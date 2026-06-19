@@ -1,0 +1,44 @@
+@charset "utf-8";
+
+body {
+  font-size: 1rem;
+  line-height: 1.8;
+  background: #ddf0ff;
+  color: #222;
+}
+
+.main {
+  max-width: 50em;
+  padding: 1.5em;
+}
+
+p {
+  margin: 0 0 0.3em 0;
+}
+
+sup {
+  font-size: 0.7em;
+  color: #b2f71e;
+}
+
+ol {
+  font-size: 0.9em;
+  color: #555;
+}
+
+ol li {
+  margin-bottom: 0.5em;
+}
+
+nav {
+  border: 100px #0f884c;
+  border-radius: 50px;
+  background-color: #62f1ba;
+  text-align: center;
+  font-size: 25px;
+}
+
+footer {
+  text-align: center;
+  color: gray;
+}

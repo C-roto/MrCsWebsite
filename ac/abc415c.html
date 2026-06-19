@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説 &nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h2>ABC415 Mixture</h2> 
+問題文は<a href="https://atcoder.jp/contests/abc415/tasks/abc415_c">こちら</a>。<br>
+<br>
+なんとなくAtcoderを始めた僕が、その後もAtcoderを続ける動機になった問題。<br>
+今思えば別に難問でもないし、典型の1つにすぎないのだけれど、「問題を抽象化して見方を変える」という体験が学び始めの僕に与えた衝撃は大きい。<br>
+<br>
+公式解説に書いてあることがすべてなのだが、自分の言葉で整理してみる。<br>
+端的に言えば薬品の混和状態を有向グラフで整理し、薬品が混和されていない状態からすべての薬品が混和された状態へ遷移する道があるか探せばよい。<br>
+問題文における状態\(i\)の定義をそのまま使えば、こういうことだ。<br>
+・\(2^N-1\)頂点のグラフを用意し、状態\(i\)と頂点\(i\)が対応していると考える。<br>
+・状態\(i\)に対して、「まだ未混和の薬品を混和して状態\(j\)になる」かつ「状態\(j\)が安全である」ときに限って、頂点\(i\)から頂点\(j\)への有向辺が存在する。<br>
+この2条件を満たすグラフを考えると、頂点\(0\)から頂点\(2^N-1\)へ有限の辺をたどって遷移できるなら、対応する状態をたどって状態\(0\)から状態\(2^N-1\)に移動できる！<br>
+つまり、「薬品混和の問題」だと思っていたこの問題は、<strong>実は「グラフの遷移問題」と等価</strong>であり、単純なBFSやDFSで解くことができてしまうのだ！<br>
+<br>
+各頂点から各頂点へ遷移可能かどうかを計算するにはビット演算をすればよい（当時の僕はこれすら覚束なかったが）だけなので、あとはやるだけ。<br>
+ざっくり頂点の個数だけ遷移先の可能性を考えないといけないので、時間計算量は\(O(2^NN)\)である。<br>
+これは今回の制約下\((N \leqq 16)\)では充分高速だと考えらえるので、この方針で実装しよう。<br>
+<br>
+僕が書いたコードがこちら。<br>
+<pre><code class="language-python">
+T = int(input())
+
+for t in range(T):
+    N = int(input())
+    S = input()
+    S = "0" + S
+
+    Check = [ False for _ in range(2 ** N)]
+    Check[0] = True
+    for i in range(2 ** N):
+        if Check[i]:
+            for j in range(N):
+                nex = i | (1 &lt;&lt; j)
+                # 既に状態iに混和済みの薬品ではなく(nex != i)、かつ遷移先が安全か?
+                if nex != i and S[nex] == "0":
+                    Check[nex] = True
+    
+    if Check[-1]:
+        print('Yes')
+    else:
+        print('No')
+</code></pre>
+最初にACしたときのコードを貼ろうと思ったが、あまりにも良くないコードだったのでリライトした。<br>
+NとSをすべて最初に受け取って保管したり、ビットシフトせずにforを1~N+1まで回して2 ** (j - 1)をandするという謎に迂遠なことをしたり……。<br>
+まあ当時の自分にはそっちの方が分かりやすかったんだと思うが、多分それは大抵の場合いい判断ではない。<br>
+<br>
+以下余談。<br>
+これは「やり方を知っていればなんてことはない」という類の問題だろうと思う。<br>
+同値な言いかえをすると、「苦戦するんだったらやり方を知らない」ということでもある。<br>
+僕は当時苦戦した。オンタイム参戦だったが、この問題の解き方が全く思いつかなくて諦めた記憶がある。<br>
+何をしたらいいのか分からない。発想があるけど実装が分からないのではなく、発想がそもそもない。<br>
+ゆえに、解説を見たときに衝撃を受けた。簡単なグラフアルゴリズムを勉強したてだったのもあったと思う。<br>
+なにせ、「自分が知ったばかりの簡単な手法」が「考えても全く糸口すら見えなかった問題」を打ち倒してしまったのだ！ 驚きと言わずしてなんと言おうか。<br>
+何に打ちひしがれたのかは、今となっては判然としない。アルゴリズムの偉大さか、自らの無知の果てなさか、ともあれ、競技プログラミングって面白いと思った瞬間の1つがこれだった。<br>
+<br>
+この問題のお陰でグラフアルゴリズムへの関心が高まったし、問題の見方を変えることの面白さを実感できたように思う。<br>
+個人的にはとても思い入れの深い問題である。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>

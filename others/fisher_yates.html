@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-lisp.min.js"></script>
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説 &nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h2>Fisher-Yatesアルゴリズムについて</h2> 
+シャッフルに関するアルゴリズムを考えたい。<br>
+入出力に対して、以下のことを要請する。<br>
+入力：整数\(N\)<br>
+出力：\(0\)から\(N-1\)までの整数1つずつのみで構成された配列<br>
+ただし、出力として考えられるどの配列についても、出力される確率は等しいことを求める。<bR>
+もしこれが実現できれば、任意の数列をランダムでシャッフルできることになる。<br>
+<br>
+これを実現するアルゴリズムとして、Fisher-Yatesアルゴリズムが知られている。<br>
+手順は以下の通り。<br>
+<div style="border: 1px solid #000000; padding: 10px; margin-bottom: 10px;">
+p1.配列\(A=[0,1,2,3,...,N-1]\)を用意する。<br>
+p2.\(i=0,1,2,3,...,N-1\)に対して、以下の手順を繰り返し1度ずつ実施する<br>
+・\(0\)以上\(i\)以下の整数を1つ選び\(j\)とする。配列\(A\)の\(i\)番目の要素と\(j\)番目の要素を交換する。<br>
+p3.操作後の配列\(A\)を返す<br>
+</div>
+このアルゴリズムが正当であること……つまり、<br>
+・アルゴリズムが有限回の動作で停止すること<br>
+・アルゴリズムが常に期待する結果を返すこと<br>
+を確かめたい。<br>
+操作は有限回しか行われないので、停止することについては自明としてよいだろう。<br>
+では、期待する結果を返すことはどうだろう？ 実は上手くいく。<br>
+一般に、\([A_{0},A_{1},...,A_{N}]\)を出力したいとき、\([0,1,2,...,N-1]\)を手順の通りに並び替えてそれを作り出す必要がある。<br>
+最後の\(N-1\)は上記の手順p2の中でも最後まで触られないものだ。ということは、\([0,1,2,...,N-2]\)の部分を先に上手く並び替えておいて、最後に\(N-1\)があるべき場所に\(A_{N-1}\)を置いておき、手順p2を最後に行うときにこの2つを入れ替えればよい。<br>
+「先にうまく並び替えておく」ことができるのかについては、今と同様に考えると\([0,1,2,...,N-3]\)を上手く並び替えられるかにかかっている。<br>
+この発想を繰り返せば、最終的に\([0]\)を上手く並び替えられるかという話になる。これは明らかに可能だ。<br>
+厳密に証明する場合は数学的帰納法を利用すればよいだろう。<br>
+<br>
+時間計算量は、配列全体を1度ずつ舐める手順p2がネックで\(O(N)\)となる。<br>
+余程大きな数列をジェネレートしない限り現実的な時間、高速な操作ができる。<br>
+ただし、途中で使う乱数が偏ると出力も偏りうるので、ある程度良い乱数を使う必要がある。<br>
+<br>
+Pythonによる実装は以下の通り。<br>
+<pre><code class="language-python">
+import random
+
+def fisher_yates(N):
+    array = [i for i in range(N)]
+    for i in range(len(array)):
+        j = random.randint(0, i)
+        array[i], array[j] = array[j], array[i]
+    return array
+
+N = int(input())
+print(fisher_yates(N))
+# -> [1, 3, 4, 2, 0]
+</code></pre>
+しかし、Pythonだとrandom.shuffleで一発。C++も同じ。こんな面倒なことをする必要がない。<br>
+折角だし標準ライブラリにシャッフルがない(と認識している)言語でも書いてみたい。<br>
+Common Lispとかはいいかもしれない(あんまり詳しくないけれど)。<br>
+<pre><code class="language-lisp">
+(setf *random-state* (make-random-state t))
+(defun fisher_yates (n)
+    (let ((a (make-array n)))
+        (dotimes (i n) 
+             (setf (aref a i) i))
+    
+        (dotimes (i n)
+            (let* ((x (aref a i))
+                (j (random (+ i 1)))
+                (y (aref a j)))
+            (setf (aref a j) x)
+            (setf (aref a i) y)))
+
+        a))
+(defun main ()
+    (let ((N (read)))
+        (format t "~A~%" (fisher_yates N))))
+
+(main)
+;; -> #(2 4 1 3 0)
+</code></pre>
+って感じでどうだろう。<br>
+<br>
+<a href="index.html">一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
