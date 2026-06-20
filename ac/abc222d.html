@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1>QLTの勉強ノート</h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC222D Between Two Arrays</h1><br>
+問題文は<a href="https://atcoder.jp/contests/abc222/tasks/abc222_d">こちら</a>。<br>
+<br>
+広義単調増加列に「挟まれる」数列の個数を求める。<br>
+問題文から\(C\)もまた広義単調増加になるということと、同一視できるものが多そうなことから、動的計画法で解けないかを検討したくなる。<br>
+<br>
+何をdpテーブルに持たせればよいかを考える。<br>
+シンプルに「\(i\)番目まで数列を作ったとき、末尾が\(c(ただしa_i \leqq c \leqq b_i)\)であるようなものの個数」を考えてみよう。<br>
+すると、「\(i-1\)番目までの末尾が\(c\)以下であるものの個数」が知りたい値になるはずである。<br>
+「以下」というのが曲者で、\(c\)の値がとりうる範囲によっては最悪の時間計算量が\(O(N \cdot max(b_i)^2)\)程度になってしまうので、この制約下ではとても遅い。<br>
+<br>
+こういう場合は「\(i-1\)番目までの末尾が\(c\)以下であるものの個数」を先に計算しておくのが良い。<br>
+よく「<strong>累積和</strong>」と呼ばれるものである。詳細はまた別にまとめる……かも。<br>
+累積和の考え方を使うと、前計算部分にかかる時間はざっくり\(O(N \cdot max(b_i))\)程度であると見積もれる。<br>
+動的計画法パートは\(O(N \cdot max(b_i))\)程度で計算できるだろうから、全体としてもやはりこの程度の時間計算量で収まると考えられる。<br>
+<br>
+DPテーブルのほかに情報を格納しておいて、それを使うという発想の問題をあまり見たことがなかったので、そういう方針もありだと学べた。<br>
+実際にACしたコードは以下の通り(コメントの位置だけ調整した)。<br>
+<pre><code class="language-python">
+N = int(input())
+A = list(map(int,input().split()))
+B = list(map(int,input().split()))
+
+mod = 998244353
+M = max(max(A), max(B))
+
+# i番目の要素までを見たとき、それがc以下であるようなものの個数をdp[i][c]としてDP
+dp = [ [ 0 for _ in range(M + 1)] for _ in range(N)]
+rowsum = [ [0 for _ in range(M + 1)] for _ in range(N)]
+
+for i in range(A[0], B[0] + 1):
+    dp[0][i] = 1
+    rowsum[0][i] += 1
+for i in range(1, M + 1):
+    rowsum[0][i] += rowsum[0][i - 1]
+
+for i in range(N - 1):
+    for j in range(A[i + 1], B[i + 1] + 1):
+        dp[i + 1][j] += rowsum[i][j]
+    for j in range(M + 1):
+        rowsum[i + 1][j] = dp[i + 1][j]
+        rowsum[i + 1][j] %= mod
+    for j in range(1, M + 1):
+        rowsum[i + 1][j] += rowsum[i + 1][j - 1]
+        rowsum[i + 1][j] %= mod
+
+answer = 0
+for i in range(A[-1], B[-1] + 1):
+    answer += dp[-1][i]
+    answer %= mod
+print(answer % mod)
+</code></pre>
+横着してDPテーブルに全部の情報を載せようとしてWAしたのと、配列rowsumの値をmod取らずに格納してMLEしたというミスで2ペナ貰っている。<br>
+本番のコンテストだったら嫌だな～。<br>
+個人的にPythonの良いところと感じているのは「思いついた実装をとりあえず形にできること」だと思っているので、「累積和の情報を管理する配列を用意しておけばいいよね～」と思ったらとりあえずそうして実装してから簡略化を考えるべきだったかもしれない。<br>
+解けたはいいが反省の残る1問だった。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
