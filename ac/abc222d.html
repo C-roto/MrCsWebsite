@@ -53,8 +53,10 @@
 累積和の考え方を使うと、前計算部分にかかる時間はざっくり\(O(N \cdot max(b_i))\)程度であると見積もれる。<br>
 動的計画法パートは\(O(N \cdot max(b_i))\)程度で計算できるだろうから、全体としてもやはりこの程度の時間計算量で収まると考えられる。<br>
 <br>
+それで、上記の問題に対する答えをメモしておき、\(i=N\)かつ\(c=a_i,a_i + 1,...,b_i\)の時の答えをすべて足せば、知りたかった元々の問題の答えが分かる。<br>
+<br>
 DPテーブルのほかに情報を格納しておいて、それを使うという発想の問題をあまり見たことがなかったので、そういう方針もありだと学べた。<br>
-実際にACしたコードは以下の通り(コメントの位置だけ調整した)。<br>
+実際にACしたコードは以下の通り(コメントを追加or位置を調整した)。<br>
 <pre><code class="language-python">
 N = int(input())
 A = list(map(int,input().split()))
@@ -67,6 +69,7 @@ M = max(max(A), max(B))
 dp = [ [ 0 for _ in range(M + 1)] for _ in range(N)]
 rowsum = [ [0 for _ in range(M + 1)] for _ in range(N)]
 
+# 初期状態の計算と累積和
 for i in range(A[0], B[0] + 1):
     dp[0][i] = 1
     rowsum[0][i] += 1
@@ -74,11 +77,14 @@ for i in range(1, M + 1):
     rowsum[0][i] += rowsum[0][i - 1]
 
 for i in range(N - 1):
+    # \(i\)番目までを見たとき末尾が\(j\)以下の数列の個数を\(dp[i+1][j]\)に格納
     for j in range(A[i + 1], B[i + 1] + 1):
         dp[i + 1][j] += rowsum[i][j]
+    # 累積和計算の前準備
     for j in range(M + 1):
         rowsum[i + 1][j] = dp[i + 1][j]
         rowsum[i + 1][j] %= mod
+    # 実際に累積和計算
     for j in range(1, M + 1):
         rowsum[i + 1][j] += rowsum[i + 1][j - 1]
         rowsum[i + 1][j] %= mod
