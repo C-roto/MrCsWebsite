@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1>QLTの勉強ノート</h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC463C Tallest at the Moment</h1><br>
+問題文は<a href="https://atcoder.jp/contests/abc463/tasks/abc463_c">こちら</a>。<br>
+<br>
+工夫を考えるために思考を巡らせるのも良いが、力業で解けそうなときはそうしてみるのも良い。<br>
+言われた通りのシミュレーションをとにかく効率よく行う方針で考えてみよう。<br>
+・部屋にいる高橋君を大きい順に並べ替えたまま保持しておくデータ構造を用意する。<br>
+・[高橋君の身長, いなくなる時刻]からなる配列を作り、いなくなる時刻でソートしておく。<br>
+・クエリを時刻の値の小さい順にソートしておく。<br>
+このような前処理を行えば、愚直なシミュレーションで行けそうだ。<br>
+<br>
+Pythonの外部ライブラリの1つにsoretedcontaiersというものがある。<br>
+GitHubにある実装内部のコメントによれば、イニシャライズに時間計算量で\(O(N \cdot \log{N})\)かかり、データの入力と削除とインデクッスを指定しての値取得にそれぞれ時間計算量で\(O(\log{N})\)かかるらしい。<br>
+ということはこれを使うと、前準備は大体\(O(N \cdot \log{N} + Q \cdot \log{Q})\)程度の時間で終わりそうだし、シミュレーションはデータ削除の部分が償却の時間計算量で\(O(N)\)、値取得が全体で\(O(N \cdot \log{N})\)程度だから、まあ何とかなりそう。<br>
+やること自体は多いし、定数倍は重い可能性があるからもしかしたらTLEの可能性も頭に入れつつ回してみると、ぎりぎりで回った。<br>
+提出コードは以下の通り。<br>
+<pre><code class="language-python">
+import sortedcontainers
+
+N = int(input())
+Takahashis = []
+Room = sortedcontainers.SortedList([])
+for i in range(N):
+    h, l = list(map(int,input().split()))
+    Room.add(h)
+    Takahashis.append([h, l])
+Takahashis.sort(key=lambda x:x[1])
+Q = int(input())
+T = list(map(int,input().split()))
+T = [ [T[i], i] for i in range(Q)]
+T.sort()
+
+idx = 0
+answer = [-1 for _ in range(Q)]
+for q in range(Q):
+    while idx != N and Takahashis[idx][1] &lt;= T[q][0]:
+        Room.discard(Takahashis[idx][0])
+        idx += 1
+    answer[T[q][1]] = Room[-1]
+
+for i in range(Q):
+    print(answer[i])
+</code></pre>
+恐らく最大ケースと思われる内容で1478ms/2000ms。ギリギリ……。<br>
+Codonで似たような実装を用意するか、或いは今回のことができるデータ構造を自前で作るなどすればもっと早くできそうですね。いつかやろうとして放り投げたsplay木の実装に手を出すときが来たということか……？<br>
+ひと昔前のatcoderにはsortedcontainersがなかったという。怖い。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
