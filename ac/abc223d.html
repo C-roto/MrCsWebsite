@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC223D Restricted Permutation</h1><br>
+問題文は<a href="https://atcoder.jp/contests/abc223/tasks/abc223_d">こちら</a>。<br>
+<br>
+「ある数字がある数字の前に来る」という条件を満たすようにして数列を並び替える問題。<br>
+「辞書順最小」という制約があるが、これが少し面白い。<br>
+<br>
+こういう「要素同士の順番」が規定されている問題は、実はグラフの問題に帰着できることが多い。<br>
+今回ならば「トポロジカルソート」という考え方を使うことで解くことができる。<br>
+詳細はまた別にまとめるなどするつもりだが、「前にある要素に向かって後ろの要素から有向辺を出す」として作った有向グラフが非巡回グラフであるかを調べればよい。<br>
+<br>
+さて、今回の問題の面白いところはkahnのアルゴリズムを回すときに頂点を管理しているデータ構造にある。<br>
+特に目的がなく、トポロジカル順を何か1つでも出せばよいのならstackやqueueを使って実装することが多いのだが、今回は「辞書順で最小のもの」を出力するよう要求されている。<br>
+つまり、できる限り頂点番号が小さい順に判定するよう調整をする必要がある。<br>
+kahnのアルゴリズムで頂点を取り出す操作を行う際に、同時に頂点管理用のデータ構造に入っている頂点たちは、どれを取り出してもトポロジカル順になるはずである。<br>
+ということは、なるべく小さいものを取り出すという目的に適うのはヒープだ。というわけで、stackやqueueの代わりにヒープを使うと望みの通り辞書順最小のものが出力される。<br>
+<br>
+自分の実装は以下の通り。<br>
+<pre><code class="language-python">
+import heapq
+
+# グラフ構築
+N, M  = list(map(int,input().split()))
+G = [ list() for _ in range(N)]
+for i in range(M):
+    a, b = list(map(int,input().split()))
+    a -= 1
+    b -= 1
+    G[a].append(b)
+
+# トポロジカルソートのための入次数サーチ
+indeg = [ 0 for _ in range(N)]
+for u in range(N):
+    for v in G[u]:
+        indeg[v] += 1
+
+# 頂点管理
+HQ = []
+heapq.heapify(HQ)
+for i in range(N):
+    if indeg[i] == 0:
+        heapq.heappush(HQ, i)
+
+# kahnのアルゴリズムで回す
+Result = []
+while HQ:
+    p = heapq.heappop(HQ)
+    Result.append(p + 1)
+    for q in G[p]:
+        indeg[q] -= 1
+        if indeg[q] == 0:
+            heapq.heappush(HQ, q)
+
+# 巡回グラフだったら-1を出す
+if len(Result) &lt; N:
+    print(-1)
+else:
+    print(*Result)
+</code></pre>
+トポロジカルソート用の自己ライブラリを用意しておくと、ある程度はそれを貼るだけで対応できる。<br>
+トポロジカルソートそれ自体も面白い概念なので、いつか自分用メモとしてしっかりまとめておきたい。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
