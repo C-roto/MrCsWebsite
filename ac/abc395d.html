@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC395D Pigeon Swap</h1><br>
+問題文は<a href="https://atcoder.jp/contests/abc395/tasks/abc395_d">こちら</a>。<br>
+<br>
+何をしたいか整理しないととても混乱する問題。<br>
+愚直に言われた通りのことをやろうとすると何が起こるか考える。<br>
+集合を要素に持つ配列BOXを用意し、巣箱\(i\)に鳩\(j\)がいることをBOX[i]の要素にjがあることで表現しよう。<br>
+すると、クエリ1は時間計算量\(O(1)\)で実行できるが、クエリ2は鳩の数によって時間計算量は左右されるし、クエリ3も前から走査する形式をとると時間がかかりそうだ。<br>
+<br>
+考えられる工夫として「どの鳩がどの巣箱にいるか」も同時に管理するというものがある。<br>
+これによってクエリ3も定数時間で実行できるようになる。<br>
+しかし、依然としてクエリ2がしんどい。どうしようか。<br>
+箱の中の鳩を直接入れ替えるから大変なのであって、鳩を入れ替えずに「箱の中身を入れ替えた状態」を作れれば良いのだ。<br>
+例えば、箱にラベルを貼っておき、そのラベルを入れ替えればこれは実現できる。<br>
+<br>
+まとめると、これらのことを適切に実装するには……<br>
+・「鳩の番号」と「箱の位置」を管理する配列Pegion(Pegion[i] = jのとき、鳩\(i\)が箱\(j\)にいることを指す)<br>
+・「箱のラベル」と「箱の位置」を管理する配列Labels(Labels[i] = jのとき、前から\(i\)番目の箱にラベル\(j\)が貼られていることを指す)<br>
+・「箱の位置」と「箱のラベル」を管理する配列Oreders(Oreders[i] = jのとき、ラベル\(i\)が貼られた箱が前から\(j\)番目にあることを指す)<br>
+このようにすれば、<br>
+・クエリ1はPegions[a]をOreders[b]に更新することで、「鳩aの位置を前からOreders[b]番目の箱」に変更することができる。<br>
+同様にクエリ2や3も処理できる。実装は以下の通り。<br>
+<pre><code class="language-python">
+N, Q = list(map(int,input().split()))
+# 何番目の箱に何番の鳩がいるか
+Pegions = [ i for i in range(N + 1)]
+# 何番目の箱が何のラベルか
+Labels = [ i for i in range(N + 1)]
+# 何のラベルの箱が何番目にあるか
+Oreders = [ i for i in range(N + 1)]
+
+for q in range(Q):
+    query = list(map(int,input().split()))
+    if query[0] == 1:
+        a, b = query[1], query[2]
+        Pegions[a] = Oreders[b]
+    elif query[0] == 2:
+        a, b = query[1], query[2]
+        x = Oreders[a]
+        y = Oreders[b]
+        Labels[x] = b
+        Labels[y] = a
+        Oreders[a] = y
+        Oreders[b] = x
+    else:
+        a = query[1]
+        print(Labels[Pegions[a]])
+</code></pre>
+ありえんほどこんがらがる。でも分かると面白い。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
