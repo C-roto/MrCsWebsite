@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC351D Grid and Magnet</h1><br>
+問題は<a href="https://atcoder.jp/contests/abc351/tasks/abc351_d">こちら</a>。
+磁石が置いてあるグリッドにおいて、移動できる場所を探す問題<br>
+<br>
+以下、上下左右のマスに磁石がなく、かつ磁石が置かれていないマスを「磁石の影響下にないマス」とする。「磁石の影響下にないマス」でないマスを「磁石の影響下にあるマス」とする。<br>
+<br>
+最初にとある方法が思いついたのだが、実装の際に色々いじるのがめんどくて一回放棄した。<br>
+末尾でまとめているのでそちらをご覧ください。<br>
+<br>
+今回ならBFSが役に立ちそうに思える。こんな感じのアルゴリズムはどうだろう。<br>
+①まだ手順②を行っていない「磁石の影響下にないマス」を探す。なければ終了。<br>
+②そのマスから遷移可能な「磁石の影響下になく、かつ未探索のマス」もしくは「上下左右に磁石があるマス」の個数を数える（ここがBFS）。探索の過程で通ったマスは探索済みにしておく。<br>
+③今数えた値が暫定最大値より大きければ更新し、①に戻る。<br>
+<br>
+正当性について考える。<br>
+あるマスから遷移可能なマスは<br>
+・磁石の影響下にあるマスにおいては0マスまたは1マス<br>
+・磁石の影響下にないマスにおいては、「自ら」もしくは「有限回の遷移で辿り着け、かつ磁石の影響下にないマス」もしくは「有限回の遷移で辿り着け、かつ上下左右に磁石があるマス」の合計数<br>
+になる。これを正しく判断するために、②の手順をもう少し細かく書いてみる<br>。
+・まずQueueを用意して、①で探してきたマスを突っ込む。<br>
+・値Counterを用意し、1で初期化しておく。<br>
+・Queueに何か入っている限り、Queueをpopして中身を見る。<br>
+・取り出したマスの上下左右にあるマスを調べる。<br>
+・もしその中に「磁石の影響下になく、かつ今回のBFS中では未探索のマスA」があるなら、マスAを今回のBFS中では探索済みの状態にしてQueueに突っ込み、Counterを+1する。<br>
+・もしその中に「上下左右に磁石があり、かつ今回のBFS中では未探索のマスB」があるなら、マスBを今回のBFS中では探索済みの状態に変え、Counterを+1する。<br>
+・Queueに何か入っていれば、Queueからpopするところまで戻る。<br>
+<br>
+正当性を示すとしたら、<br>
+・あるマスから遷移可能なすべてのマスを、ただ1度だけ数え上げているか？<br>
+を調べる必要があり、これは、<br>
+・探索済みのマスは、そのBFS中でただ1度だけCounterの値を変化させるのみなので、未探索から探索済みに代わるちょうど1回で期待通りに増加する<br>
+・始点から遷移可能なマスは「始点から直接遷移可能」または「始点から遷移可能な磁石の影響下にないマスから遷移可能」のいずれかになっている<br>
+・始点から遷移可能なマスは上記ですべて<br>
+であることを確かめればよく、これは現に正しい。<br>
+<br>
+時間計算量はどうだろうか？<br>
+BFSの時間計算量が増えるのは既に探索済みの頂点を再探索する場合だ。<br>
+上記のまま実装すると「磁石の影響下にないマス」すべてで独立にBFSを行うことになってしまい、効率が悪い。<br>
+ここで、それまでのBFSで一度でも到達したことのある「磁石の影響下にないマス」を再度調べる必要がないことに注意する。そのようなマスは、あるマスを始点として遷移可能なマスであり、この2マスは相互に行き来可能であるからだ（厳密な証明は省くが、直観的には明らかだろう）。<br>
+よって、一度でも到達したことのある「磁石の影響下にないマス」は2度調べないようにする。すると、すべての「磁石の影響下にないマス」はただ1度だけBFSで到達するのみになるから、かなり効率が良くなる。<br>
+手順の途中で、以前のBFSで数えた「上下左右に磁石があるマス」を再度カウントすることもありうるが、そこから遷移可能なマスが増えないことから、結局全体の計算量は「磁石の影響下にないマス」の個数の「1マスから可能な遷移先の個数」倍で抑えられるはずだ。<br>
+よって、1マスから可能な遷移先の個数を\(K\)個として、時間計算量は\(O(KHW)\)で済み、今回の制約下ならおよそ期待通りの時間で動作するだろう。<br>
+実際の実装は以下の通り<br>
+<br>
+<pre><code class="language-python">
+import collections
+
+# グリッド探索のお供たち
+# m_1,m_2はforで回して上下左右に移動してもらうためのもの
+# isinはグリッドの中に納まっているかの判定
+m_1 = [0, 1, 0, -1]
+m_2 = [1, 0, -1, 0]
+
+def isin(h, w):
+    return 0 &lt;= h &lt;= H - 1 and 0 &lt;= w &lt;= W - 1
+
+# 磁石の付近にあるマスか？
+def nearmagnet(h, w):
+    for i in range(4):
+        nh = h + m_1[i]
+        nw = w + m_2[i]
+        if isin(nh, nw) and S[nh][nw] == "#":
+            return True
+    return False
+
+# 磁石のおいてあるマスか？
+def ismagnet(h, w):
+    return S[h][w] == "#"
+
+# 幅優先探索
+def bfs(h, w, hmt):
+    que = collections.deque([[h, w]])
+    Visited[h][w] = hmt
+    counter = 1
+    while que:
+        ph, pw = que.popleft()
+        for k in range(4):
+            nh, nw = ph + m_1[k], pw + m_2[k]
+            if isin(nh, nw):
+                if Magnetstate[nh][nw] == 0 and Visited[nh][nw] == 0:
+                    que.append([nh, nw])
+                    Visited[nh][nw] = hmt
+                    counter += 1
+                elif Magnetstate[nh][nw] == 1 and Visited[nh][nw] != hmt:
+                    Visited[nh][nw] = hmt
+                    counter += 1
+    return counter
+
+H, W = list(map(int,input().split()))
+S = []
+for _ in range(H):
+    S.append(input())
+
+# 0は磁石に隣接していない、1は磁石のそばにある、2は磁石そのもの
+# 以下、磁石に隣接しているか、磁石そのもののマスのことを「磁石の影響下にあるマス」とする
+Magnetstate = [ [0 for _ in range(W)] for _ in range(H)]
+Visited = [ [ 0 for _ in range(W)] for _ in range(H)]
+
+for i in range(H):
+    for j in range(W):
+        if nearmagnet(i, j):
+            Magnetstate[i][j] = 1
+        if ismagnet(i, j):
+            Magnetstate[i][j] = 2
+
+# hmt(howmanytimes)は「今が何回目のbfsか?」をカウントしておく変数
+# 未探索かつ磁石が付近に無いマスを起点にbfsして行けるマスを数える
+# 探索済みかどうかはVisitedが0かどうかで判断する
+answer = 1
+hmt = 1
+for i in range(H):
+    for j in range(W):
+        # 探索済み、もしくは磁石の影響下にあるマスかを判断
+        if Visited[i][j] != 0 or Magnetstate[i][j] > 0:
+            continue
+        # bfsする(Visitedの幾つかのセルの値が変更されることに注意)
+        count = bfs(i, j, hmt)
+        hmt += 1
+        answer = max(answer, count)
+
+print(answer)
+</code></pre>
+実はBFSじゃない方法でも実装できる。<br>
+最初に書いた通り、その方法を以下の折り畳みに書いてみる。<br>
+<details><summary>最初に思いついた方針</summary>
+最初に思いついたのは、相互に行き来できる白マス同士を「1つのグループ」と見なして、そのグループのマス数と、グループが触れている「上下左右に磁石があるマス」を数えるという方法だ。<br>
+「グループにする」という発想は、素集合データ構造における<strong>Union-Find</strong>操作で実現できる。<br>
+もはやデータ構造の名前自体がUnion-FindとかUnion-Find木とか呼ばれているが、『アルゴリズムイントロダクション　第4版』には「互いに素な集合族のためのデータ構造」という名称で載っており、ややこしい。<br>
+この操作は、「要素同士をグループ化して、そのグループのリーダー(代表元)に色んな情報を持たせて楽をする」というようなもので、複雑な分応用が利く素敵なデータ構造だ。<br>
+これを使うと<br>
+・磁石の影響下にないマスをUnion操作でグループ化する。グループ化後の同グループに属するマスの個数を、リーダーのマスに記録しておく。<br>
+・各黒マスの周りにあるグループに行けるマス数を+1していく（グループの大きさに+1すれば良い）<br>
+・各グループの大きさの最大値を全走査して調べる。<br>
+という感じで調べられる。実装例は省略。<br>
+こっちの方が個人的には自然な発想のように感じられる。<br>
+</details>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
