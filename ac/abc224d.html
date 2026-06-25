@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC224D 8 Puzzle on Graph </h1>
+<br>
+問題は<a href="https://atcoder.jp/contests/abc224/tasks/abc224_d">こちら</a>。<br>
+問題名の通り、グラフ上で8パズルを解くような問題。<br>
+<br>
+8パズルや15パズルといったパズルは、数学的に解けるかどうかが知られている場合もある。<br>
+なので例えば偶置換や奇置換といった概念や、何か良さそうな定理とかで殴れるのかな～などと考えていた。<br>
+とはいえ、あいにく数学に対する知見はそんな無いので困っていた。<br>
+<br>
+唸ること5分。コマの配置について総当たりすることを考えはじめる。<br>
+コマの配置は\(9! = 362880 \le 10^6\)以下の可能性しかなく、あるコマの配置から別のコマの配置への遷移可能性は（常に空きマスが1つしかないことから）コマの配置の数の9倍程度で抑えられることを考えると、例えばすべてのコマの配置について、遷移可能な別のコマの配置を持っておいてグラフを作り、BFSする方法が有効ではないかと思いつく。<br>
+今書いたことを実装すればとりあえず答えにはなる。<br>
+<br>
+実装を楽にするため各コマの配置に一意に識別できる番号を振り、番号をコマの配置に、コマの配置を番号に一意に変換するための連想配列を作っておく。<br>
+元のグラフとは別に、コマの状態からなる大きなグラフ(実装例ではBigGraph)を作る。<br>
+さて、あるコマの配置Aから遷移できるのは、Aの空きマスとつながっている別のマスに置いてあるコマを、空きマスに動かした後の配置だけだ。可能な動かし方を全部検証して、グラフに辺を張る。<br>
+そしてBigGraph上で最短距離を求めればよい。先にも書いた通りBFSで充分だろう。<br>
+<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import math
+import itertools
+import collections
+
+# -1の部分
+def emptysearch(s):
+    for i in range(9):
+        if s[i] == -1:
+            return i
+    return -1
+
+# タプルsを受け取り、sのv番目とu番目の要素をスワップしたタプルを返す
+def change(s, v, u):
+    res = []
+    for i in range(9):
+        if i != v and i != u:
+            res.append(s[i])
+        elif i == v:
+            res.append(s[u])
+        else:
+            res.append(s[v])
+    return tuple(res)
+
+def bfs(que):
+    while que:
+        p, c = que.popleft()
+        if p == goalid:
+            return c
+        for q in BigGraph[p]:
+            if Visited[q] == False:
+                Visited[q] = True
+                que.append([q, c + 1])
+    return -1
+
+M = int(input())
+G = [ set() for _ in range(9)]
+for i in range(M):
+    u, v = list(map(int,input().split()))
+    u -= 1
+    v -= 1
+    G[u].add(v)
+    G[v].add(u)
+P = list(map(int,input().split()))
+S = [ -1 for _ in range(9)]
+for i in range(8):
+    S[P[i] - 1] = i
+S = tuple(S)
+
+# State_to_num[(0, 1, 2, 3, 4, 5, 6, 7, -1)] = 46233なので、ゴールはここ
+# BigGraphの開始地点から46233に遷移する最短手順は？
+BigGraph = [ set() for _ in range(math.factorial(9))]
+Visited = [ False for _ in range(math.factorial(9))]
+States = itertools.permutations([ i for i in range(-1, 8)])
+Num_to_State = dict()
+State_to_num = dict()
+idx = 0
+for s in States:
+    Num_to_State[idx] = s
+    State_to_num[s] = idx
+    idx += 1
+startid = State_to_num[S]
+goalid = 46233
+
+for i in range(math.factorial(9)):
+    s = Num_to_State[i]
+    empid = emptysearch(s)
+    for v in G[empid]:
+        t = change(s, v, empid)
+        u = State_to_num[t]
+        BigGraph[i].add(u)
+
+que = collections.deque([])
+que.append([startid, 0])
+Visited[startid] = True
+
+print(bfs(que))
+</code></pre>
+ライブラリマシマシでライブラリに足を向けて寝られない。<br>
+<br>
+思いついたらやるだけな問題だけど、単純な全探索って割と見落としがち。<br>
+本当は真っ先に検討する必要がある方法だろう。策士策に溺れないようにしたい。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>

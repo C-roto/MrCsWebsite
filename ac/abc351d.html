@@ -170,7 +170,98 @@ print(answer)
 ・磁石の影響下にないマスをUnion操作でグループ化する。グループ化後の同グループに属するマスの個数を、リーダーのマスに記録しておく。<br>
 ・各黒マスの周りにあるグループに行けるマス数を+1していく（グループの大きさに+1すれば良い）<br>
 ・各グループの大きさの最大値を全走査して調べる。<br>
-という感じで調べられる。実装例は省略。<br>
+という感じで調べられる。実装例は以下の通り。<br>
+<pre><code class="language-python">
+class DisjointSetUnionfind:
+    def __init__(self, N: int):
+        self.number = N
+        self.parent = [ -1 for _ in range(N)]
+        self.size = [ 1 for _ in range(N)]
+
+    def find(self, v : int):
+        compress = []
+        while self.parent[v] != -1:
+            compress.append(v)
+            v = self.parent[v]
+        for c in compress:
+            self.parent[c] = v
+        return v
+
+    def union(self, u: int, v: int):
+        ru = self.find(u)
+        rv = self.find(v)
+        if ru != rv:
+            if self.size[ru] &lt; self.size[rv]:
+                ru, rv = rv, ru
+            self.parent[rv] = ru
+            self.size[ru] += self.size[rv]
+
+m_1 = [0, 1, 0, -1]
+m_2 = [1, 0, -1, 0]
+
+def isin(h, w):
+    return 0 &lt;= h &lt;= H - 1 and 0 &lt;= w &lt;= W - 1
+
+def nearmagnet(h, w):
+    for i in range(4):
+        nh = h + m_1[i]
+        nw = w + m_2[i]
+        if isin(nh, nw) and S[nh][nw] == "#":
+            return True
+    return False
+
+def ismagnet(h, w):
+    return S[h][w] == "#"
+
+H, W = list(map(int,input().split()))
+S = []
+for _ in range(H):
+    S.append(input())
+
+# 0は磁石に隣接していない、1は磁石のそばにある、2は磁石そのもの
+Magnetstate = [ [0 for _ in range(W)] for _ in range(H)]
+# S[i][j]はuf.container[i * W + j]と対応するものとして考える
+uf = DisjointSetUnionfind(H * W)
+
+for i in range(H):
+    for j in range(W):
+        if nearmagnet(i, j):
+            Magnetstate[i][j] = 1
+        if ismagnet(i, j):
+            Magnetstate[i][j] = 2
+
+for i in range(H):
+    for j in range(W):
+        if Magnetstate[i][j] &gt; 0:
+            continue
+        for k in range(2):
+            ni = i + m_1[k]
+            nj = j + m_2[k]
+            if isin(ni, nj) and Magnetstate[ni][nj] == 0:
+                    uf.union(i * W + j, ni * W + nj)
+
+for i in range(H):
+    for j in range(W):
+        if Magnetstate[i][j] != 1:
+            continue
+        tmp = set()
+        for k in range(4):
+            ni = i + m_1[k]
+            nj = j + m_2[k]
+            if isin(ni, nj) and Magnetstate[ni][nj] == 0:
+                group = uf.find(W * ni + nj)
+                if group not in tmp:
+                    uf.size[group] += 1
+                    tmp.add(group)
+                
+answer = 1
+for i in range(H):
+    for j in range(W):
+        if answer &lt; uf.size[i * W + j]:
+            answer = uf.size[i * W + j]
+
+print(answer)
+</code></pre>
 こっちの方が個人的には自然な発想のように感じられる。<br>
 </details>
 <a href="index.html">問題一覧へ</a>
