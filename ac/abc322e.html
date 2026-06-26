@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC322E Product Development</h1>
+問題文は<a href = "https://atcoder.jp/contests/abc322/tasks/abc322_e">こちら</a>。<br>
+最小コストで複数パラメータを最大化することを試みる問題。<br>
+<br>
+問題文の端々からDP(動的計画法)の波動を感じる。<br>
+・すべての計画案に対して「実行する」もしくは「実行しない」の2択を考える<br>
+・選択の過程を全列挙する必要はなく、コストの最小値のみが分かればよい<br>
+・制約数値の\(N \leqq 100, 1 \leqq K, P \leqq 5\)はかなり小さい<br>
+あたりからだろうか。<br>
+以前にも書いた通り、DPは道中の過程をある程度握りつぶして1つにまとめられるのが利点だ。<br>
+本来なら\(2^N\)通りの検討が必要なところを、より制約下において小さなパターン数に圧縮できる。基礎技法みたいな教わり方するけど、改めてすごいことを言っているなあと思う。<br>
+<br>
+さて、今回のDPにおいて保持しておくべき情報と遷移方法について考えてみる。<br>
+ナイーブには「各計画案を実行した後、K個のパラメータそれぞれがどんな値か？」を持っておきたい。<br>
+ただ、「ある計画案を実行した直後にK個のパラメータがすべてPを超えているもの」については、実はすべて同一視してよい。今回はあくまで全部のパラメータがP以上なら良いわけだから、どれくらい超えているかについては全く問題にならず、その中でコストが最小のものを選べばよい。<br>
+すると、DPの各遷移のタイミングで持っておきたい情報は\((P+1)^K\)個だ。遷移の回数も考えると、DPテーブル全体は\(N \cdot (P+1)^K\)個の情報を保持する必要があるが、制約下においては十分小さい。<br>
+以下、「K個のパラメータの状態」を単に状態と呼ぶことにする。<br>
+<br>
+遷移の方法については「i個目の計画案を実行する」「実行しない」の2パターンで分ける。<br>
+\(i=1,2,3,...,N\)について、\(i\)個目の計画案を実行した後に状態\(s\)に辿り着くための最小コストを\(dp[i][s]\)として定義する。\(i=0\)のときは、1つも計画を実行していないときの各状態について考えるものとする。<br>
+すると、遷移することを選択した場合、状態sから計画案iを実行した後の状態をtとすると、<br>
+\(dp[i][t] = min(dp[i - 1][s] + C[i], dp[i][t])\)<br>
+と更新すればよい。また、遷移しないことを選択した場合は<br>
+\(dp[i][s] = min(dp[i - 1][s], dp[i][s])\)<br>
+として更新すればよい。<br>
+初期値は\(dp[0][(0, 0, ..., 0)] = 0\)で、それ以外は無限大で初期化しておく。<br>
+こうすれば、常にその時最小の値が更新され続けるはずだ。<br>
+一瞬、コスト順に開発案をソートしておく必要があるように思えたが、この遷移方法なら最小のものが出た時点で更新されるはずだから問題なさそうだ（少なくともACはした）。<br>
+<br>
+実装例は以下の通り。見通しよくしたかったので、状態に番号付けをして相互変換している。<br>
+<pre><code class="language-python">
+import itertools
+
+# 「数値iに対応する状態のパラメータをdの通り変化させた後の状態」に対応する数値を返す
+def moveafternum(i, d):
+    st_i = Num_to_State[i]
+    movedstate = []
+    for j in range(len(d)):
+        if d[j] + st_i[j] > P:
+            movedstate.append(P)
+        else:
+            movedstate.append(d[j] + st_i[j])
+    return State_to_Num[tuple(movedstate)]
+
+N, K, P = list(map(int,input().split()))
+Developments = []
+for i in range(N):
+    Developments.append(list(map(int,input().split())))
+Developments.sort()
+
+# 状態と数値を変換（少なくともAC環境では(0,0, ..., 0)が0に、(P, P, ..., P）が末尾に対応する）
+Num_to_State = dict()
+State_to_Num = dict()
+states = itertools.product([i for i in range(P + 1)], repeat = K)
+i = 0
+for s in states:
+    Num_to_State[i] = s
+    State_to_Num[s] = i
+    i += 1
+
+# dpテーブル構築
+INF = 10 ** 12
+dp = [ [ INF for _ in range((P + 1) ** K)] for _ in range(N + 1)]
+dp[0][0] = 0
+
+# dp遷移
+for i in range(N):
+    # 計画案iのコストcと、計画案iで変動するパラメータの表dを取得
+    c = Developments[i][0]
+    d = Developments[i][1:]
+    for j in range((P + 1) ** K):
+        # 遷移不能な場所からの遷移はカットする（時間短縮）
+        if dp[i][j] == INF:
+            continue
+        # 移動後の状態を示す数値mを取得
+        m = moveafternum(j, d)
+        # 計画案iを選ぶ場合
+        dp[i + 1][m] = min(dp[i][j] + c, dp[i + 1][m])
+        # 計画案iを選ばない場合
+        dp[i + 1][j] = min(dp[i][j], dp[i + 1][j])
+
+# 遷移不能なら-1、そうでないならdpテーブルの最末尾を出力
+if dp[-1][-1] == INF:
+    print(-1)
+else:
+    print(dp[-1][-1])
+</code></pre>
+itertools.productの中身が取り出される順番って環境によって固定なのだろうか？<br>
+少なくとも自環境やAtcoderの提出フォームでは上記のコードで動いたが、調べる余地はありそう。<br>
+<br>
+時間計算量は遷移部分の遷移先決定の部分がネックになり、\(O( N\cdot P^K \cdot K)\)になる。<br>
+……公式解説見るまで\(\cdot K\)の部分が抜けてた！ Kの値が小さい今回は大した違いが出ないとはいえ、場合によっては計算量が大きく変わるので怖い。<br>
+<br>
+実際の思考の流れとしては漠然と\((P+1)^K\)この情報を持っておけば良さそうだな～とだけ思っており、最初はP以上になるパラメータがあった場合はDPテーブルからはみ出るので切り捨てるとしていた。しかし、よくよく考えてみると超えたやつは全部同じとみなさないと、ちょうどのやつだけ拾うことになってバグると気が付いた。漠然と行けそうだと思ったタイミングで実装を始めるとこうなりがち。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
