@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC464C Plumage Palette</h1><br>
+問題文は<a href = "https://atcoder.jp/contests/abc464/tasks/abc464_c">こちら</a>。<br>
+色が変わる摩訶不思議な鳥を観察する問題。<br>
+<br>
+すべての鳥について、変化の回数は高々1回しかない。観察日数もそんなに長くない。<br>
+すると、全部を愚直に検証してもよさそうに思う。<br>
+<br>
+前準備として、各鳥の情報を、色が変化する日数の小さい順にソートして配列にもって置く。<br>
+その後は以下のように検証するのが良いだろう。<br>
+・仮想的な「0日目」の状態を連想配列で持っておく（keyが色の種類、valueがその色の鳥の数）。<br>
+　これは各\(A_i\)の値について調べれば良い。<br>
+・次に、now=0とし、iを1からMまで動かして以下の操作を行う。<br>
+→配列の先頭を見て、もしD_[now]=iなら、状態を記録している連想配列から\(A_{now}\)の鳥を1匹減らし、\(B_{now}\)の鳥を1匹増やす。その後nowを1インクリメントして同じ動作を行う。<br>
+　D[now]=iでないなら何もしない。<br>
+→連想配列に含まれるkeyの種類数を出力する<br>
+<br>
+実際には現在の鳥の種類数を管理する変数racesを用意して、連想配列をいじるのと同様に整合性を取るのが楽だろう。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+def dictadd(D, e):
+    global races
+    if e not in D:
+        D[e] = 1
+        races += 1
+    else:
+        D[e] += 1
+
+def dictminus(D, e):
+    global races
+    D[e] -= 1
+    if D[e] == 0:
+        D.pop(e)
+        races -= 1
+
+N, M = list(map(int,input().split()))
+Birds = []
+for _ in range(N):
+    Birds.append(list(map(int,input().split())))
+Birds.sort(key = lambda x:x[1])
+answer = []
+
+States = dict()
+idx = 0
+races = 0
+# イニシャライズ
+for i in range(N):
+    dictadd(States, Birds[i][0])
+
+for i in range(1, M + 1):
+    while idx &lt; N and Birds[idx][1] == i:
+        dictminus(States, Birds[idx][0])
+        dictadd(States, Birds[idx][2])
+        idx += 1
+    print(races)
+</code></pre>
+計算量は、各鳥をただ1度ずつみる前提と、全部の日をただ1度ずつ走査するという前提から、日数と鳥の数の多い方に依存するので、\(O(N + M)\)だ。<br>
+ループ内のwhile条件を逆に書くと、Birds[N]という存在しない場所を走査させてしまいエラーになるので注意（1敗）。よくやるんだけど、何でか治らないんだよねこのミス。<br>
+引数に指定していない変数を無理やりいじる良くないスタイルが出てしまっている。<br>
+動けばいいの精神は時に良くないと思うのでした。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>

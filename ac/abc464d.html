@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC464D Celester</h1><br>
+問題文は<a href = "https://atcoder.jp/contests/abc464/tasks/abc464_d">こちら</a>。<br>
+神力を用いて天気を変更し、嬉しくなる問題。<br>
+<br>
+晴れと雨が常に交互になるように並べ替えたらええんや！ とか考えそうだが、天気を交互にするために「天気を変更すると減る嬉しさ」より、「天気が交互になったことで得られる嬉しさ」の値が少なかったら全体的に損をすることになる。<br>
+しかし、i日目まで見て「天気が晴れのときの嬉しさの最大値」と「天気が雨のときの嬉しさ最大値」を記録しておけば、i+1日目のそれを求めるのは容易く、2つの最大値を見るのはもっと簡単。<br>
+そう考えてみると、DPの波動を感じてくる（天気が晴れか雨かの2通りで、途中過程を全列挙する必要がない、あたりから実際はもっと早めにそれを察したが）。<br>
+類題を解いたことがあったので実装の方針には困らなかった。<br>
+方針の概要はこんな感じ。<br>
+・2種類のdpテーブル(dp_sun,dp_rain)を用意し、「最終的なn日目の天気が晴れ/雨の場合の嬉しさの最大値」を記録する。<br>
+・遷移方法は……<br>
+・n日目の本来の天気が晴れだった場合、これを変更するかしないかで場合分けが必要。<br>
+→もし変更しないなら、「"n-1日目が雨の場合の最大値"にY[i-1]を加えた値」か、「"n-1日目が晴れの場合の最大値"」のうち大きい方が「n日目が晴れの場合の最大値」になる。<br>
+→もし変更するなら、「n-1日目の最大値」からX[i]を引いた値が「n日目が雨の場合の最大値」になる。<br>
+・n日目本来の天気が雨だった場合も、これを変更するかしないかで場合分けが必要、<br>
+→もし変更するなら、「"n-1日目が雨の場合の最大値"にY[i-1]を加えてX[i]を引いた値」か、「"n-1日目が晴れの場合の最大値"からX[i]を引いた値」のうち大きい方が「n日目が晴れの場合の最大値」になる。<br>
+→もし変更しないなら、「n-1日目の最大値」がそのまま「n日目が雨だった場合の最大値」になる。<br>
+<br>
+でも、よく考えると「その方針で問題がないこと」の証明って結構大変かも。<br>
+今回、途中で「握りつぶした」値が実は真の最大値を与えると仮定した場合、その握りつぶした後の値が辿る遷移過程をより大きい値で辿った方が最終の値が大きくなることから矛盾する、と考えれば腑には落ちる。<br>
+すべての遷移のパターンを網羅し、その時々の最大値を取っているからこそこの方法は上手く行く。<br>
+単なる貪欲法や、遷移を雑に省略した形式とは違う結果が得られるのはそういうわけなのだ。<br>
+実装例は以下の通り。時間計算量は\(O(N)\)でよさそう。<br>
+<pre><code class="language-python">
+T = int(input())
+mINf = -1 * 10 ** 100
+
+for t in range(T):
+    N = int(input())
+    S = input()
+    X = list(map(int,input().split()))
+    Y = list(map(int,input().split()))
+
+    # i日目の最終的な天気がsun/rainのときの暫定最大値
+    dp_sun = [ mINf for _ in range(N)]
+    dp_rain = [ mINf for _ in range(N)]
+
+    # イニシャライズ(0日目がもともと雨か晴れか)
+    if S[0] == "S":
+        dp_sun[0] = 0
+        dp_rain[0] = -1 * X[0]
+    else:
+        dp_sun[0] = -1 * X[0]
+        dp_rain[0] = 0
+
+    for i in range(1, N):
+        # i日目がもともと晴れのとき
+        if S[i] == "S":
+            dp_sun[i] = max(dp_rain[i - 1] + Y[i - 1], dp_sun[i - 1])
+            dp_rain[i] = max(dp_sun[i - 1] - X[i], dp_rain[i - 1] - X[i])
+        # i日目がもともと雨のとき
+        else:
+            dp_sun[i] = max(dp_rain[i - 1] - X[i] + Y[i - 1], dp_sun[i - 1] - X[i])
+            dp_rain[i] = max(dp_rain[i - 1], dp_sun[i - 1])
+
+    print(max(dp_sun[-1], dp_rain[-1]))
+</code></pre>
+2種類のDPテーブルを用意する問題、見たらパッと解けるようにしておきたいところ。<br>
+答えを1つ何か復元する方法とセットで出ることもあるので、気を付けたい。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
