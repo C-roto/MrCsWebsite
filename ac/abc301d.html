@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC301D Bitmask</h1><br>
+問題文は<a href="https://atcoder.jp/contests/abc301/tasks/abc301_d">こちら</a>。<br>
+2進表記の一部と上限が与えられ、上限以下の最大値を求める問題。<br>
+<br>
+色々考えた。<br>
+?を0か1かならDPって手もありそうだし、条件を満たす/満たさないなら二分探索も頭をよぎる。<br>
+一方で、DPは保持しておくべき情報が多すぎる（一部における最大値が全体の最大値につながるとは限らない）し、二分探索も「ある値以上であることと条件を満たすことが同値」という性質じゃないのでダメそう。<br>
+「ある方法が使えない」と確信を持てることも大事なことな気がする。<br>
+<br>
+結局色々考えた末、これが2進数なので貪欲法が普通に使えることに気が付く。<br>
+2以上の整数\(M\)について、2進法において\(M\)桁目が1である数と、\(M-1\)桁目以下がすべて1である数を比較すると、前者の方が勿論大きい(10進法では\(2^M\)と\(2^0+2^1+2^2+...+2^{M-1}=2^M-1\)だし、桁の趣旨を考えれば自明)。<br>
+ということは、桁が大きい方から見ていって「?を1にしても条件を満たすならそうする」という貪欲法が正当になりそうだ（それを取らずに、後から下桁を回収した方が大きくなる可能性は0）。<br>
+<br>
+元々1である位だけを取り出してまとめておくと計算しやすい。<br>
+?が全部0でも、もともとが1である位のみで構成される数が条件を満たす可能性があるので、その考慮を忘れないようにする。<br>
+僕は1回忘れて「なんで通らんのやろ～？」とか呟いていました。<br>
+<br>
+実装例はこちら。<br>
+<pre><code class="language-python">
+S = input()
+N = int(input())
+
+ones = 0
+ques = []
+for i in range(len(S)):
+    if S[-1 - i] == '1':
+        ones += 2 ** i
+    elif S[-1 - i] == '?':
+        ques.append(i)
+
+ques.reverse()
+
+answer = ones
+ok_flag = False
+for q in ques:
+    if answer + 2 ** q &lt;= N:
+        answer += 2 ** q
+        ok_flag = True
+
+if ok_flag:
+    print(answer)
+else:
+    if answer &lt;= N:
+        print(answer)
+    else:
+        print(-1)
+</code></pre>
+<a href="index.html">問題一覧へ</a>
+なんか策を弄したくなるけど、今回は単純な発想が一番早いという問題。<br>
+こういうのあんまり悩まないようにしたいんだけどね～……。<br>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
