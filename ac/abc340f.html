@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC340F S = 1</h1>
+問題文は<a href="https://atcoder.jp/contests/abc340/tasks/abc340_f">こちら</a>から。<br>
+座標平面上の2点が与えられ、面積1の三角形を作るための格子点を1つ出力する問題。<br>
+<br>
+結論：めっちゃ高校数学。<br>
+<br>
+とりあえず簡単な式で面積を表すことを試みたい。正弦使ったりヘロンの公式使ったり色々考えたけど、今回与えられる1点のうち1つが原点なので「点と直線の距離の公式」が簡単になることに気が付き、この辺りでぐちゃぐちゃすることを考えてみた。<br>
+すると、底辺の長さが距離公式の下部分を上手く約分して消滅してくれるので、絶対値付きの簡単な整数不定方程式が得られる。公式解説はこの辺りの解説を省略してまるで有名事実かのように式を与えているが、個人的には「知らんので導きました」ってタイプの話だと思う（まあこれを見て「この式丸暗記するか！」ってなる方が珍しい気もするんだけど）。<br>
+そういうわけでこの問題は、求める点を(A,B)とすると、\(XB-YA=2\)を満たす整数値\(A,B\)が存在するか否かを求める問題に帰着できる。大きさの制約については、アルゴリズムで得られる値の絶対値がざっくり\(XやY\)の値以下になることを評価できる気がする（厳密に証明してないのでホントかは怪しいが、現に通ってるんでたぶん大丈夫なんだろう……）。<br>
+で、その値を求めるのが拡張ユークリッドの互除法とか言われるアルゴリズムらしい。なんだそりゃと思ったが、高校数学でやる具体的に特殊解を1つ求める手順そのものだった。互除法の過程の式を全部抜き出し、値に式を代入していって解を出す、みたいなアレ。<br>
+とりあえずそれが分かったので、あとは書くだけ。無から錬成した結果2敗した、先人の知恵は大事。あとでよさそうな実装例を調べて知っておこうと思う。<br>
+結構ぐちゃぐちゃになってしまったが、実装例はこんな感じ。<br>
+<pre><code class="language-python">
+# |XB-YA| = 2の解を返すアルゴリズム
+def kakuchou(X, Y, g):
+    # Yの方がXより大きいときに反転する
+    # 互除法のアルゴリズムがX>=Yでしか正しく動かなそうなため
+    reverse_flag = False
+    if X &lt; Y:
+        reverse_flag = True
+        X, Y = Y, X
+
+    X, Y = X // g, Y // g
+
+    # Qsは商を保管しておく、As,Bsは
+    Qs = []
+    As = []
+    Bs = []
+    # Y == 1のときは割り算が実行されないようにして、条件を必ず満たす(1,0)を返すように設定
+    if Y == 1:
+        As.append(1)
+        Bs.append(0)
+    # 互除法する
+    while Y != 1:
+        Qs.append(X // Y)
+        X, Y = Y, X % Y
+
+    # 漸化式的に商から値を計算する
+    # len(Qs) == 0とY == 1が同値
+    if len(Qs) &gt;= 1:
+        As.append(Qs[0])
+        Bs.append(1)
+    if len(Qs) &gt;= 2:
+        As.append(-1 - (As[-1] * Qs[1]))
+        Bs.append(-Bs[-1] * Qs[1])
+    for i in range(2, len(Qs)):
+        As.append(As[i - 2] - (As[i - 1] * Qs[i]))
+        Bs.append(Bs[i - 2] - (Bs[i - 1] * Qs[i]))
+
+    # =1のときの解が上で出るから、2のときに直して調整する
+    d = 2 // g
+    if reverse_flag:
+        return d * -1 * Bs[-1], d * -1 * As[-1]
+    else:
+        return d * As[-1], d * Bs[-1]
+
+def gcd(X, Y):
+    if X &lt; Y:
+        X, Y = Y, X
+    while Y != 0:
+        X, Y = Y, X % Y
+    return X
+
+X, Y = list(map(int,input().split()))
+
+if X == 0:
+    if abs(Y) &gt; 2:
+        print(-1)
+    else:
+        print(2 // abs(Y), 0)
+elif Y == 0:
+    if abs(X) &gt; 2:
+        print(-1)
+    else:
+        print(0, 2 // abs(X))
+else:
+    # ベズーの等式の話(gcdが3以上になったらダメ)
+    aX, aY = abs(X), abs(Y)
+    g = gcd(aX, aY)
+    if g &gt; 2:
+        print(-1)
+    else:
+        a, b = kakuchou(aX, aY, g)
+        # 正負を考慮
+        if X &lt; 0:
+            b *= -1
+        if Y &lt; 0:
+            a *= -1
+        print(a, b)
+</code></pre>
+実際に手順を書くときには漸化式的に求めてやると良さそう。割り算が3回以上/2回/1回/0回行われるタイミングでそれぞれ漸化式をどこまで使う必要があるか変わってくるので、実装例ではバカ真面目にその通り書いてみた。<br>
+あとは0除算だったり、XとYの最大公約数が1か2かで式の形が変わってきちゃうので、そこの分岐もめっちゃ差し込みまくってしまった。ついでに、内部的にはXの方が大きくなるよう値を入れ替えて計算するreverse_flagを導入した。<br>
+結果的になんかごちゃっとしてしまった。数カ月経ったら「なぜか動くコード」化しそう。怖い。<br>
+<br>
+ともあれ、高校数学すぎる。<br>
+水diffの問題ってエグいイメージが大きいけど、この問題は初心者でも高校数学ができれば普通に解けそう。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
