@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC321D Set Menu</h1>
+問題文は<a href="https://atcoder.jp/contests/abc321/tasks/abc321_d">こちら</a>から。<br>
+セットメニュー全体の合計金額を求める問題。<br>
+<br>
+主菜と副菜全部の組み合わせについて個別に計算すると、時間計算量は\(O(NM)\)になってしまい、この問題の制約下だと遅すぎる。<br>
+一方で、主菜だけの金額の総和は簡単に求まる。\(P\)の存在を一回忘れると、各副菜についてその副菜を用いるセットメニューの総和は「主菜だけの金額の総和」+「副菜の金額×主菜の個数」になる。<br>
+そうなると、主菜の金額の総和を求めておくと、全体の時間計算量が\(O(N)\)まで減る。これはこの制約下なら早い。<br>
+\(P\)の存在をどうするかだが、\(A\)を昇順にソートしておけば二分探索をすることで、副菜\(B\)を固定した際の「\(A[i]+B\)の値が\(P\)を超えない境界となる\(i\)」を時間計算量\(O(\log{N})\)で求めることができる。<br>
+よって、主菜の総和は累積和などで求めておき、必要な部分だけ取り出して使うなどすれば、全体の時間計算量は\(O(M\log{N})\)になって、この制約下なら十分に高速となる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import bisect
+
+N, M, P = list(map(int,input().split()))
+A = list(map(int,input().split()))
+B = list(map(int,input().split()))
+
+A.sort()
+B.sort()
+
+Sa = [ 0 for _ in range(N)]
+Sa[0] = A[0]
+for i in range(1, N):
+    Sa[i] = Sa[i - 1] + A[i]
+
+answer = 0
+for i in range(M):
+    x = bisect.bisect(A, P - B[i])
+    answer += P * (N - x)
+    if x > 0:
+        answer += Sa[x - 1] + (B[i] * x)
+print(answer)
+</code></pre>
+二分探索+累積和ってなると、本当に典型という感じがする。<br>
+瞬発的に解くことができるようにしたい。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
