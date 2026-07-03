@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC268D Unique Username </h1>
+問題文は<a href="https://atcoder.jp/contests/abc268/tasks/abc268_d">こちら</a>。
+使いたいユーザーネームの候補から可能なものがあるかを探す問題。<br>
+<br>
+どんな問題においてもまず考えることだが、全探索したい！ できるか考える。<br>
+\(1 \leqq N \leqq 8\)なので、制約はかなり小さい。これだけ小さいと、「与えられた文字列で作ることのできるユーザーネームの候補」を全列挙してもさほど時間がかからないのではないか？ と考えられる。<br>
+一旦、\(N \geqq 2\)のときについて考える（\(N=1\)のときは"_"を挟めないため、以下の議論とは変わる）。<br>
+まず、各\(S_i\)の並び替えは\(N!\)通りある。<br>
+文字列は最大で16文字だから各\(S_i\)の文字数の合計を\(L\)と仮定すると、挟むことのできる"_"は\(16 - L\)個ある。これの割り振り方を考える。<br>
+\(i=1,...,N - 1\)に対し、\(S_i\)と\(S_{i+1}\)の間にある"_"の個数を\(x_i\)とすると、\(x_1+x_2+...+x_{N-1} \leqq 16-L\)を満たす正の整数たち\(x_i\)の組み合わせの個数を求める問題に帰着できる。<br>
+これは高校数学IA程度の知識があれば求まる。まず、各文字列の間に1つ以上の"_"が挟まるわけだから、それは先に差し込んでしまう。よって、\(x_i'=x_i + 1\)と置き換えてしまうことによって、\(x_1'+x_2'+...+x_{N-1}' \leqq 16-L-(N-1)\)を満たす非負整数たち\(x_i'\)の組み合わせの個数を求める問題になる。<br>
+これはいわゆる「仕切りと玉」の問題に帰着できる。\(N - 1\)個の仕切りを、\(17 - N - L\)個のボールの間もしくは両端に置く方法の個数を求める問題だ。\(i=1,2,...,N-2\)について、左から\(i\)番目の仕切りと\(i + 1\)番目の仕切りの間にある球の個数を\(x_i\)の値と対応させればよい。\(i=N-1\)については、左から\(N-1\)番目（つまり一番右）の仕切りと右端までにある球の数を\(x_{N-1}\)とすればよい。（今回の問題だと、左端の仕切りより左にはみ出た玉は使わなかったものと考えれば"\(\leqq\)"の部分が表現できる）。<br>
+となると大体\({}_{17-N-L} C_{N-1}\)程度の組み合わせの可能性があり得る。文字列の順番\(N! < 5 * 10^4\)通りを考慮して、\(N!{}_{17-N-L} C_{N-1}\)通りすべてを計算するのは現実的だろうか？<br>
+見積もりがすごく微妙な値にしかならないので、実際に以下のようなコードを書いて調べてみる(\(17-n-l < n-1\)になると0が出力されて正しい値が出ないので、1に修正している)。<br>
+<pre><code class ="language-python">
+import math
+
+maximum = 0
+for n in range(2, 8 + 1):
+    for l in range(n, 16 + 1):
+        if 17 - l - n >= 0 and n - 1 >= 0:
+            maximum = max(maximum, max(math.comb(17 - l - n, n - 1), 1) * math.factorial(n))
+        print(n, l, max(math.comb(17 - l - n, n - 1), 1) * math.factorial(n))
+print(maximum)
+</code></pre>
+すると、最大でも\(43200\)通りの生成候補があることが分かった(N=8のときだ。並び替えの方が支配的なんだなあ)。<br>
+この程度であれば、1候補の生成に\(O(N)\)程度の時間がかかるとしても、余裕で生成を終えることが可能だろう。<br>
+<br>
+というわけで、後はそれを実際に作るのみ……ではない。<br>
+\(N=1\)の場合が候補から漏れているからだ。<br>
+といっても、\(N=1\)の場合は単純で、希望するユーザーネームが使用不可リストの中に入っていないかどうかを調べれば良い。入っていたらダメで、入っていなかったらオーケーだ。<br>
+……というわけではない。入力制約から、\(S\)の長さは2以下であることがあり得る。つまり、例えばユーザーネーム"ac"などは、そもそも希望したとて使えない。それを弾くようにしておかないといけないわけだ（1敗）。<br>
+ちなみに\(N \geqq 2\)の場合は文字列の長さが3以上になることが確定している（\(S_1,S_2\)は1文字以上で、間に"_"を挟んでいるから）ので、チェックは不要である。<br>
+<br>
+ここまでくれば、後は実装するのみだ。<br>
+文字列がリストの中にあるかどうかの判定はハッシュテーブルを使えば定数時間で完了する。pythonならsetで充分だ。<br>
+僕はitertools.combinations_with_replacementを使って仕切りの位置を全出力し、それに対応する各所の"_"の個数を全列挙する方法をとった。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import itertools
+
+N, M = list(map(int,input().split()))
+S = []
+T = set()
+for i in range(N):
+    S.append(input())
+for i in range(M):
+    T.add(input())
+
+L = 0
+for i in range(N):
+    L += len(S[i])
+
+if N == 1:
+    if S[0] in T or len(S[0]) < 3:
+        print("-1")
+    else:
+        print(S[0])
+else:
+    shikiri_gen = itertools.combinations_with_replacement([i for i in range(18 - L - N)], N - 1)
+    shikiri = []
+    for s in shikiri_gen:
+        tmp = [ s[i + 1] - s[i] for i in range(len(s) - 1)]
+        tmp.append(17 - L - N - s[-1])
+        shikiri.append(tmp)
+
+    it = itertools.permutations([i for i in range(N)])
+
+    answer = '-1'
+    for perm in it:
+        for t in shikiri:
+            check_s = []
+            for i in range(N):
+                check_s.append(S[perm[i]])
+                if i < N - 1:
+                    check_s.append("_" * (t[i] + 1))
+            if "".join(check_s) not in T:
+                answer = "".join(check_s)
+                break
+        if answer != '-1':
+            break
+
+    print(answer)
+</code></pre>
+長いネストはあまり良くない気もするが、とりあえず。<br>
+総じて、実装よりも方針検討の方が本質な感じのする問題。僕のコードだとあり得るユーザーネームの候補の個数を\(N_{user}\)とすると、ユーザーネームの候補を生成するのがネックになり、\(O( N_{user} \cdot N))\)程度の時間計算量がかかる。先ほど見た通り、これなら全く以て許容範囲といえるだろう。<br>
+<br>
+競技で成果を出すなら早く解く必要はあるので、方針検討は非常にザックリとだけで終わるケースも多い。<br>
+一方で、ある程度どれくらいの時間がかかるのか事前に見積もることそのものも楽しくはある。10割趣味でやってる身としては、数学的な道具立てを使って「大体これくらいの時間で済むはず」を見積もる時間の方も大事にしたい。<br>
+特に競技中だと「証明は抜きで良いからとりあえず実装が通れば勝ち」というケースも多い。僕もいくらかそれに甘えているところはあるが、やっぱり「なぜこれで動くのか」、「なぜ（複数の実装がある中で）これが良いのか」をある程度納得できるようにはしたい（如何に難しくとも、最低限証明の方針だけでも知っておきたい）。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
