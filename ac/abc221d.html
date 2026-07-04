@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC221D Online games</h1>
+<br>
+問題は<a href="https://atcoder.jp/contests/abc221/tasks/abc221_d">こちら</a>。<br>
+何人ログインしていた日があるかを出力する問題。<br>
+<br>
+日数に注目して累積和を取ろう、と最初は思ったわけだが、制約上それは厳しい。<br>
+\(10^9\)日をシミュレーションすることはできない。<br>
+一方で、人の出入り自体は2N回しか起きていないので、こちらを主体に見るのは良さそうだ。<br>
+ログインする日とログアウトする日をすべて記録しておくと、それ以外の日にログインしている人の数が増減することはないから、間の日数に何人いたかさえ記録しておけばよい。<br>
+<br>
+具体的には<br>
+・ログインしているユーザーの人数humansと、サービス開始からの経過日数dateを記録しておく。また、配列Dを初期化しておく<br>
+・あるユーザーがログイン/ログアウトするなら、今の経過日数-dateをD[humans]に加える。<br>
+→ログインする場合、humansを1インクリメントする。ログアウトする場合、humansを1デクリメントする。<br>
+→dateを今の経過日数で上書きする<br>
+というような操作を繰り返せばよい。<Br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+Logins = []
+for i in range(N):
+    a, b = list(map(int,input().split()))
+    Logins.append([a, 0])
+    Logins.append([a + b, 1])
+
+D = [ 0 for _ in range(N)]
+
+humans = 0
+date = 1
+Logins.sort()
+
+for i in range(2 * N):
+    if humans > 0:
+        D[humans - 1] += Logins[i][0] - date
+    
+    if Logins[i][1] == 0:
+        humans += 1
+    else:
+        humans -= 1
+    date = Logins[i][0]
+
+print(*D)
+</code></pre>
+累積和に囚われると辛いが、本質的にはあまり難しいことを要求されない問題。<br>
+にしても、\(10^{100}\)日続くソシャゲとはいったい何なのだろう……。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
