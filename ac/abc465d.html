@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC465D X to Y</h1>
+問題文は<a href="https://atcoder.jp/contests/abc465/tasks/abc465_d">こちら</a>から。<br>
+正整数Xに特定の操作を行い、正整数Yにするための最小手数を求める問題<br>
+<br>
+一見するとなんだかよく分からない問題。遷移できない場合がない、ということが問題で保証されているのに驚く。<br>
+とりあえず手を動かしてみると、例えば\(x > Y\)のときは\(\lfloor \frac{x}{K} \rfloor = y\)としてやる（つまり\(x\)の値を小さくする。以降こちらの操作を「小さくする方の操作」と呼び、そうでない方を「大きくする方の操作」とする）のが得だろうということが分かる。でも、大きくできるときは可能な限り大きくした方が良いかというと、そうでもない。この方面での考察はやめた方が良さそうだ。<br>
+ある\(x\)からあり得る\(y\)へのすべての遷移を確かめるというのも手ではあるが、今回は\(X,Y,K\)の制約がやたらでかいので多分やめた方が良い（と思ったのだが、後から公式解説を見てこの方針でちゃんと考えていればまた別の方法で解けたことに気が付いた）。<br>
+<br>
+色々ガチャガチャしてると、以下のような疑問が浮かぶ。<br>
+・\(Y\)に辿り着くには\(\lfloor \frac{Y}{K} \rfloor\)が作れれば良い。\(X\)を\(\lfloor \frac{X}{K} \rfloor\)に置き換えていく過程で、\(\lfloor \frac{Y}{K} \rfloor\)を作るにはどうしたらいいだろう<br>
+例えば、\(X, Y, K = 27, 14, 5\)として例を見てみよう。<br>
+\(14\)を作るには、\(14 = 2 \codt 5 + 4\)なので\(2\)が作れれば良い。\(2 = 0 \codt 5 + 2\)であるから、\(2\)を作るには\(0\)が作れれば良い。\(X\)を\(\lfloor \frac{X}{K} \rfloor \)にする操作は、明らかに\(\lfloor \log_K{X} \rfloor\)回繰り返せば\(0\)になる。<br>
+今回は\(K=5\)で作りたい数が\(2\)なので明らかに作れるが、\(0\)にした後確実にどんな数でも作ることができるだろうか？ これについては後で考察結果を書くが、結論から言えば\(\lfloor \log_K{Y} \rfloor\)回以内の操作で必ずできる。<br>
+よって、最低でも\(\lfloor \log_K{X} \rfloor + \lfloor \log_K{Y} \rfloor\)回の操作で任意の遷移ができることが分かる。<br>
+なるほど、問題で保証されていたことの背景はこれか、と納得した。<br>
+<br>
+一旦\(0\)にした後にどんな数でも作れるか？ という問いの答えだが、どうやって作るかを考えてみると分かる。<br>
+例えば\(K=5\)のとき、\(Y=16\)を作れるかを考えてみる。これは\(y= 0 \cdot 5 + 3\)とした後、\(y = 3 \cdot 5 + 1\)とすればよい。より一般には\(x = R\)としたとき、大きくする方の操作をすると\(y = R \cdot K + r \hspace{0.5em}(0 \leqq e \leqq K - 1)\)に変えることができる。<br>
+少し考えて、これが「\(K\)進法における桁シフト」であることに気が付く。<br>
+これに気づいた瞬間、以下のことが連鎖的にわかる。<br>
+・「小さくする方の操作」は、\(x\)を\(K\)進法表記した時に右に1シフトすることと同義。<br>
+・「大きくする方の操作」は、\(x\)を\(K\)進法表記した時に左に1シフトし、最下位桁を\(0\)以上\(K-1\)以下の任意の値にすることと同義。<br>
+そして、この操作は明らかに任意の正整数を\(K\)進法表記で作るのに十分だ。シフト回数についてもほぼ自明だろう。任意の2以上の正の整数\(K\)について、\(K\)進法表記が一意であることは明らかだから、複数通りの表記があることも心配しなくて良い。<br>
+<br>
+こうしてここまでの考察がすべて繋がり、この問題を解く方法の核心が分かった。<br>
+後は、テストケースの1つ目のような、\(\lfloor \log_K{X} \rfloor + \lfloor \log_K{Y} \rfloor\)回未満の操作で終わる例をどう考えるかだけだ。<br>
+しかしこれもそれほど難しくない。できるのが「シフト操作」だと分かれば、\(X,Y\)を\(K\)進法表記した最初の何桁かが一致している場合、わざわざ過剰に右シフトしてそれを消さない方が得になる。<br>
+よって、\(K\)進法表記の上何桁が一致しているかを確認し、\(X\)を一致している桁まで右シフトで消し、左シフトで\(Y\)と一桁ずつ一致させていけば、それが最小の回数になる(厳密な証明は省略するが、まあほとんど明らかだろう)。<br>
+これですべての謎が解けた。あとは実装するのみだ。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+T = int(input())
+
+for t in range(T):
+    X, Y, K = list(map(int,input().split()))
+
+    # XとYのK進法表記を記録
+    KshinX = []
+    KshinY = []
+
+    while X != 0:
+        KshinX.append(X % K)
+        X //= K
+    while Y != 0:
+        KshinY.append(Y % K)
+        Y //= K
+
+    # checkは「X,Yが(K進法で)上何桁までが一致しているか」を示す
+    check = 0
+    answer = 0
+    for i in range(min(len(KshinX), len(KshinY))):
+        if KshinX[-1 -i] != KshinY[-1 -i]:
+            break
+        check += 1
+    # Xを右に(XのK進桁数)-check回シフトし、左に(YのK新桁数)-check回シフトすればよい
+    answer += len(KshinX) + len(KshinY) - 2 * check
+    print(answer)
+</code></pre>
+時間計算量は、テストケース1つあたり\(O(\log_K{X} + \log_K{Y})\)なので、テストケース全体では\(O(T(\log_K{X} + \log_K{Y}))\)になり、これは制約下において十分高速だろう。<br>
+9割9分が数学的考察、残りが実装って感じの問題。<br>
+ゴリゴリ実装しようみたいな問題とか、典型で瞬時に倒そう見たいな問題も嫌いじゃないが、こういう「考察が全部繋がって頭がスパークする」みたいな問題も好き。尤も、それは「脳内にスパークが走らないと解けないだけの能力しか私にない」ということかもしれないが。<br>
+<br>
+ここまでを書き終えた公式の解説を見たが、seekworserさんによるユーザー解説と考え方が一致しているようだった。<br>
+個人的にはこちらの方が自然な気がするが、公式解説のやり方も興味深く、言われてみれば確かにそれで求まる（XだけでなくY側からも近づけていく）というのがよく分かる。<br>
+僕はグラフを書こうとしてめんどくさくなってやめたので、ちゃんと遷移を確かめればこちらの方法で実装していたかもしれない。そして多分その方が楽だ。まだまだ修行が足りないなあ、と実感。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
