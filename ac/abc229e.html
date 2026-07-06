@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC229E Graph Destruction</h1>
+問題文は<a href="https://atcoder.jp/contests/abc229/tasks/abc229_e">こちら</a>から。<br>
+グラフの辺を消していき、連結成分の個数を逐次答える問題。<br>
+<br>
+前から順に考えていくと非常に面倒なことになる。<br>
+最初にいくつの連結成分があるのか、それが操作によって減るのか増えるのか（消し方によってはどっちもあり得る）というのは正直無理。<br>
+その点、後ろから考えていく方が簡単だ。絶対に最後の頂点が消えれば連結成分は0だし、そこから遡る方が楽そうに思える。<br>
+そして、「頂点を消す」操作は逆転させると「頂点を増やす」操作に変わる。頂点を増やして連結成分を考える……それはUnion-Findの仕事だろう。<br>
+Union-Findの自己ライブラリに連結成分数を示す(self.groupnumber)を作っておき、以下のようにすればよい。<br>
+・頂点を増やすたび、連結成分のカウントを1増やす。<br>
+・Union操作でまだ未併合な2頂点同士を併合するたび、連結成分のカウントを1減らす。<br>
+連結成分が増減するタイミングはこれしかないので、この操作だけを考えればそれで正当だ。<br>
+<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+class DisjointSetUnionfind:
+    def __init__(self, N: int):
+        self.number = N
+        self.parent = [ -1 for _ in range(N)]
+        self.size = [ 1 for _ in range(N)]
+        self.groupnumber = 0
+
+    def find(self, v : int):
+        compress = []
+        while self.parent[v] != -1:
+            compress.append(v)
+            v = self.parent[v]
+        for c in compress:
+            self.parent[c] = v
+        return v
+
+    def union(self, u: int, v: int):
+        ru = self.find(u)
+        rv = self.find(v)
+        if ru != rv:
+            if self.size[ru] &lt; self.size[rv]:
+                ru, rv = rv, ru
+            self.groupnumber -= 1
+            self.parent[rv] = ru
+            self.size[ru] += self.size[rv]
+
+    def same(self, u: int, v: int):
+        return self.find(u) == self.find(v)
+
+N, M = list(map(int,input().split()))
+G = [ set() for _ in range(N)]
+for _ in range(M):
+    a, b = list(map(int,input().split()))
+    a -= 1
+    b -= 1
+    G[a].add(b)
+    G[b].add(a)
+
+uf = DisjointSetUnionfind(N)
+
+answer = [ 0 for _ in range(N)]
+for i in range(N - 1, 0, -1):
+    uf.groupnumber += 1
+    for p in G[i]:
+        if i &lt; p:
+            uf.union(i, p)
+    answer[i - 1] = uf.groupnumber
+
+for i in range(N):
+    print(answer[i])
+</code></pre>
+典型と言えば典型。Union-Findを使う「頂点を消す」問題は、逆転して「頂点を増やす」操作にすると楽！<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
