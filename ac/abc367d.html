@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC465D Pedometer</h1>
+問題文は<a href="https://atcoder.jp/contests/abc465/tasks/abc367_d">こちら</a>から。<br>
+時計回りで歩く歩数が特定の数の倍数になるかを確かめる問題。<br>
+<br>
+すべてのスタートとゴールの選び方は\(N(N-1)\)通りあるから、これをすべて試すのは非効率的。<br>
+「スタートとゴールを決める」に囚われると、高々定数倍程度の改善しかできず困ることになる。<br>
+発想を変えてみる。毎回スタートとゴールを決めて計算すると、「すでに計算した場所」まで多重に計算することになり、面倒だ。<br>
+こういう場合は「始点を一致させて累積和をとる」と、計算量を削減できるケースが多い。<br>
+具体的にはこういうことだ。休憩所\(t\)から\(s\)までの歩数は、休憩所\(1\)から\(s\)までの歩数から、\(1\)から\(t\)までの歩数を引くことによって求められる。<br>
+そして、休憩所\(1\)から\(k\)までの距離は、休憩所\(1からk-1\)までの距離に、\(k-1からk\)までの距離を加えればよく、これらは定数時間で計算可能だ。<br>
+\(s\)のほうが\(t\)より小さい場合は、\(s\)を\(s+N\)とみなして計算すればよく、結局全体として時間計算量は\(O(N)\)程度で済むはずだ。<br>
+あとは「\(M\)の倍数であるか」のチェックが必要だ。以下、休憩所\(1\)から休憩所\(k\)までの距離を\(S_{k}\)とする。<br>
+これは、\(i=1,2,...,N-1\)について、\(S_{i+1},S_{i+2},...,S_{i+N-1}\)の中に、\(M\)で割った余りが\(S_{i}\)と一致するものがいくつあるかを調べればよい。<br>
+ある2整数について、\(M\)で割った余りが等しいなら、その差は\(M\)の倍数になるからだ。<br>
+これは以下の実装例の通り、連想配列を使えば簡単に管理ができる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+def dictplus(e, D):
+    if e not in D:
+        D[e] = 1
+    else:
+        D[e] += 1
+
+N, M = list(map(int,input().split()))
+A = list(map(int,input().split()))
+
+S = [ 0 for _ in range(2 * N)]
+for i in range(2 * N - 1):
+    S[i + 1] += (A[i % N] + S[i]) % M
+
+D = dict()
+for i in range(N):
+    dictplus(S[i], D)
+
+answer = 0
+answer += D[S[0]] - 1
+for i in range(N - 1):
+    D[S[i]] -= 1
+    dictplus(S[i + N], D)
+    answer += D[S[i + 1]] - 1
+print(answer)
+</code></pre>
+これも全然典型なのだが、いかんせん累積和とか苦手で結構見逃しがち。<br>
+累積和の関連分野でもある尺取り法とか結構ミスるし、勉強がいりますね。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
