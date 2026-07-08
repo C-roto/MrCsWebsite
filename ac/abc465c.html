@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC465C Reverse Permutation</h1>
+問題文は<a href="https://atcoder.jp/contests/abc465/tasks/abc465_c">こちら</a>から。<br>
+反転操作を繰り返した後の数列を求める問題。<br>
+<br>
+ガチャガチャして、前から順に操作後の処理を記録するの大変だなあ、などと思う。<br>
+一方で、逆順に操作を見ると簡単になることに気が付く。<br>
+例えば\(N=6\)の場合を考えよう。5回までの操作を終えた直後は、どうあっても6は末尾にあるはずだ。<br>
+\(1,2,...,5\)に5回目までの操作を終えた列を\(R_5\)とすると、\(R_5,6\)という状態になる。<br>
+列\(R\)を反転させた列を\(R'\)と書くとする。<br>
+もし6回目の操作が"o"なら、数列全体は\(6,R_{5}'\)になる。"x"なら\(R_5,6\)のままだ。<br>
+つまり、6の位置は先頭か末尾のいずれかで、それは6回目の操作がどうであったかだけに依存する。<br>
+<br>
+5に遡って考えてみても、これはほぼ同じだ。<br>
+\(1,2,3,4\)に4回目までの操作を終えた後のを\(R_4\)と書くなら、\(R_4,5\)と書ける。<br>
+これは、5回目の操作が"o"か"x"によって\(R_5\)が\(5,R_{4}'\)になるか\(R_4,5\)のままか決まり、その後6回目の操作によって数列全体のどの位置に5がいるか決まる。<br>
+端的に言えば、最後2回が"xx"か"oo"なら、5は後ろから2番目になり、"xo"や"ox"なら5は先頭になる。<br>
+ここから得た知見を実装に活かしていく。<br>
+<br>
+実装する内容としては以下の通りだ。<br>
+・答えの配列Aを、N個の-1で初期化しておく（この-1は未確定の意味）。
+・入力数列\(P\)を長さ\(N\)の配列にもっておく（問題の場合\(P=(1,2,...,N)\)である）。
+・\(i=N,N-1,...,1\)の順にSを見ていく。<br>
+→もしSのi文字目からN文字目までに"o"が偶数回登場するなら、数列Pのi項目を、Aにおいてその時点で-1である（つまり未確定である）最も後ろの位置に確定する。<br>
+→Sのi文字目からN文字目までに"o"が奇数回登場するなら、数列のi項目を、Aにおいてその時点で-1である最も前の位置に確定する。<br>
+・\(A\)を出力する。<br>
+アルゴリズムの正当性については列の長さに関する数学的帰納法で示せると思う（実際に細かく示してはいない）。直観としては「帰納的に明らか」としたい。<br>
+実装例は以下のとおりである。<br>
+<pre><code class="language-python">
+N = int(input())
+S = input()
+
+A = [ 0 for _ in range(N)]
+M = 0
+front = 0
+back = N - 1
+for i in range(N, 0, -1):
+    if S[i - 1] == 'o':
+        M += 1
+    if M % 2 == 1:
+        A[front] = i
+        front += 1
+    else:
+        A[back] = i
+        back -= 1
+
+print(*A)
+</code></pre>
+計算量は\(O(N)\)で、充分高速。<br>
+別に難しくはないのだけれど、「後ろから見る」に思い至るかが鍵。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
