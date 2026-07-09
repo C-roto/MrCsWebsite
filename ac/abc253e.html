@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC253E Distance Sequence</h1>
+問題文は<a href="https://atcoder.jp/contests/abc253/tasks/abc253_e">こちら</a>から。<br>
+条件を満たす数列がいくつあるかを求める問題。<br>
+<br>
+注目するのが\(i\)番目と\(i + 1\)番目だけだから、DPみが強い。<br>
+例えば、\(dp_{i,j}\)を「数列の\(i\)項目まで見た時点で、末尾が\(j\)である条件を満たす数列の個数」とするのは良さそうである。<br>
+ただし、こうすると複数の遷移元から次の遷移先へ値が寄与するので、普通にやるとTLEする可能性もある。<br>
+\(i\)項目までで末尾が\(j\)の数列であって、\(i-1\)項目の値としてあり得るものを列挙すると、1から\(j-K\)までと、\(j+K\)から\(M\)までである。<br>
+末尾が\(j+1\)の場合は添え字が1ずつずれるわけだから、直前の寄与分から\(dp[i-1][j+K]\)のものを除いて、\(dp[i-1][j-K+1]\)のものを加えるだけでよい。<br>
+これを利用すれば、累積和の応用のような感じで計算量を減らすことができる。<br>
+実装例は以下の通り。以下ではその累積和の部分を値tmpに担わせている。<br>
+<pre><code class="language-python">
+N, M, K = list(map(int,input().split()))
+
+# dp[i][j]はi番目までを見たときに末尾がjである条件を満たす数列の個数
+dp = [ [0 for _ in range(M + 1)] for _ in range(N)]
+mod = 998244353
+
+for j in range(1, M + 1):
+    dp[0][j] = 1
+
+for i in range(1, N):
+    tmp = 0
+    for j in range(K + 1, M + 1):
+        tmp += dp[i - 1][j]
+    high_idx = K + 1
+    low_idx = 2 - K
+    tmp %= mod
+    for j in range(1, M + 1):
+        dp[i][j] += tmp
+        if 1 <= high_idx <= M:
+            tmp -= dp[i - 1][high_idx]
+        if M >= low_idx >= 1:
+            tmp += dp[i - 1][low_idx]
+        high_idx += 1
+        low_idx += 1
+        tmp %= mod
+print(sum(dp[-1]) % mod)
+</code></pre>
+DPだけど、単にDPするのではなく、一ひねりある問題だった。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
