@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC219D Strange Mirroring</h1>
+問題文は<a href="https://atcoder.jp/contests/abc380/tasks/abc380_d">こちら</a>から。<br>
+なが～～～～～～い繰り返し文字列の特定の箇所をこたえる問題。<br>
+<br>
+\(K_i\)は\(10^{18}\)になることもあるので、順に文字列を生成しようものなら1クエリでTLEするケースもありうる。<br>
+文字列の生成方法を見ると、特徴的な形をしている。実際に紙に書いてみると、例えば文字列の\(N\)文字目は\(2 * N\)文字目の大文字/小文字を反転させたものであるし、\(3*N\)番目は\(N\)番目と同じもので、\(4 * N\)番目はそれと大小逆……のように繰り返される。<br>
+とりあえず大小を無視すると、同じ種類の文字が\(N\)回ごとに繰り返されるから、\(N\)で割った余りを見ようという発想にはなる。<br>
+<br>
+もう少し思考を進めてみる。<br>
+\(i &gt; N\)について、\(i\)文字目と同じ種類の文字がどこに登場するか、という視点で考えてみる。<br>
+数列を\(m\)回操作すると、長さは\(2^m \cdot N\)になっているわけなので、\(2^{m-1} \cdot N &gt; i \geqq 2^m \cdot N\)とすると、\(i\)文字目の大小を反転させたものが\(i - 2^{m-1} \cdot N\)番目と一致するはずだ。<br>
+ということは、この問題は文字列の\(i - 2^{m-1} \cdot N\)番目を求める問題と実質的には同じということがわかるから、再帰的にこの問題を解くことができる。<br>
+<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+def ulreverse(s):
+    if s.islower():
+        return s.upper()
+    else:
+        return s.lower()
+
+S = input()
+Q = int(input())
+K = list(map(int,input().split()))
+
+answer = []
+for q in range(Q):
+    k = K[q]
+    if 1 <= k <= len(S):
+        answer.append(S[k - 1])
+    else:
+        m = 1
+        while not(len(S) * 2 ** (m - 1) < k <= len(S) * 2 ** m):
+            m += 1
+        
+        rev = 0
+        while m > 0:
+            if k > len(S) * 2 ** (m - 1):
+                k -= len(S) * 2 ** (m - 1)
+                rev += 1
+            m -= 1
+
+        if k == 0:
+            k = len(S)
+
+        if rev % 2 == 0:
+            answer.append(S[k - 1])
+        else:
+            answer.append(ulreverse(S[k - 1]))
+print(*answer)
+</code></pre>
+いわゆるダブリングとか呼ばれる手法とほとんど同じような感覚で求めることができる。<br>
+ちょっと前までここの思考速度が結構遅かったので、慣れはありそう。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
