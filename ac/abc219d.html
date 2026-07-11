@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC219D Strange Lunchbox</h1>
+問題文は<a href="https://atcoder.jp/contests/abc219/tasks/abc219_d">こちら</a>から。<br>
+たこやきとたいやきをいっぱい食べる問題。<br>
+<br>
+「\(i\)個目の弁当を選ぶか選ばないか」が重要で、選び順は関係なく、最後に特定の個数を得ているかがポイントになるという点から、DPで高速に解けることを疑ってみる。<br>
+端的に言えば\(dp[i][j][k]\)は「\(i\)個目の弁当を見たとき、たこ焼き\(j\)個とたい焼き\(k\)個を得るのに必要な最小な弁当の個数」とするとどうだろうか。<br>
+\(X,Y\)個より多くたこ焼きやたい焼きを手に入れた場合は、ちょうど\(X,Y\)個の場合と合流させて良い（少ない弁当の個数で済むなら、たこ焼きやたい焼きの個数が超過しても問題ない）。<br>
+<br>
+上記を踏まえて（配るDPの形で）遷移を考える。\(dp[i-1][j][k]\)から遷移できる箇所は2か所あり、<br>
+・\(dp[i][j][k]\)（\(\i\)個目の弁当箱を取らない場合。たこ焼きとたい焼きの個数は変わらない）<br>
+・\(dp[i][j + A[i]][k + B[i]]\) (\(i\)個目の弁当箱を取る場合。\(i\)個目の弁当箱に入っているたこ焼きとたい焼きの個数が増える)<br>
+である（もし\(j + A[i], k + B[i]\)が\(X,Y\)を超えたら\(X,Y\)の時の値に集約すればよい）。<br>
+初期値を無限大に設定し、常にその時の最小の値を取るように遷移を考えていけば、\(dp[N][X][Y]\)の値が求める最小値になる。<br>
+<br>
+あり得る\(i \leqq 300, j \leqq 300, k \leqq 300\)の範囲で調べ上げればよい。時間計算量は\(O(NXY)\)で、この制約下なら高速だ。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+X, Y = list(map(int,input().split()))
+A = [ 0 for _ in range(N)]
+B = [ 0 for _ in range(N)]
+for i in range(N):
+    A[i], B[i] = list(map(int,input().split()))
+INF = 1000
+
+#dp[i][j][k] i番目までの弁当を見たときにたこ焼きj個とからあげk個を達成するのに必要な弁当の最小値
+dp = [ [ [ INF for _ in range(Y + 1)] for __ in range(X + 1)] for ___ in range(N)]
+a, b = A[0], B[0]
+if a > X:
+    a = X
+if b > Y:
+    b = Y
+dp[0][a][b] = 1
+dp[0][0][0] = 0
+
+for i in range(1, N):
+    for j in range(X + 1):
+        for k in range(Y + 1):
+            a = A[i] + j
+            b = B[i] + k
+            if a > X:
+                a = X
+            if b > Y:
+                b = Y
+            
+            # 弁当iを取らない場合
+            dp[i][j][k] = min(dp[i - 1][j][k], dp[i][j][k])
+            # 弁当iを取る場合
+            dp[i][a][b] = min(dp[i - 1][j][k] + 1, dp[i][a][b])
+
+if dp[-1][X][Y] == INF:
+    print(-1)
+else:
+    print(dp[-1][X][Y])
+</code></pre>
+現代基準ではそんなに難しい問題ではないような気もする（実際、のちにこれと同じ解き方を実装するとTLEするため、もう一段の工夫が必要な問題が出ていた）。<br>
+ある時の非有名問題は、いつか有名問題へと変わるケースは多い。<br>
+競技者の進歩、界隈の常識の進歩ってあるよな～みたいなことを思った。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
