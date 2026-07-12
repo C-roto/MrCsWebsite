@@ -42,3 +42,11 @@ footer {
   text-align: center;
   color: gray;
 }
+
+
+@media (max-width: 500px){
+    body {
+      font-size: 15px;
+      overflow-wrap: anywhere;
+     }
+}
