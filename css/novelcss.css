@@ -46,7 +46,7 @@ footer {
 
 @media (max-width: 500px){
     body {
-      font-size: 15px;
+      font-size: 20px;
       overflow-wrap: anywhere;
      }
 }
