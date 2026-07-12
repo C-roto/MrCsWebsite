@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC466C Count Close Pairs</h1>
+問題文は<a href="https://atcoder.jp/contests/abc466/tasks/abc466_c">こちら</a>から。<br>
+数直線上の与えられた点のペアについて、その距離が1以下である者の組数を出力する問題。<br>
+<br>
+インタラクティブジャッジの問題。珍しい。過去問を漁っていても1回か2回くらいしか解いた記憶がない。<br>
+いつもの問題と見た目が変わるが、本質的にやっていることは「制約範囲内で何が来ても正しく結果が出るプログラムを記述すること」なので、焦らずいきたい。<br>
+今回の問題についてだと、全部の点のペアを逐一チェックすると\(N^2\)通りあるわけで、\(N\)が充分大きいとき、\(2N\)回のランダムな質問で答えをチェックすることは難しくなる。<br>
+一方で、例えば\(i < j + 1\)について点\(i\)と点\(j\)の間の距離が1以下なら、点\(i+1\)と点\(j\)の間の距離も1以下になるはずだ（小さい順に左から点が与えられているという制約があるため）。<br>
+これを利用すると大きく計算量を減らすことができるだろう。<br>
+<br>
+最初は「ある点と点の距離が1以下なら、その中にある点同士の組み合わせは全部条件を満たす」として、距離1以下の2点を探す方針で書いていたが、これはダブりが出てしまうので上手く行かないし、何なら\(2N\)回以下の質問で終わるかも怪しい。<br>
+「漏れなくダブりなく」と考えると、例えば「ある点\(j\)を左端としたとき、条件を満たす右端の点\(i\)はいくつある？」という問いの答えを各\(j\)ごとに列挙すれば漏れもダブりも起きないことに気づく。<br>
+後は尺取り法の要領で、左端と右端を動かせばよい。以下の実装例でidxとなっているのが右端、jdxとなっているのが左端で、何をしているかは実装例を見てもらうのが早いように思う。<br>
+以下の通りだ。<br>
+<pre><code class="language-python">
+N = int(input())
+
+answer = 0
+idx = 1
+jdx = 2
+while jdx <= N:
+    print("?", idx, jdx)
+    if input() == "Yes":
+        # 半開区間[idx, jdx)にある点はすべて条件を満たす
+        p = (jdx - 1) - (idx - 1)
+        answer += p
+        # 右端を一つ進める
+        jdx += 1
+    else:
+        # 少なくとも今のidxとjdxの組は条件を満たさない
+        # idxを一つ増やし、次の左端を調べる
+        idx += 1
+
+    if idx == jdx:
+        jdx += 1
+
+print("!", answer)
+</code></pre>
+計算回数だが、1回計算するごとにidxかjdxのどちらか一方が必ず1増え、idxが\(N\)になるかjdxが\(N + 1\)になった時点で計算が終了するわけだから、どう頑張っても\(N - 1 + N = 2N - 1\)回で質問は完了する。<br>
+これは明らかに\(2N\)回より少ないので、計算回数の制約は満たしている。<br>
+よって、先のコードは制約下において問題なく動き、無論十分高速である。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
