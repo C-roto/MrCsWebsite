@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC349D Divide Interval</h1>
+問題文は<a href="https://atcoder.jp/contests/abc349/tasks/abc349_d">こちら</a>から。<br>
+与えられた数列を、問題中の「良い数列」に分割することを考える問題。<br>
+<br>
+今回個人的に大きなヒントになったのは「最小となるような分割は一意に定まる」というところ。<br>
+最小値が一意に定まるケースは多いが、具体的な分割まで一意に定まるというのは非常に強い制約だ。しかも、今回の問題のルール的に、分割のやり方が実質1通りしかないように見える、とかでもない。<br>
+例えば、4を左端に持つ良い数列は(4,6)も(4,8)もあるが、一見どっちに遷移した方が良いのかは分からない。でも、問題的には一意に定まると言っているので、どちらかの分割は「不正解」ということになる。<br>
+どう見たらいいのかな～と思っていたが、例えば(4,6)に分割した後、6を左端に持つ数列は(6,7)か(6,8)しかない。(4,6),(6,8)という分割をするくらいなら、(4,8)1回の方が明らかに良い。<br>
+また、左端が奇数の場合は1大きい偶数を右端に持つ数列しか良い数列にならない(左端が3の場合は(3,4)とか)。<br>
+この辺りの条件を統一的に語る言葉があるといいな～などと考え始める。<br>
+<br>
+そのうち、2の累乗が絡むわけだから2進法で考えたらなんかいいんじゃないかな？ と思い始める。<br>
+実際これは当たっていて、ある数Lを左端とする良い数列を考える時、その右端Rは以下の条件を満たしている。<br>
+・Rは、Lを2進法表記した時に、1が立っている最も下位のビット以下に1を加えた数になっている<br>
+例えば、数20を左端に持つような良い数列を考えてみる。<br>
+20は2進法で10100であるから、今言った条件を満たすような数は4の位、2の位、1の位のいずれかに1を加えた数である。<br>
+つまり、2進法で11000か、10110か、10101のいずれかで表せるような数で、これらは10進法で順に24,22,21である。<br>
+実際に元の例に戻って考えてみると、これらを右端に持つ良い数列は作れるし、逆にこれら以外は作れないことが分かる。<br>
+一般の場合もこの方針で証明ができるので、2進法での見方は正当であると言えそうだ。<br>
+<br>
+ここから、与えられたLとRについて、このように分割していくことが正当であると分かる。<br>
+・LとRを上位のビットから比べていく。<br>
+・もしRだけ1が立っているビットがあった場合、そのビットよりも下桁であって、Lの1が立っている最下位のビットに1を加えた数をSとすると、数列(L,S)は答えになる分割の一部である。<br>
+→その後、Sを新たにLとして操作を繰り返す。<br>
+→Lにこの条件を満たすビットがない場合、今見ているビットよりも小さい桁であって、Rの1が立っているビットと同じLのビットを立て、それをSとする。<br>
+→そのようなビットもない場合、L=Rであるので操作を終了してよい。<br>
+Lの1が立っている最下位ビットよりも下のビットに数を足しても、何回か操作を繰り返すと結局上記のSを左端に持つ数列ができてしまうので、それなら1回で分割した方が良いことになる。<br>
+また、上記の操作は常に正当になることは比較的簡単に証明できる（と思う）。<br>
+<br>
+実装例は以下の通り。時間計算量は\(R\)を2進法変換して各ビットを見る回数から見て\(O((logR)^2)\)程度に抑えられて、十分高速。<br>
+実装がややこしくなったが、やってることは上記の内容と大きく変わらないはずである。<br>
+<pre><code class="language-python">
+def bintoten(L):
+    res = 0
+    for i in range(len(L)):
+        res += L[i] * 2 ** (len(L) - 1 - i)
+    return res
+
+L, R = list(map(int,input().split()))
+
+Lbin = []
+Rbin = []
+while L != 0:
+    if L % 2 == 0:
+        Lbin.append(0)
+    else:
+        Lbin.append(1)
+    L //= 2
+
+while R != 0:
+    if R % 2 == 0:
+        Rbin.append(0)
+    else:
+        Rbin.append(1)
+    R //= 2
+
+while len(Lbin) < len(Rbin):
+    Lbin.append(0)
+
+Lbin.reverse()
+Rbin.reverse()
+
+answers = []
+now = bintoten(Lbin)
+for i in range(len(Lbin)):
+    if Lbin[i] == 0 and Rbin[i] == 1:
+        one_check = False
+        for j in range(len(Lbin) - 1 , i, -1):
+            if Lbin[j] == 1 and one_check:
+                one_check = False
+                answers.append([now, bintoten(Lbin)])
+                now = bintoten(Lbin)
+            if Lbin[j] == 1 and one_check == False and j != i:
+                Lbin[j - 1] += 1
+                Lbin[j] = 0
+                one_check = True
+            if Lbin[j] == 2:
+                Lbin[j - 1] += 1
+                Lbin[j] = 0
+        Lbin[i] = 1
+        answers.append([now, bintoten(Lbin)])
+        now = bintoten(Lbin)
+
+print(len(answers))
+for l, r in answers:
+    print(l, r)
+</code></pre>
+考察7割、実装3割な感じだった。<br>
+高校数学の隣接分野だなあ～。高校数学ちゃんと勉強するの大事かも。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
