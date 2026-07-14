@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC346D Gomamayo Sequence</h1>
+問題文は<a href="https://atcoder.jp/contests/abc346/tasks/abc346_d">こちら</a>から。<br>
+1か所だけ同じ文字が連続する01数列を作る最小コストを求める問題。<br>
+<br>
+基本的に0と1が交互に現れる数列で、1か所だけそうではない箇所がある。<br>
+「どこが連続していて、それは0か1か」が決まればその数列は一意に定まるわけなので、全体でもあり得る数列は\(2(N-1)\)個しかなく、要するに簡単に総コストを求める方法さえあれば良さそうだ。<br>
+色々実験していくと、とりあえず「スタートが1で、交互に1010……となるような数列」と「スタートが0で、交互に0101……となるような数列」を作って、途中のどこかで切って貼り合わせると目的の数列が作れるということに気が付く。<br>
+例えば10010は条件を満たす数列だが、これは10101を2文字目まで使って、01010を3文字目から使ったものと一致する。他の場合も切り方に対して1対1の対応を作ることができるから、「どこで数列を切るか」を考えればこの問題が解けそうだ。<br>
+<br>
+今回の方針はこんな感じだ。<br>
+まず、\(i=1,2,...,N\)について、最初から\(i\)文字目までを、「スタートが1で、交互に1010……となるような数列」にする必要なコストを計算する。これは累積和の要領で、\(i\)文字目がどうかを見て\(i-1\)文字目までのコストに足せばよい。<br>
+同様にして「スタートが0で、交互に0101……となるような数列」に関しても計算する。<br>
+こうすると、\(i=1,2,...,N - 1\)について、例えば\(i\)文字目までを1010……にして、\(i+1\)文字目までを0101……にするのにかかるコストは以下のように計算できる。<br>
+「最初から\(i\)文字目までを1010……にするコスト」+「\(i+1\)文字目から最後までを0101……にするコスト」
+＝「①最初から\(i\)文字目までを1010……にするコスト」+(「②最初から最後までを0101……にするコスト」-「③最初から\(i\)文字目までを0101……」にするコスト」)<br>
+①、②、③はすべて前計算で求めているから、定数時間で問題なく計算できる。<br>
+勿論、0101……と1010……を交換しても同じ要領で計算できる。<br>
+よって、条件を満たす数列を作るコストは、いかなる場合も定数時間で計算ができることが分かったので、すべての数列についてかかるコストを確かめても、時間計算量は\(O(N)\)で済む。<br>
+前計算をしても全体の時間計算量は\(O(N)\)で済む。よって、制約下において十分高速にこの問題を解くことができる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+S = input()
+C = list(map(int,input().split()))
+
+# start[i][j]はj番目までが(0-indexedにおいて)偶数番目が、それに限りiであるような文字列を作るのにかかるコスト
+start = [ [0 for _ in range(N)] for __ in range(2)]
+
+for i in range(N):
+    if i % 2 == 0 and S[i] == '0':
+        start[1][i] = C[i]
+    elif i % 2 == 0 and S[i] == '1':
+        start[0][i] = C[i]
+    elif i % 2 == 1 and S[i] == '0':
+        start[0][i] = C[i]
+    else:
+        start[1][i] = C[i]
+
+for i in range(1, N):
+    start[1][i] += start[1][i - 1]
+    start[0][i] += start[0][i - 1]
+
+answer = 10 ** 20
+
+for i in range(N - 1):
+    for j in range(2):
+        r = 0
+        if j == 0:
+            r = 1
+        if answer > start[j][N - 1] - start[j][i] + start[r][i]:
+            answer = start[j][N - 1] - start[j][i] + start[r][i]
+
+print(answer)
+</code></pre>
+なんかいっぱい考えたんだけど、結局こういうシンプルな解があるとホッとする。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
