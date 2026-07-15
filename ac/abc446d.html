@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC466D Placing Rooks</h1>
+問題文は<a href="https://atcoder.jp/contests/abc466/tasks/abc466_d">こちら</a>から。<br>
+チェスの盤面の指定された箇所にルークを置く問題。<br>
+<br>
+現代だと類題も多いような気がする。<br>
+配列Row_to_colmunを用意し、Row_to_colmun[i]の値が「i行目のコマが置かれている列」を示すようにする。同様に配列Colmun_to_rowを用意する(実装例ではR_d,C_dという名前になっている)。<br>
+そして、新しいコマが置かれるたびに<br>
+・今置こうとしている行\(i\)について、既に行\(i\)にコマが置かれている場合、列\(Row_to_colmun[i]\)に置かれているコマも除く<br>
+といった操作をすれば、盤面に置かれているコマが正しく管理できる。<br>
+問題の制約から、各行と各列について、その行/列には高々1つしかコマが置かれていないためにこうした解き方が成立する。<br>
+実装例は以下の通り。時間計算量は\(O(N+M)\)になる。<br>
+<pre><code class="language-python">
+N, M = list(map(int,input().split()))
+R = [ 0 for _ in range(M)]
+C = [ 0 for _ in range(M)]
+for i in range(M):
+    R[i], C[i] = list(map(int,input().split()))
+
+# R_d[r]は行rに存在するコマが列R_d[r]に存在することを示す
+R_d = [ -1 for _ in range(N + 1)]
+# C_d[c]は列cに存在するコマが行C_d[c]に存在することを示す
+C_d = [ -1 for _ in range(N + 1)]
+# 上記2つとも、-1はコマが置かれていないことを示す。
+
+for i in range(M):
+    if R_d[R[i]] != -1:
+        C_d[R_d[R[i]]] = -1
+    if C_d[C[i]] != -1:
+        R_d[C_d[C[i]]] = -1
+    R_d[R[i]] = C[i]
+    C_d[C[i]] = R[i]
+
+answer = 0
+for i in range(1, N + 1):
+    if R_d[i] != -1:
+        answer += 1
+
+print(answer)
+</code></pre>
+それほどでもない問題というか、難易度がぶれやすいD問題らしいというか、そんな感じ。<br>
+未参加の回だけど、茶～緑レート帯だとこの回は早解きがものを言ったんじゃないだろうか（AtcoderProblemsによれば、E問題はそれなりに難しそうという感じだし）。<br>
+\(N\)の制約によっては工夫が要りそうだが、今回は素直に言われた通りの管理でよさそう。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
