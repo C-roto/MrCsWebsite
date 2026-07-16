@@ -51,7 +51,7 @@
 popできなくなるキューが生まれる=それ以上列がそろわなくなる、なのでその時点で時刻を記録できていないブロックはそれ以降絶対に揃うことはない(よって、クエリで訊かれた時点で必ずYesを返せばよい)。<br>
 時刻を記録できたブロックについては、クエリで訊かれた時刻が消える時刻より前か後かでYesかNoを切り替えればよい。<br>
 実装例は以下の通り。<br>
-<pre><code class=”language-python”>
+<pre><code class="language-python">
 N, W = list(map(int,input().split()))
 Xs = [ [] for _ in range(W + 1)]
 for i in range(N):
