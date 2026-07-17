@@ -58,6 +58,8 @@ for i in range(N):
     x, y = list(map(int,input().split()))
     Xs[x].append([y, i])
 
+# 長さが最小のlistを探す
+# (長さ最小のリストの長さの回数だけ揃うはず)
 shortest = 10 ** 30
 for i in range(1, W + 1):
     Xs[i].sort()
