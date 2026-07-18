@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC197C ORXOR</h1>
+問題文は<a href="https://atcoder.jp/contests/abc197/tasks/abc197_c">こちら</a>から。<br>
+区間のORを取って、出た値のXORを取る問題。<br>
+<br>
+どう区間を分けたら最小になるのかを考えてもあんまり見えない。<br>
+制約の小ささから、全パターン試せるのではないかと考えて分けてみるのが速そうだ。<br>
+「\(i\)項目が区間の右端となるかどうか」を見れば、あらゆる区間分割に対応できると気付けば、これは結局「この数は区間の右端か？」への答えとしてあり得るものを全列挙すればよいことになる。<br>
+というわけで、これはビット全探索に落ち着く。実装例ではitertools.productで全列挙したが、本質的には同じだ。<br>
+与えられる数列の最終項は必ず区間の右端だから、それ以外のN-1個の値に関して全探索を試みればよい。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import itertools
+
+N = int(input())
+A = list(map(int,input().split()))
+
+# 区間端の選び方は2^N通り=2000000以下通りしかない
+# 列挙して全探索すればよい(bit全探索)
+C = itertools.product([0, 1], repeat= (N - 1))
+
+answer = 10 ** 100
+first_one = True
+for c in C:
+    ORs = []
+    tmp = 0
+    for p in range(len(c)):
+        tmp = tmp | A[p]
+        if c[p] == 1:
+            ORs.append(tmp)
+            tmp = 0
+    tmp = tmp | A[-1]
+    ORs.append(tmp)
+    
+    tmp_2 = 0
+    for r in ORs:
+        tmp_2 = tmp_2 ^ r
+    if answer > tmp_2:
+        answer = tmp_2
+
+print(answer)
+</code></pre>
+と考えたところで、XORの結合性やYes/Noを考えるという問いの性質から、DPでも解ける可能性に気が付く。<br>
+公式解説に実際それで解いているユーザー解説があったが、最悪計算量は結局愚直に解くのと変わらないっぽい。<br>
+あんま上手く結果を握りつぶせないってことなんだろうか……。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
