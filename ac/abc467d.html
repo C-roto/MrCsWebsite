@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC467D Concentric Circles</h1>
+問題文は<a href="https://atcoder.jp/contests/abc467/tasks/abc467_d">こちら</a>から。<br>
+与えられた2点のペア2つが、同心で同一とは限らない円上にあるか調べる問題。<br>
+<br>
+ある点がある2点を通る円の中心であることは、その点がその2点からの距離が等しい点の集合の要素であることだ。<br>
+要するに、その2点を結んだ線分の垂直二等分線上の点であることと、2点を通る円の中心になりうることは同値である。<br>
+なので、各ペアごとに、そのペアを両端とする線分の垂直二等分線を求め、その垂直二等分線同士が交点を持つかどうかを調べればよい。<br>
+<br>
+2直線が交点を持つというのは、つまり「傾きが異なる」か「直線として一致するか」のいずれかの条件を満たすということである。<br>
+なので、それを満たすように条件分岐を記述すればよい。<br>
+傾きが定義不能になる（つまりペア中の2点のy座標が等しい）場合だけ頑張って別に処理する。<br>
+浮動小数点数を使うと誤差が出うるので、fractionsなどで誤差が出ないように工夫する。<br>
+傾きを求める、y切片を出すなどのことはすべて定数時間で計算できるはずなので、全体での時間計算量は\(O(T)\)となり、無論十分高速である。<br>
+実装例は以下の通り。fractions.Fraction(Px + Qx,2)とかを別に変数置いておけばよかったかも……。<br>
+<pre><code class="language-python">
+import fractions
+
+INF = 10 ** 100
+
+def katamuki(x1, x2, y1, y2):
+   if x1 - x2 != 0:
+       return fractions.Fraction(y1 - y2, x1 - x2)
+   else:
+       # 技術上の理由で-INFにしているだけで、本質的には関係ない
+       return -1 * INF
+
+def yseppen(katamuki_t, x, y):
+   if katamuki_t == INF:
+       return INF
+   else:
+       return y - katamuki_t * x
+
+T = int(input())
+
+for t in range(T):
+    Px, Py, Qx, Qy, Rx, Ry, Sx, Sy = list(map(int,input().split()))
+    katamuki_pq = -1 * katamuki(Py, Qy, Px, Qx)
+    katamuki_rs = -1 * katamuki(Ry, Sy, Rx, Sx)
+    
+    if katamuki_pq == INF or katamuki_rs == INF:
+        if katamuki_pq == katamuki_rs and fractions.Fraction(Px + Qx, 2) != fractions.Fraction(Rx + Sx, 2):
+            print('No')
+        else:
+            print('Yes')
+    else:
+        if katamuki_pq == katamuki_rs and yseppen(katamuki_pq, fractions.Fraction(Px + Qx, 2), fractions.Fraction(Py + Qy, 2)) != yseppen(katamuki_rs, fractions.Fraction(Rx + Sx, 2), fractions.Fraction(Ry + Sy, 2)):
+            print('No')
+        else:
+            print('Yes')
+</code></pre>
+高校数学すぎて、閃くとか閃かないとかじゃないような気がする。<br>
+しいて言うなら「あー、距離が等しい2点って垂直二等分線だなー」とか、その辺は思い出したり検討する必要があるかもしれない（実際忘れかけていた）。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
