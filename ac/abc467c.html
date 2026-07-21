@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC467C Adjacent Sums (easy)</h1>
+問題文は<a href="https://atcoder.jp/contests/abc467/tasks/abc467_c">こちら</a>から。<br>
+数列の隣接する二項の和を2で割った余りを指定の値にする操作の回数を考える問題。<br>
+<br>
+\(M=2\)という太っ腹な条件を付けてくれている。<br>
+これにより、あまりは0か1かの2通りしかなくなるし、数列Aに対する操作は実質ビット反転とみなしてよくなるため、見通しがとても良くなる。<br>
+具体的には、\(B_i = 0\)であるということは、\(A_i\)と\(A_{i+1}\)が異なる、ということと同値である。<br>
+なので、各\(i\)について\(B_i\)の値を順繰り見ていくことで、各\(A_i\)同士が(mod2上で)等しいかどうかを一意に定めることができる。<br>
+これによって、\(A_1 = 0\)か\(A_1 = 1\)を定めることで、それぞれについて最終的な数列がただ1つに定まる。<br>
+(mod2上で)最終的な数列はこの2つしかないので、数列Aとこれらの数列を比較すればよい。<br>
+片方の数列はもう片方の数列とビットが反転しているわけだから、Aを最終的な数列のうちどちらか片方(実装例のC)にするのにかかる操作回数を求めれば、もう片方の数列にするための操作回数は、今求めた回数をNから引いた値になる。<br>
+よって、この2つの値のうち小さい方を答えればよい。数列の生成と比較は全部時間計算量\(O(N)\)で出来るので、全体の時間計算量も\(O(N)\)になり、十分高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N, M = list(map(int,input().split()))
+A = list(map(int,input().split()))
+B = list(map(int,input().split()))
+
+C = []
+if B[0] == 0:
+    C.append(0)
+    C.append(0)
+else:
+    C.append(0)
+    C.append(1)
+
+for i in range(1, N - 1):
+    if B[i] == 0:
+        C.append(C[-1])
+    else:
+        C.append((C[-1] + 1)% 2)
+
+# 最終形はCかCのビット反転しかありえない
+# Cにする操作は、Cのビット反転を作る操作とちょうど逆（した操作をせず、しない操作をする必要がある）
+# どっちを作る操作の方が少ないかを考える
+answer = 0
+for i in range(N):
+    if A[i] != C[i]:
+        answer += 1
+print(min(answer, N - answer))
+</code></pre>
+よく考えると、\(B_i = 0\)と\(A_i xor A_{i+1} = 1\)は同値であり、上手く問題をがちゃがちゃやると「このような数列が実現できるか？」は2-SAT問題に帰着できることが分かる。（まあ、結果的には絶対実現できるので、多項式時間どころか定数時間で解けてしまうからそんなに面白くないが……）。<br>
+2-SATの解き方の考えの一部に「各項の真偽の依存関係をグラフに落とし込む」という部分があるが、この「依存関係を可視化する」という考え方はこの問題でも有効である。僕の発想の入り口はここだった。<br>
+正直者と嘘つきのパズルとも似ている。競技に直接役に立たないことでも、やっておくと何か良いことがあるかもしれないと思った。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
