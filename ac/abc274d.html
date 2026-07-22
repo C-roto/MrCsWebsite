@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC274D Robot Arms 2</h1>
+問題文は<a href=”https://atcoder.jp/contests/abc274/tasks/abc274_d”>こちら</a>から。<br>
+ロボットアームをジャキンジャキンする問題。<br>
+<br>
+問題の制約から、ロボットアームは縦か横にしか伸びず、しかも最初は必ず横に伸び、次に縦→横→縦→……と繰り返す感じになる。<br>
+また、制約上「縦の時にどう移動したか」は「横の時にどう移動したか」と全く無関係になる。<br>
+なので、縦の時にあり得る可能性を上手く検討すればよい。<br>
+ここで、各線分の長さ\(A_i\)は10以下だから、\(N \leqq 10^3\)回まで最大限操作してもあまり大きな値にならないことが分かる。なので、愚直にすべての移動を考えてもそんなに大変なことにはならなそうだ。<br>
+具体的にはx座標とy座標を記録しておく集合を設け、\(N\)回これらを走査する。<br>
+縦方向を考える時はy座標の集合を走査し、そこに記録されている座標(=その操作をする時点でアームが存在しうる場所)から\(±A_i\)だけ離れた地点をすべて列挙し、新たにy座標の集合として保存する。横の場合も同様にx座標の集合を変換する。<br>
+先ほど考えた通り、要素の数はそれほど莫大にはならない。時間計算量は\(O(max(A_i) \codt N^2)\)程度で収まるはずで、これはこの制約下で十分高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class=”language-python”>
+def henkan(X, idx):
+    res = set()
+    for x in X:
+        res.add(x + A[idx])
+        res.add(x - A[idx])
+    return res
+
+N, x, y = list(map(int,input().split()))
+A = list(map(int,input().split()))
+
+# A[i]の制約とNの制約から、扱う座標の絶対値は10^4以下の値にしかならない
+# 1回の変換過程で2*10^4+1個以上の入力、出力は出てこないので、見た目より高速になる
+# 端的に言えばO(N*(N*max(A[i])))程度で処理出来て、これはそんなに遅くない
+tate = set([A[0]])
+yoko = set([0])
+
+# 縦の動きは横の動きに影響を与えない、逆もしかり
+for i in range(1, N):
+    if i % 2 == 0:
+        tate = henkan(tate, i)
+    else:
+        yoko = henkan(yoko, i)
+
+# 全部の移動が終わった後のX座標とy座標を見る
+if x in tate and y in yoko:
+    print('Yes')
+else:
+    print('No')
+</code></pre>
+一見すると総当たりがきつそうに見えるけど、意外と握りつぶせるし、そもそも幅が小さいというのは面白い。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
