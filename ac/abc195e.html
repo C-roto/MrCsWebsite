@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC192E Train</h1>
+問題文は<a href="https://atcoder.jp/contests/abc192/tasks/abc192_e">こちら</a>から。
+時刻を待って発車する列車に乗って最短の移動をする問題。<br>
+<br>
+負辺を持たない1対1(または1対多)の最短経路問題に対しては、ダイクストラ法が有効である場合が多い。<br>
+この問題も、出発のタイミングがずれる部分だけが大変だが、ダイクストラ法は有効に働く。<br>
+具体的には、最短での到着時刻が定まっている駅Aに対して、そこから最短到着時刻が未確定の駅Bに対し、AとBを繋ぐ鉄道の直近発車時刻を求め、その時刻に移動に係る時間を加えた時間を暫定の最短時刻として更新する。<br>
+基本的に、到着できる中で一番短い時刻を選ぶのが明らかに最適（遅い方を選んだ方が得な場合があるとすると、それより早い時刻でも同じ時刻になるまで待てばそのルートを選べるはずなので矛盾）。<br>
+よって、発車時刻にだけ気を付けてダイクストラ法を使えばよい。<br>
+<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import heapq
+
+N, M, X, Y = list(map(int,input().split()))
+X -= 1
+Y -= 1
+G = [ list() for _ in range(N)]
+for i in range(M):
+    a, b, t, k = list(map(int,input().split()))
+    a -= 1
+    b -= 1
+    G[a].append([b, t, k])
+    G[b].append([a, t, k])
+
+HQ = []
+heapq.heapify(HQ)
+heapq.heappush(HQ, [0, X])
+
+INF = 10 ** 50
+dist = [ INF for _ in range(N)]
+dist[X] = 0
+
+while HQ:
+    d, p = heapq.heappop(HQ)
+    if d > dist[p]:
+        continue
+    for u, t, k in G[p]:
+        if d % k == 0:
+            x = k
+        else:
+            x = d % k
+        if dist[u] > d + (k - x) + t:
+            dist[u] = d + (k - x) + t
+            heapq.heappush(HQ, [dist[u], u])
+
+if dist[Y] == INF:
+    print(-1)
+else:
+    print(dist[Y])
+</code></pre>
+なんか一見複雑そうに見えて、よくよく考えてみるとそうでもない問題。<br>
+ダイクストラ法の理屈さえ分かっていればサクッと解けてしまう。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
