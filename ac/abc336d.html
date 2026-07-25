@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC336D Pyramid</h1>
+問題文は<a href="https://atcoder.jp/contests/abc336/tasks/abc336_d">こちら</a>から。
+ピラミッドみたいになってる数列を削り出せるかを考える問題。<br>
+<br>
+高さ\(X\)のピラミッド数列が作れるなら（余分に1回ずつ先頭と後ろを削り、各項から1を引けば）\(X-1\)のピラミッド数列が作れる。<br>
+また、これの対偶を取ると、高さ\(X-1\)のピラミッド数列が作れないなら、高さ\(X\)のピラミッド数列も作れないことが分かる。<br>
+よって、ピラミッド数列は「ある一定の値までは常に作れて、ある一定の値より大きくなると作れない」という性質を持つことが分かる。<br>
+この手の性質を持つものには二分探索が有効であるケースも多い。しかし今回はなかなかいいサーチ方法が思いつかない。先頭から順番に長さ\(X\)のピラミッド数列ができるかを愚直に調べると、恐らく\(O(XN)\)程度の時間がかかってしまうだろう。これは遅すぎる。<br>
+<br>
+何故それほど時間がかかってしまうのかといえば、数列の「下り」側を調べるのが難しいからである。<br>
+便宜上、ピラミッド数列のうち前半の\(1,2,3,...,k-1,k\)を「上り」側、後半の\(k-1,k-2,...,2,1\)を「下り」側として扱う。<br>
+もし、ある数\(A_i\)までで\(X\)段の数列の「上り」（\(1,2,...,X-1,X\)）を作れる場合、次の数\(A_{i+1}\)を使って\(X+1\)段を実現できるかどうか調べるには、単に\(A_{i+1}とX+1\)の大小を調べれば良い。これなら\(O(N)\)程度で数列全体を走査できる。<br>
+一方で、下り側では素直に同じことを行えない。下りの\(X\)段が実現できている時、単にその1つ先だけを見て\(X+1\)段が構成できるかは不明であり、また段のすべてを再走査しないといけなくなる。このせいで効率が悪くなるのだ。<br>
+<br>
+ここで発想を変える。上りと下りを同時に構成しようとするから難しいのであって、上りと下りを別々に考えるのはどうだろうか？<br>
+「\(A_i\)を終端とする上りであって、段数が最大のものは何段？」という問いは、先ほどと同様に考えれば解ける。実は、この問いの「上り」を「下り」に変えたものも、数列を逆順に走査すれば同様にすぐ答えが出せる。<br>
+そして、上りも下りも、\(X\)段が実現できれば\(X-1\)段が実現できるわけだから、今知りたいピラミッド数列の最大の段数は、「各\(A_i\)について先ほどの上りの最大段と下りの最大段のうち、最小の方を取る」という操作を繰り返して得られる最大値と一致する。<br>
+よって、数列を前からと後ろから、2回走査すれば答えが出せるので、時間計算量\(O(N)\)でこの問題を解くことができた。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+A = list(map(int,input().split()))
+
+nobori = [1]
+kudari = [1]
+
+tmp_nobori = 1
+tmp_kudari = 1
+for i in range(1, N):
+    if tmp_nobori + 1 <= A[i]:
+        tmp_nobori += 1
+    else:
+        tmp_nobori = A[i]
+    nobori.append(tmp_nobori)
+
+    if tmp_kudari + 1 <= A[N - 1 - i]:
+        tmp_kudari += 1
+    else:
+        tmp_kudari = A[N - 1 - i]
+    kudari.append(tmp_kudari)
+kudari.reverse()
+
+answer = 1
+for i in range(N):
+    if answer < min(nobori[i], kudari[i]):
+        answer = min(nobori[i], kudari[i])
+
+print(answer)
+</code></pre>
+二分探索しやすい性質を持つことと、上りと下りを分けてよいということに気づくと解ける問題。<br>
+一見すると大変だが、なんか解けると気持ちいい。<br>
+<br>
+書き終わってから公式解説を見たら、evimaさんによる別解が本質的に同じことを言っていた。<br>
+別解と書いてはあるが、個人的にはこっちの方が自然な発想のように思える。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
