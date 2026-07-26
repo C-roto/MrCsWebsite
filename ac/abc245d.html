@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC245D Polynomial division</h1>
+問題文は<a href="https://atcoder.jp/contests/abc245/tasks/abc245_d">こちら</a>から。
+整式と、それを整数係数の範囲内で因数分解した1つが与えられるので、もう片方を特定する問題。<br>
+<br>
+高校数学だなあ。<br>
+具体的には\(B_k\)について、\(\sum_{i=0}^{min(N, M - k)} A_{N - i}B_{k + i} = C_{N + k}\)が成り立つ。<br>
+（次数の和が\(M+k\)になる組を掛けて総和を取る）<br>
+ということは、\(\displaystyle B_k = \frac{C_{N + k} - \sum_{i=1}^{min(N, M - k)} A_{N - i}B_{k + i}}{A_N}\)が成り立つ。<br>
+右辺分子を求めることは、適当に見積もっても時間計算量\(O(N+M)\)で出来るわけなので、この操作全体は最低でも時間計算量\(O(M(N + M))\)程度で完遂でき、これは十分高速である（真の上界として妥当かは検討の余地あり）。<br>
+よって上記の計算を愚直にやるプログラムを書けばよい。実装例は以下の通り。<br>
+<pre><code class="language-python">
+N, M = list(map(int,input().split()))
+A = list(map(int,input().split()))
+C = list(map(int,input().split()))
+
+B = [ 1000 for _ in range(M + 1)]
+for i in range(M + 1):
+    tmp = 0
+    for j in range(i):
+        if N >= N - i + j >= 0 and M >= M - j >= 0 and B[M - j] != 1000:
+            tmp += A[N - i + j] * B[M - j]
+    B[M - i] = (C[N + M - i] - tmp) // A[N]
+
+print(*B)
+</code></pre>
+と、書いた後に知ったが、Pythonにはnumpyという有名なライブラリがあり、それには多項式の割り算を行える機能があるそうだ（実際に書いて通したが、あまりきれいなコードではないので割愛。公式解説のユーザー解説の中により良い実装があるので、そちらを読むべし）。<br>
+今回の目的なら上記の内容で全く問題ないし、こちらの方が早いのだが、色々知っておいて損はないだろう。<br>
+
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
