@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC468D Pre-Palindrome</h1>
+問題文は<a href="https://atcoder.jp/contests/abc468/tasks/abc468_d">こちら</a>から。
+1文字以下を変えて回文になる部分文字列を調べ上げる問題。<br>
+<br>
+回文と言えばローリングハッシュ(そうか？)。しかし今回は「1文字違う」を許容するとのこと。<br>
+1文字でも違うとハッシュ値はめちゃくちゃ変わりうるので、こういう方針ではないっぽい。<br>
+制約を見ると\(N \leqq 10^4\)とのことで、なんかちょっと小さい。<br>
+時間計算量\(O(N^2)\)ぐらいまでは許してもらえそうだ。<br>
+となると、あり得る全部の連続部分文字列を列挙して確かめるのが良いだろう。<br>
+とはいえ、例えば「始点と終点を指定して条件を満たすか調べる」みたいなことをやると、時間計算量\(O(N^3)\)ぐらいになってしまって普通にオーバーしてしまう。<br>
+今回は「どこが真ん中になるか」で考えてみる。これなら指定すべき場所は\(N\)のオーダー箇所になるし、各箇所についてざっくり探索時間は\(O(N)\)程度になるので、時間計算量は\(O(N^2)\)で収まりそうだ。<br>
+真ん中としてあり得るのは、<br>
+・\(i\)文字目<br>
+・\(i\)文字目と\(i+1\)文字目の間<br>
+の2パターンあるので、各パターンに対して\(i=0,1,...,|S|-1\)までを試せばよろしい（下のパターンは\(|S|-2\)まで）。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+S = input()
+
+answer = 0
+# ちょうど真ん中がi文字目であるような良い文字列はいくつ？
+for i in range(len(S)):
+    good_flag = True
+    for j in range(len(S)):
+        if 0 <= i - j and i + j <= len(S) - 1:
+            if S[i - j] == S[i + j]:
+                answer += 1
+            elif good_flag:
+                good_flag = False
+                answer += 1
+            else:
+                break
+        else:
+            break
+# i文字目とi+1文字目の間が真ん中であるような良い文字列はいくつ？
+for i in range(len(S) - 1):
+    good_flag = True
+    for j in range(len(S)):
+        if 0 <= i - j and i + 1 + j <= len(S) - 1:
+            if S[i - j] == S[i + 1 + j]:
+                answer += 1
+            elif good_flag:
+                good_flag = False
+                answer += 1
+            else:
+                break
+        else:
+            break
+
+print(answer)
+</code></pre>
+「文字列が特定の条件を満たすか？」とか「文字列が〇〇と一致するか？」みたいな問題は色々な方法があって難しい。<br>
+動的計画法を使う場合もあるし、ローリングハッシュを使う場合もあるし、今回みたいな問題の可能性もある。<br>
+大事なのは「何が来たらこれ」のようなパターン暗記ではなくて、「問題文はこう言っているから、それに適した手法ってこんなのがあったな(或いは全探索で事足りるな)」と考えることのような気がする。<br>
+私も不肖にして知識やひらめきは足りない方だと思うが、とりあえず考えてみることはやりたい。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
