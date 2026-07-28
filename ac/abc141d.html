@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC141D Powerful Discount Tickets</h1>
+問題文は<a href="https://atcoder.jp/contests/abc141/tasks/abc141_d">こちら</a>から。
+半額にするチケットを使いまくって、なるべく安く代金を押さえる問題。<br>
+<br>
+動的計画法かな？ と思ったが、よく考えたら普通に貪欲法すればよいことに気が付く。<br>
+まず、最終的にX円の品物にa枚の割引券を使うとすると、実際に支払う金額は\(\lfloor \frac{X}{2^a} \rfloor \)円になるが、これは「X÷2の商をさらに2で割って、さらにその商を2で割って、さらにその商を2で割って……」という操作を繰り返して得られる金額と相違ない。<br>
+よって、各操作後における各商品の代金を走査して、適切な品物の代金を都度2で割る、という操作を繰り返して得られる最終的な代金の合計が今回の答えになる。<br>
+<br>
+では、各操作における「適切な品物」とは何かと考えると、その時点で一番価格が高い品物になるだろう。<br>
+元々の代金が高いほど、割引される代金も大きくなる。あえて最大値でないものを割引する理由は特にない（雑に言えば、もしそのタイミングでより高い代金のものを割引していれば、その後同じ操作を繰り返したときよりも明らかに全体の代金が安くなる）。<br>
+というわけで、そのタイミングで料金が最大のものを探索して、それを2で割る、という操作を繰り返していけばよいと分かった。この操作は明らかに優先度付きキュー（Pythonならheapq）によって実現できる（各回操作後の品物の代金は非負だから、-1をかけて最小値を取ればよい）。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import heapq
+
+N, M = list(map(int,input().split()))
+A = list(map(int,input().split()))
+
+HQ = []
+heapq.heapify(HQ)
+for i in range(N):
+    heapq.heappush(HQ, -1 * A[i])
+
+for i in range(M):
+    p = heapq.heappop(HQ)
+    p *= -1
+    p //= 2
+    heapq.heappush(HQ, -1 * p)
+
+print(-1 * sum(HQ))
+</code></pre>
+昔の問題だからかシンプル。<br>
+緑diffとはあるけど、比較的解きやすい。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
