@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ARC120B Uniformly Distributed</h1>
+問題文は<a href="https://atcoder.jp/contests/arc120/tasks/arc120_b">こちら</a>から。
+赤青に塗り分けたチェス盤を左上から右下まで、赤色の個数が同じように辿れるよう塗る問題。<br>
+<br>
+マスを赤/青で塗るという2通りがあるな～動的計画法とかで回すのかな～と思っていたが、あまりうまくいかなそうに思える。<br>
+各マスに対して保持しておくべき情報を上手く乗せるのがキツい。そこまでに通った赤マス/青マス/無色マスの情報を乗せるとパンクするし、仮に乗せられたとして上手い使い方も見えない。<br>
+<br>
+もっと別の見方をしよう。<br>
+通りうるすべてのルートは、\({H + W \choose H}\)通りと、非常に莫大な個数になる。<br>
+すると「任意のルートを通っても赤マスと青マスの数が変わらない」ということを、全パターン総当たりで調べるのは難しい。一方で、ある2つのルートに関して見比べることは難しくない。<br>
+上手い2つのルートを見て、その2ルートで赤/青の個数が等しくなるか否かを考えてみる。<br>
+今回考えたのは、「殆どが同じで1か所だけが違う」という2つのルートだ。<br>
+つまり、以下のような2つのルートを考える。<br>
+・\((1,1)→(a,b)→…→(i,j)→(i+1, j) →(i+1,j+1)→…→(H,W)\)<br>
+・\((1,1)→(a,b)→…→(i,j)→(i, j+1) →(i+1,j+1)→…→(H,W)\)<br>
+あるルートにおいて右→下と進んでいる箇所を、下→右と動いてみるルートということだ。<br>
+この場合、マス\((i+1,j)\)とマス\((i,j+1)\)だけが異なり、他のマスはすべて同じルートなわけだから、2つのルートで赤と青が同じ数だけあるかどうかは、マス\((i+1,j)\)とマス\((i,j+1)\)の色にのみ依存する。<br>
+この2マスが同じ色ならオーケー、違えば不可能。<br>
+要するに、「右上と左下で隣り合う2マスが同色ならこの2ルートにおける赤マスの数は等しいし、そうでないなら違う」ということが分かる。<br>
+これを繰り返し適用すると、「右上から左下に伸びる各斜めの列について、その列がすべて同色ならその列を通るすべてのルートについて赤マスの数は等しいし、そうでないなら少なくとも2つのルートでは赤マスの数が違う」ということが分かる。<br>
+任意のルートはあらゆる斜めの列のいずれかを通るから、実質的に「その列を通るすべてのルートについて」の部分を省略しても問題ない。<br>
+「そうでないなら違う」という部分から、必要十分性も分かる。<br>
+<br>
+もう少しきちんとした言葉で整理しよう。<br>
+任意の2マス(p,q)と(s,t)について、「p+q=s+tであるならばマス(p,q)とマス(s,t)が同色である」ときに、かつその時に限って「任意のルートにおける赤マスの個数が等しい」と言える。<br>
+要するに、「p+q=s+tであるならばマス(p,q)とマス(s,t)が同色である」ように盤面を塗る方法がどれだけあるか、がこの問題の肝になるのだ。<br>
+これは以下のように場合分けができる。<br>
+・もしp+q=s+tなのにマス(p,q)とマス(s,t)が異なる色で塗られているようなp,q,s,tがあるとき
+→0通り。
+・そのようなマスがない場合
+→p+q=rとなるようなマス(p,q)の集合であって、既に赤か青で塗られているものがある場合
+→→その集合に含まれる無色のマスは、すでに塗られているマスと同色になるしかないので1通り
+→p+q=rとなるようなマス(p,q)の集合であって、既に赤か青で塗られているものがない場合
+→→その集合はすべて無色であり、集合内のすべてのマスを赤もしくは青で塗る2通りがある
+よって、各場合について何通りあるか出して、それらをすべて掛け合わせればよい。<br>
+時間計算量は各マスを1度ずつ走査する部分がネックで、\(O(HW)\)になる。これは制約下で十分高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+H, W = list(map(int,input().split()))
+S = []
+for _ in range(H):
+    S.append(input())
+mod = 998244353
+
+answer = 1
+# 右上から左下への斜め列に異なる色があれば上手く塗れない
+# そうでないならOK、未塗りのマスがあればそのマス
+for i in range(H + W - 1):
+    diagonal = set()
+    # マスのx座標とy座標の和が一定＝同じ斜め列にある内容をピックアップ
+    for j in range(i + 1):
+        if H - 1 >= i - j >= 0 and W - 1 >= j >= 0:
+            diagonal.add(S[i - j][j])
+    # 今調べている斜め列が無色のみ？
+    if "." in diagonal and "R" not in diagonal and "B" not in diagonal:
+        answer *= 2
+        answer %= mod
+    # 今調べている斜め列に2色同時に出てきている？
+    if "R" in diagonal and "B" in diagonal:
+        answer = 0
+
+print(answer % mod)
+</code></pre>
+愚かなので1回modを取り損ねてWAになった。悲しいね。<br>
+これも高校数学って感じで、特にアルゴリズム的な発想は新しく使わなかった気もする。<br>
+結構ひねりがいというか、考えがいのある良い問題だと感じる。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
