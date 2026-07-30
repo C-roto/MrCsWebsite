@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC364D K-th Nearest</h1>
+問題文は<a href="https://atcoder.jp/contests/abc364/tasks/abc364_d">こちら</a>から。<br>
+数直線上の\(N\)点の中から、ある点からの距離が\(K\)番目に近い点を何度も答える問題。<br>
+<br>
+単純な全探索、つまり「各\(b_j\)に対して各\(A_i\)からの距離を毎回出して\(k_j\)番目に近い値を答える」のようなことをやると、距離の計算に時間計算量\(O(NQ)\)掛かってしまい、そのほかがいくら早くても遅すぎる。<br>
+「距離をいちいち出す」という発想だと時間がかかりすぎる。<br>
+問題をにらみつつ考えること数十分。<br>
+「K番目に近い点を直接探す」のは難しいが、「点\(B_j\)を中心としたある範囲に何個の点があるか」を調べることで「その範囲の中に\(K_j\)番目に近い点があるか？」を調べるのは容易いことに気が付く。<br>
+これに気が付くと、後はその範囲の幅を適切に狭めていけば、ちょうど\(K\)番目の点の距離がどこかを調べるのは非常に容易いことも分かる。<br>
+適切に狭めようと思うと、今回は二分探索が有効だ。「\(K\)個未満の範囲は正解にならない」、「\(K\)個より多い範囲は正解にならない」、「\(K\)個の範囲の中で最小のものが正解」という条件を満たしているからである。<br>
+そういうわけで、二分探索を繰り返して範囲を求めればよく、これは探索する範囲の最大値を\(L\)とすると、この部分は時間計算量\(O(Q \log_{}{L})\)で計算できる。<br>
+ソートもネックになりうるため、コード全体では\(O(N log_{}{N} + Q \log_{}{L})\)程度で計算ができる。<br>
+今回\(L=10^10\)としており、これも含めて制約下において十分高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import bisect
+
+def binarysearch(L, v, c):
+    low = 0
+    high = 10 ** 10
+    mid = 0
+    while low < high:
+        mid = (low + high) // 2
+        r = bisect.bisect_left(L, v - mid)
+        l = bisect.bisect_right(L, v + mid)
+        if l - r < c:
+            low = mid + 1
+        else:
+            high = mid
+    mid = (low + high) // 2
+    return mid
+
+N, Q = list(map(int,input().split()))
+A = list(map(int,input().split()))
+A.sort()
+
+for q in range(Q):
+    b, k = list(map(int,input().split()))
+    print(binarysearch(A, b, k))
+</code></pre>
+PyPyだと実行制限ギリギリ(通るけども)だが、多分Codonとかで適切に書けばそれなりの速度で解けるのではなかろうか。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
