@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ARC116B Products of Min-Max</h1>
+問題文は<a href="https://atcoder.jp/contests/arc116/tasks/arc116_b">こちら</a>から。<br>
+すべての部分列の最大値と最小値の積の総和を求める問題。<br>
+<br>
+部分列については連続でなくても良いので、順番は関係ない。<br>
+よって、最大最小を考えやすくするために、昇順でソートができていると仮定してよい。<br>
+以降、数列\(A\)は昇順でソートされているものとする。<br>
+<br>
+数列\(A\)の適当な2つの項を選ぶと、それを両端(つまり最小値と最大値)とする部分列ができる。<br>
+これを全部カウントすると組み合わせの数だけ計算せねばならず、制限時間以内には間に合わない。<br>
+こういう時は端のうちどちらかを固定することを考える。<br>
+例えば、\(min(B)=A_i\)となるような組についての総和はどうなるだろうか？<br>
+今、数列\(A\)はソートされているという前提であるから、\(A_i\)以前の項については考えなくて良い。<br>
+\(A_i\)以降の項については……<br>
+・\(max(B)=A_i\)となるのは、\((A_i)\)のみなので1通り<br>
+・\(max(B)=A_j \hspace{0.5em} (j>i)\)となるのは、\(i < k < j\)を満たす\(a_k\)を含めるかどうかなので\(2^{j-1}\)通り<br>
+なので、結局\(min(B)=A_i\)となるような組に関する総和は<br>
+\({A_i}^2 + A_i \cdot \sum_{j=1}^{N-i} 2^{j-1}A_i+j\)<Br>
+となる。これを\(i=1,2,...,N\)に関して足せばよい(ただし\(i=N\)のときは\(\sum\)の部分は0と約束する)。<br>
+<br>
+ここで\(S_i = \sum_{j=1}^{N-i} 2^{j-1}A_i+j\)とおくと、\(S_{i+1}= (S_i - A_i) \div 2\)で計算できることが分かるので、最初に\(S_1\)を求めておけば、後はそこから項を引いて2で割る操作を繰り返すことで各\(S_i\)を簡単に求めることができる。<br>
+よって、各\(i=1,2,..,N\)に対し、\({A_i}^2 + A_iS_i\)は（modを取る操作を度外視すると）\(S_1\)を求めるのだけ時間計算量\(O(N)\)が掛かり、後は定数時間で処理ができる。<br>
+なるべく大きい数を扱わないためにmodを取る操作はガンガン途中で挟めばよいが、2で割る操作はmod998244353においては499122177を掛ける操作と同一視できることに注意して、そのように書く。逆元があるってサイコーだ。<br>
+結局最初に\(A\)をソートするところがネックになり、全体の時間計算量は\(O(Nlog_{}{N})\)になる。これは制約下においては十分高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+A = list(map(int,input().split()))
+A.sort()
+
+mod = 998244353
+
+pow_twos = [ 1 for _ in range(N + 1)]
+for i in range(1, N + 1):
+    pow_twos[i] = (pow_twos[i - 1] * 2) % mod
+
+maximumsum = 0
+for i in range(1, N):
+    maximumsum += (A[i] * pow_twos[i - 1]) % mod
+two_rev = 499122177
+answer = 0
+for i in range(N - 1):
+    answer += (((A[i] ** 2) % mod) + (A[i] * maximumsum) % mod) % mod
+    maximumsum -= A[i + 1]
+    if maximumsum < 0:
+        maximumsum += mod
+    maximumsum *= two_rev
+    maximumsum %= mod
+
+answer += (A[-1] ** 2) % mod
+
+print(answer % mod)
+</code></pre>
+「如何に計算量を減らすか」ということにすべてが掛かっているように思える。<br>
+特に、組み合わせの問題に帰着できると分かってからは、「どうやって\({N \choose 2}\)通りを見ずに立式するか」という問題に落ちつくわけで、それは「どうやって再利用できる部分を発見するか」ということでもあると思う。<br>
+これに限らず、結構「再利用できるところを見つける」ってのは大事だよなと思う。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
