@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ARC162B Insertion Sort 2</h1>
+問題文は<a href="https://atcoder.jp/contests/arc162/tasks/arc162_b">こちら</a>から。<br>
+2つ並んだ箇所を持ち上げて移動し、数列をソートできるか、できるとしたらどんな手順かを調べる問題。<br>
+<br>
+「できる？ できない？」系の問題を見ると、何かしらの不変量があるのかもしれないと疑いたくなる。<br>
+操作をどのように何度行っても、常に変わらない特徴的な数値があれば、それをもとに可能不可能を分類できるからである。<br>
+色々考えた結果、今回は(☆)「\(i=1,2,...,N\)について、数\(A_i\)より本来なら前にあるべきだが後ろにある数(つまり\(A_i>A_j\)を満たす\(i+1以上N以下の整数j\)の個数)」の総和について、その偶奇が不変であることに気が付く。<br>
+<details><summary>証明</summary>
+今、適当な\(i\)と\(j\)を選んで操作を行うとする。この操作を\((i,j)\)と書くことにする。<br>
+\(j < i\)のとき、操作に関して\((i,j)\)を行った結果得られる数列と、\((i,i-1),(i-1,i-2),...(j+1,j)\)をこの順に繰り返し行って得られる数列は同じものになる。\(j \geqq i\)のときも、同様に隣り合う部分に関する操作を行うことに帰着できる。<br>
+よって、\((i,i-1)\)と\((i,i)\)に関して、これらの操作が可能であるとき、(☆)が不変であることを示せばよい。<br>
+\((i-1,i)\)について、\(P_{i-1}とP{i},P_{i-1}とP_{i+1}\)の大小関係はそれぞれ4パターンありえ、\(P_{i-1}\)が\(P_{i}とP_{i-1}\)の間にある場合は操作前と後で(☆)の値は変化せず、そうでない場合は2増えるか2減るかなので、(☆)の値の増減は偶数しか起こらない。\((i,i)\)についても同様に示せる。<br>
+</details>
+というわけで、(☆)の値を調べることで、まず可能か不可能かが分かる。<br>
+愚直に調べても\(N^2\)回の計算で終わる。今回の制約下なら全く問題ない。<br>
+<br>
+では、可能だと分かったらどのように並べ替えればよいだろうか。<br>
+これは以下のようなアルゴリズムが有効だ。<br>
+・前から\(i\)番目の数が\(i\)だったなら、何もしない。<br>
+・前から\(i\)番目の数が\(i\)でないなら、以下の操作を行う。<br>
+→もし\(i\)が数列の末尾にあるなら、操作\((N-1,N-3)\)を行ったうえで、以下の操作を行う。<br>
+→もし\(i\)が数列の末尾にないなら、今\(i\)があるインデックスを\(p\)として、操作\((p,i-1)\)を行う。<br>
+アルゴリズムの正当性は、先の事実を認めれば簡単に示せる。<br>
+今、(☆)の値は偶数であるとして、並び替えが可能かを考える。<br>
+まず、数列の前から\(N-2\)項目までは、この手順で明らかに順番通り並ぶ（\(N-2\)項目以前の項は触れる必要がない限り不変な状態を保てるため）。<br>
+すると、\(N-1\)項目と\(N\)項目が並び替えできるかにすべてが掛かっているが、もしここが並び替え不能だとすると、(☆)の値は奇数になってしまう。よって、(☆)の値が偶数なら、並び替え可能ということになる。<br>
+以上のアルゴリズムは、\(N\)個の整数に対し、最大で\(2N\)回の入れ替え操作を行うことを要請するが、これは制約の回数以内で収まっている。<br>
+よって、これを適切に実装すればよい。時間計算量は最初の走査や、実際の並び替え操作に\(O(N^2)\)が掛かるが、これは制約下で充分高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+P = list(map(int,input().split()))
+
+# 数A[i]から見て「本当は前にあるべきであるのに後ろにある数」の個数の総和
+# 上記の数の偶奇は問題の挿入操作によって変わらない(不変量である)
+# 操作完了後の上記の数は必ず0なので、偶奇によって必要性は担保可能
+check_sum = 0
+for i in range(N):
+    for j in range(i + 1, N):
+        if P[i] > P[j]:
+            check_sum += 1
+
+# 「小さい奴をとにかく前に出していく」というアルゴリズムが正当である
+# もしこれで上手く行かない場合は、最後の2個が逆になっている
+# さっきの偶奇性の話からこれで十分性の話にもって行けるはず
+manuplation_list = []
+if check_sum % 2 == 1:
+    print('No')
+else:
+    for i in range(N):
+        if P[i] == i + 1:
+            continue
+        else:
+            tmp = 0
+            for j in range(i + 1, N):
+                if P[j] == i + 1:
+                    tmp = j
+                    break
+            if tmp == N - 1:
+                P[-2], P[-3] = P[-3], P[-2]
+                P[-1], P[-2] = P[-2], P[-1]
+                tmp -= 1
+                manuplation_list.append([N - 1, N - 3])
+            for k in range(tmp, i, -1):
+                P[k], P[k - 1] = P[k - 1], P[k]
+                P[k + 1], P[k] = P[k], P[k + 1]
+            manuplation_list.append([tmp + 1, i])
+    print('Yes')
+    print(len(manuplation_list))
+    for p, q in manuplation_list:
+        print(p, q)
+</code></pre>
+高校数学というか、数学パズル然とした問題だったように思う。<br>
+不変量の特定はこの手のパズルの定石ともいえる内容で、探してみることが多い。<br>
+後から公式解説を読んで知ったが、(☆)は転倒数っていうらしい。なんか聞いたことがある気もするけど、知ってたら早かったのだろうか。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
