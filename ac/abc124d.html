@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC124D Handstand</h1>
+問題文は<a href="https://atcoder.jp/contests/abc124/tasks/abc124_d">こちら</a>から。<br>
+与えられたビット列を指定回数判定させ、1がなるべく多く連続する区間を作る問題。<br>
+<br>
+個人的には2ステップぐらいあった(もう1ステップ合った気もするが忘れた)。<br>
+・既に1であるビットをひっくり返す必要はないこと<br>
+・連続する1をはさんで隣り合っている、連続する0しかひっくり返す必要がないこと<br>
+先の方は自明というか、10101→11011→11111にするのと10101→11101→11111にするのとで、必要な操作回数は2回で変わらないってことである。<br>
+後は、既に連続している区間を切る必要もないよねということ（もし今ある区間を切った上で最大になる場所があるなら、それをしない方がもっと長くなるためすぐ矛盾する）。<br>
+<br>
+後ろの方がやや非自明な感じがするが、これもこんな具体例で考えてみると分かりやすい。<br>
+K=2、S=10…010…010…01とする（…の箇所は0がいくらか省略されているとしよう）。Sには0が連続する区間が3か所ある。便宜上左、中、右と書くことにしよう。<br>
+先に考えたことから、出来る操作は「左と中の全ビットを1にする」、「右と中の全ビットを1にする」、「左と右の全ビットを1にする」のいずれかだ。<br>
+このとき、0がいくつあったとしても「左と中の全ビットを1にする」が最適解になることは絶対にない。<br>
+もし、その操作で最大のものが得られると仮定しよう。すると、この場合1が連続している区間は操作後の左の前後に1がくっついたものか、操作後の右の前後に1がくっついたもののいずれかになるはずだ。<br>
+もし操作後の左の前後に1がくっついたものの方が長かったとしよう。この時、明らかに「左と中の全ビットを1にする」操作で得られる文字列の方が、1の長さは長くなる。操作後の右の方が長かったとしても同様だ。<br>
+これは区間の数がいくら増えても変わらない。「連続していない」2区間をひっくり返すぐらいなら、「連続している」場所をひっくり返した方が明らかに最終的な長さは長くなるのだ。<br>
+というわけで、後は愚直にこれを調べれば良い。<br>
+最終的に数列全体を走査するのは1回で済むから、時間計算量は\(O(N)\)になる。これは充分に高速である。<br>
+実装例は以下の通り。見通しをよくするためにランレングス圧縮をしたうえでキューを使って文字の出し入れを管理している。<br>
+<pre><code class="language-python">
+import collections
+
+def runlength(s):
+    res = []
+    tmp = [s[0], 1]
+    for i in range(1, len(s)):
+        if s[i - 1] == s[i]:
+            tmp[1] += 1
+        else:
+            res.append(tmp)
+            tmp = [s[i], 1]
+    res.append(tmp)
+    return res
+
+N, K = list(map(int,input().split()))
+S = input()
+
+que = collections.deque(runlength(S))
+now = collections.deque([])
+
+zero_num = 0
+answer = 0
+tmp_answer = 0
+while que:
+    p, t = que.popleft()
+    if p == '0':
+        if zero_num == K:
+            while zero_num == K:
+                q, t_2 = now.popleft()
+                if q == '0':
+                    zero_num -= 1
+                tmp_answer -= t_2
+        zero_num += 1
+    now.append([p, t])
+    tmp_answer += t
+
+    if answer < tmp_answer:
+        answer = tmp_answer
+print(answer)
+</code></pre>
+公式解説（お2人方のユーザー解説）もランレングス圧縮してる。そうしたほうが明らかに扱いやすい。<br>
+累積和を使えば楽なのも分かるので、そうしたほうがよかったかも（尤も今回は出し入れが簡単なので、僕のコードもそんなに悪いわけではないと思うが）。<br>
+そういえば初めてコンテスト中にACした緑diff問題もランレングス圧縮すると解きやすい問題だったな。当時はランレングス圧縮を知らなくて、持ってる知識を総動員して何とか通したけど、ちょっとした知識が見通しをよくするのって珍しくないよなと今は思う。<br>
+先人の知恵って結局早いとこ学ぶに越したことはない。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
