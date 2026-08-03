@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC206D KAIBUNsyo</h1>
+問題文は<a href="https://atcoder.jp/contests/abc206/tasks/abc206_d">こちら</a>から<br>
+回文にするために変えなきゃいけない文字数について検討する問題。<br>
+<br>
+また回文。回文だけでどんだけテーマになるんだ！ 回文って面白い！<br>
+この問題についてまず考えたのは、\(A_i \neq A_{N + 1 - i}\)を満さない組を調べ上げることだ。<br>
+例えば数列\(1,2,3,5,5\)は、\(i=1,2,4,5\)について回文になる条件を満たしていない。<br>
+\(i=1,5\)について、回文にするにはどちらかをどちらかに合わせないといけない。<br>
+\(i=2,4\)についても同様だ。<br>
+各場合でどちらをどちらに合わせたとしても、操作回数は2回かかる。<br>
+<br>
+この考え方を発展させよう。<br>
+例えば数列\(1,1,2,4,5,3,2,3\)は、いずれの要素についても回文の条件を満たしていない。<br>
+つまり……<br>
+①\(i=1,8\)について、1か3をどちらかに合わせる
+②\(i=2,7\)について、1か2をどちらかに合わせる
+③\(i=3,6\)について、2か3をどちらかに合わせる
+④\(i=4,5\)について、4か5をどちらかに合わせる
+という操作が必要だ。この場合は一見4回の操作が必要に思えるが、実は3回で良い。<br>
+なぜなら、上3つの操作のうちいずれか2つを同じ側に合わせて終えた時点で、3つのうちの残り1つの操作は行う必要がなくなる（変えようと思っていた要素が同一になっている）からである。<br>
+これはなぜか考えてみよう。例えば①で1に合わせたとすると、1と3は同一視できるようになるわけで、するとあとは2を1に変えれば、1,2,3がすべて同一視できるようになることが分かる。<br>
+要するに、1をグループリーダーとして2と3をそれにフォローさせているような感じだ。<br>
+こういう操作にはUnion-Find、素集合データ構造が役に立つ。<br>
+まず、「同じグループに属している要素」同士の各グループサイズを算出する。<br>
+そして、各グループのサイズから1を引いたものの総和が今回求める答えになる（1回の操作につき、各グループの要素であってリーダーの要素と異なるもの1つをリーダーの要素と同一視するから）。<br>
+<br>
+実装例は以下の通り。Union-Findの計算量から見て\(O(N\alpha(N))\)で収まるだろう(ただし\(\\alpha(x))は逆アッカーマン関数のことだとする)。<br>
+逆アッカーマン関数が出てくる理由ちゃんと分かってないな。AtCoder Algorithm Lecturesにあったはずなので見ておきたい。<br>
+<pre><code class="language-python">
+class DisjointSetUnion:
+    def __init__(self, N: int):
+        self.number = N
+        self.parent = [ -1 for _ in range(N)]
+        self.size = [ 1 for _ in range(N)]
+ 
+    def find(self, v : int):
+        compress = []
+        while self.parent[v] != -1:
+            compress.append(v)
+            v = self.parent[v]
+        for c in compress:
+            self.parent[c] = v
+        return v
+ 
+    def union(self, u: int, v: int):
+        ru = self.find(u)
+        rv = self.find(v)
+        if ru != rv:
+            if self.size[ru] < self.size[rv]:
+                ru, rv = rv, ru
+            self.parent[rv] = ru
+            self.size[ru] += self.size[rv]
+            self.size[rv] = 1
+ 
+    def same(self, u: int, v: int):
+        return self.find(u) == self.find(v)
+
+N = int(input())
+A = list(map(int,input().split()))
+
+uf = DisjointSetUnion(max(A) + 1)
+
+for i in range(N):
+    if A[i] != A[N - 1 - i]:
+        uf.union(A[i], A[N - 1 - i])
+
+answer = 0
+for i in range(max(A) + 1):
+    answer += uf.size[i] - 1
+print(answer)
+</code></pre>
+むずくはない。でもひらめきが足りない。<br>
+最初にも書いたが回文ってテーマだけでこうも多様な出題があり得るんだなあというのは面白い。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
