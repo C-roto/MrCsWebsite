@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC469D The Big Two</h1>
+問題文は<a href="https://atcoder.jp/contests/abc469/tasks/abc469_d">こちら</a>から。<br>
+トーナメント戦で毎回勝ち残っている強い2人が何組あるか調べる問題。<br>
+<br>
+各人を頂点とみなし、トーナメント決勝での対決ペアを辺とすると、この問題はグラフの言葉で書ける。<br>
+要素数が2であるような頂点集合の部分集合\(V\)がいくつあるかを調べる問題ということで、頂点被覆問題と呼ばれる問題の特殊例ということになる(ちなみに、一般の場合の頂点被覆問題には効率の良いアルゴリズムが知られていない)。<br>
+もしくは全リテラルのうちただ2つだけが真であるような2-SATの解を探すとも言い換えられるか。<br>
+つまり、一般の場合は効率よく解ける方法が知られていないが、ある特定の条件を課すと簡単になる問題だということになる。<br>
+<br>
+今回は、グラフだと見えて、頂点被覆問題だと思えた時点でかなり話は簡単になる。<br>
+まず、重複辺は明らかに無視して問題ないため、重複辺がある場合はそれを除いて考えることにする。勿論自己ループもない。<br>
+よって、この問題は単純無向グラフ上での被覆問題と考えて良くなる。以降そうして考える。<br>
+例えば、もし頂点\(i\)(人\(i\))を問題文で指定されている組の片方だと仮定した場合、もう片方としてあり得るのはどんな頂点になるかを考えてみる。<br>
+頂点\(i\)を端点として持たない頂点が\(E_i\)本あったとすると、問題の組のもう片方になるような頂点\(j\)は以下の条件のうちいずれかを満たしている必要がある。<br>
+・\(i < j\)かつ、頂点\(j\)を端点として持つ頂点が\(M - E_i\)本あり、かつ頂点\(i\)と頂点\(j\)がともに端点であるような辺がない。<br>
+・\(i < j\)かつ、頂点\(j\)を端点として持つ頂点が\(M + 1 - E_i\)本あり、かつ頂点\(i\)と頂点\(j\)がともに端点であるような辺がある。<br>
+これは、すべての辺の少なくとも一方の端点を覆うための必要十分条件を考えれば明らかだ。<br>
+というわけで、後はこれがどの程度の計算量となるかを考えてみる。<br>
+直感的には次数が多い頂点が沢山あるとあっという間に\(2M\)を超えてしまうから、実はそんなに大変じゃないんじゃない？ と感じてしまう。<br>
+実際、直感に基づいて以下の実装例を書いたら通ってしまったのでちょっとビビった。<br>
+<br>
+より詳細に考えてみる。<br>
+まず、\(i\)本の辺が伸びている頂点の個数を\(P_i\)個とすると、握手の補題を使うことで\(\sum_{i=1}^{M} i \cdot P_i = 2M\)となる。<br>
+ここから\(P_i \leqq \frac{2M}{i}\)が分かる。<br>
+これ以上は考えても光明が見えなかったので、(もちろんコンテスト時間外に)ChatGPTを使ってそれらしいことを出力させてみた。内容を検証しつつ自分の言葉で直してみる。<br>
+頂点の和が\(M\)になるような2頂点のうち、片方の頂点数は少なくとも\(\frac{M}{2}\)以上であり、握手の補題と組み合わせるとそうした頂点は高々4つしかない。<br>
+要は、\(P_i\)と\(P_{M-i}\)ではどちらかの値が4以下であると分かるので、片方を何と定数で抑えることができるのだ！ もちろん\(P_i\)と\(P_{M+1-i}\)についても同様。<br>
+さて、単純計算では、合計で\(\sum_{i=0}{M} P_i \cdot P_{M - i} + P_i \cdot P_{M + 1 - i}\)回先の判定を行う必要が出てくる。<br>
+さっき調べた通り定数で抑えられる部分があるわけで、\(\sum_{i=0}{M} P_i \cdot P_{M - i} + P_i \cdot P_{M + 1 - i} \leqq \sum_{i=0}{M} 4 \cdot P_i + 4 \cdot P_i \leqq 4N\)と、頂点の定数倍で計算回数を抑えることができる！<br>
+つまり、なんか\(O(NM)\)とか\(O(N^2)\)とかに見えたこの計算量は、驚くべきことに\(O(N)\)まで落ちる。これはこの制約下なら十分高速だ！<br>
+<br>
+……分かった瞬間はいたく感じ入ったが、よく考えると元から知ってる範囲でカバーできる内容ではある。<br>
+こういう償却計算量を考える1つの定石を知れたのは良かった、と考えることにしよう。<br>
+ともあれ、ネックとなっていた部分が\(N\)の定数倍で収まるので、後は頂点走査がネックの可能性があり、全体で\(O(N+M)\)程度の計算量で収まる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N, M = list(map(int,input().split()))
+Edges = set()
+for m in range(M):
+    Edges.add(tuple(map(int,input().split())))
+M = len(Edges)
+
+D = dict()
+edge_num = [ 0 for _ in range(N + 1)]
+for p, q in Edges:
+    if p not in D:
+        D[p] = set([q])
+    else:
+        D[p].add(q)
+    edge_num[p] += 1
+
+    if q not in D:
+        D[q] = set([p])
+    else:
+        D[q].add(p)
+    edge_num[q] += 1
+
+edge_num_dict = dict()
+for e in range(1, N + 1):
+    if edge_num[e] not in edge_num_dict:
+        edge_num_dict[edge_num[e]] = set([e])
+    else:
+        edge_num_dict[edge_num[e]].add(e)
+
+answer = 0
+for e in range(1, N + 1):
+    p = edge_num[e]
+    if M - p in edge_num_dict:
+        for q in edge_num_dict[M - p]:
+            if e < q and (e, q) not in Edges:
+                answer += 1
+    if M + 1 - p in edge_num_dict:
+        for q in edge_num_dict[M + 1 - p]:
+            if e < q and (e, q) in Edges:
+                answer += 1
+
+print(answer)
+</code></pre>
+直感的に大丈夫だろうはいともたやすく裏切られるので、理論の裏付けはとても大事だ。<br>
+計算量への納得を以て、この問題への決着としたい。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
