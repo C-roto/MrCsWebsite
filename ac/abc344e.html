@@ -38,7 +38,7 @@
 <body>
 <div class = "main">
 <h1>ABC344E Insert or Erase</h1>
-問題文は<a href=”https://atcoder.jp/contests/abc344/tasks/abc344_e”>こちら</a>から。<br>
+問題文は<a href="https://atcoder.jp/contests/abc344/tasks/abc344_e">こちら</a>から。<br>
 リストの中に挿入したり、消したりする問題。<br>
 <br>
 これは競プロの勉強というよりはむしろ、基本情報とか普通にデータ構造の勉強をしているときに得た知識が役立った問題だった。<br>
@@ -65,7 +65,7 @@
 リスト全体を出力するにはある要素から次の要素へ辿り、そのまま次の要素に辿り……という操作を繰り返す必要があるため、リストの長さを\(L\)とすると全体で\(O(L)\)時間かかってしまうが、リスト全体の出力が要求されているのは最後の1回だけなので、これなら許容できるはずだ。<br>
 クエリ処理後のリストの長さは最大でも\(N+Q\)であるから、最初のリスト走査などネックになりうる部分をひっくるめても、全体の時間計算量は\(O(N+Q)\)程度と考えられ、制約下において充分に高速である。<br>
 実装例は以下の通り。<br>
-<pre><code class=”language-python”>
+<pre><code class="language-python">
 N = int(input())
 A = list(map(int,input().split()))
 Q = int(input())
