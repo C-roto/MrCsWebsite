@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC344E Insert or Erase</h1>
+問題文は<a href=”https://atcoder.jp/contests/abc344/tasks/abc344_e”>こちら</a>から。<br>
+リストの中に挿入したり、消したりする問題。<br>
+<br>
+これは競プロの勉強というよりはむしろ、基本情報とか普通にデータ構造の勉強をしているときに得た知識が役立った問題だった。<br>
+これは明らかに「連結リスト」の話をしている。最初に知ったときに「ほーん」と思ってそれきりになっていたヤツとの再会がこの問題であったわけだ。<br>
+<br>
+(双方向)連結リストにおいては「ある要素の前と、ある要素と後ろにある要素を保持しておく」という発想が大事になる。<br>
+例えば、\(2,4,5\)という配列をこの形で持っておこうと思う場合、<br>
+・\(2\)の前にデータはない、\(2\)の次は\(4\)<br>
+・\(4\)の前は\(2\)、\(4\)の次は\(5\)<br>
+・\(5\)の前は\(4\)、\(5\)の次にデータはない<br>
+のように保管しておく。今回の問題であれば要素に重複がないことが保証されているから、連想配列などを使って管理しておくとよいだろう。<br>
+こうすると、挿入が非常に容易になる。例えばさっきの数列\(2,4,5\)の\(2\)と\(4\)の間に\(3\)を挿入することを考える。この場合、<br>
+・「\(2\)の次は\(4\)」を「\(2\)の次は\(3\)」に書き換える<br>
+・「\(4\)の前は\(2\)」を「\(4\)の前は\(3\)」に書き換える<br>
+・「\(3\)の前は\(2\)、\(3\)の次は\(4\)」という内容を新しく追加する<br>
+ことで、データの順序と内容を正しく保持できていることになる。<br>
+削除クエリも同様で、例えば数列\(2,4,5\)から\(4\)を削除したいなら<br>
+・「\(2\)の次は\(4\)」を「\(2\)の次は\(5\)」に書き換える<br>
+・「\(5\)の前は\(4\)」を「\(5\)の前は\(2\)」に書き換える<br>
+・「\(4\)の前は\(2\)、\(4\)の前は\(3\)」という内容を消す（消さなくてもよい）<br>
+ことで、これもデータの整合性は保たれている。<br>
+よって、これによって挿入と削除に関するクエリは常に定数時間で処理できる。<br>
+<br>
+リスト全体を出力するにはある要素から次の要素へ辿り、そのまま次の要素に辿り……という操作を繰り返す必要があるため、リストの長さを\(L\)とすると全体で\(O(L)\)時間かかってしまうが、リスト全体の出力が要求されているのは最後の1回だけなので、これなら許容できるはずだ。<br>
+クエリ処理後のリストの長さは最大でも\(N+Q\)であるから、最初のリスト走査などネックになりうる部分をひっくるめても、全体の時間計算量は\(O(N+Q)\)程度と考えられ、制約下において充分に高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class=”language-python”>
+N = int(input())
+A = list(map(int,input().split()))
+Q = int(input())
+queries = []
+for q in range(Q):
+    queries.append(list(map(int,input().split())))
+
+#F_to_Bがある要素の次の要素、B_to_Fがある要素の前の要素
+#0と-1が番兵
+F_to_B = dict()
+B_to_F = dict()
+F_to_B[0] = A[0]
+B_to_F[-1] = A[-1]
+for i in range(len(A) - 1):
+    F_to_B[A[i]] = A[i + 1]
+    B_to_F[A[-1 - i]] = A[-1 - (i + 1)]
+F_to_B[A[-1]] = -1
+B_to_F[A[0]] = 0
+
+for q in range(Q):
+    now_q = queries[q]
+    if now_q[0] == 1:
+        x = now_q[1]
+        y = now_q[2]
+        back = F_to_B[x]
+        F_to_B[x] = y
+        F_to_B[y] = back
+        B_to_F[back] = y
+        B_to_F[y] = x
+    else:
+        x = now_q[1]
+        prev = B_to_F[x]
+        back = F_to_B[x]
+        F_to_B[prev] = back
+        B_to_F[back] = prev
+        B_to_F[x] = -2
+        F_to_B[x] = -2
+
+now = 0
+answer = []
+while now != -1:
+    now = F_to_B[now]
+    if now != -1:
+        answer.append(now)
+
+print(*answer)
+</code></pre>
+勉強外で知った事実というのも大事だなと思う。<br>
+やっぱり応用情報の勉強とかそろそろちゃんとしようかな（区分が消えるという話が確定してたような気もするけど）。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
