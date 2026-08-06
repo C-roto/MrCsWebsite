@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC125D Flipping Signs</h1>
+問題文は<a href="https://atcoder.jp/contests/abc125/tasks/abc125_d">こちら</a>から。
+隣り合う2数の符号を反転させて全体の総和を最大にする問題。<br>
+<br>
+隣り合う2数の符号を反転させるとき、全体のうち正のものの個数と負のものの個数の偶奇は基本的に変化しない。また、適切な操作を行うことで結局ある\(A_i,A_{i+1}\)以外はすべて正の数であるような状況を作れる<br>
+よって、大体の場合、最初に偶数個の負の数があったら適切に操作を行うことですべて正の数にできるし、奇数個の負の数があったら1つを除いてすべて正の数にすることができる。<br>
+0が数列の中にあるときだけ例外だが、結局これは負の数が偶数個あるときと同等に見なせて、すべてを0以上の値にすることができる。<br>
+すべて0以上の値にできる場合は、すべての要素の絶対値の総和がそのまま最大値になる。<br>
+そうでない場合、なるべく絶対値が小さな要素1つだけを負の値にし、それ以外の値はすべて正の値として総和を取ることで最大になる。<br>
+よって、以上を適切に実装すればよく、全体の時間計算量は\(O(N)\)程度で収まる。<br>
+実装例は以下の通り。<br>
+ <pre><code class="language-python">
+# 0がある？ ないなら負の値は奇数個？ 偶数個？
+def prodsign(X):
+    res = 1
+    for e in X:
+        if e > 0:
+            res *= 1
+        elif e < 0:
+            res *= -1
+        else:
+            res *= 0
+    return res
+
+N = int(input())
+B = list(map(int,input().split()))
+
+answer = 0
+# 0があるか偶数個負の数がある場合、全部正にできるので絶対値の総和
+if prodsign(B) >= 0:
+    for e in B:
+        answer += abs(e)
+# 偶数が奇数個で0がない場合、一番絶対値が小さい1つだけを負の数にする
+else:
+    tmp = 10 ** 10
+    for e in B:
+        if tmp > abs(e):
+            tmp = abs(e)
+        answer += abs(e)
+    answer -= 2 * tmp
+
+print(answer)
+ </code></pre>
+不変量に注目する問題だが、0でひと捻りあるような問題。<br>
+それほど大変ではないが、ちょっと面白い。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
