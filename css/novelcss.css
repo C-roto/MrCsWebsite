@@ -42,3 +42,12 @@ footer {
   text-align: center;
   color: gray;
 }
+
+@media screen and (max-width: 480px){
+  body{
+    font-size: 1rem;
+  }
+  main{
+    padding: 0 16px;
+  }
+}
