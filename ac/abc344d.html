@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC344D String Bags</h1>
+問題文は<a href="https://atcoder.jp/contests/abc344/tasks/abc344_d">こちら</a>から。<br>
+バッグの中から文字列を取り出すよ！ なんだそれ～！ な問題<br>
+<br>
+貪欲法は上手くいかない。<br>
+極端な例を考えてみると分かる。前の方の6つのバッグからa,b,c,d,e,fを取り出すより、後ろの方の1つのバッグに入っているabcdefを取り出した方が明らかにコストは低い。<br>
+こういう、前から順に選択肢を見て、その選択肢の中から択一して結果を見る、というタイプの問題には動的計画法が効く。具体的な手順を握りつぶして、コストだけを拾うという方針に特化するわけだ。<br>
+この問題については、正直ここまでわかれば後は愚直に実装するだけ。<br>
+DPテーブルの内容は「\(i\)番目までのかばんを見たときに、Tの\(j\)文字目までと一致する文字列を作るのにかかる最小のコスト」を保持しておけばよい。<br>
+遷移は「どの文字も拾わない場合」と、「各文字を（拾える場合に）拾った場合」についてのみ考えればよい。<br>
+実装例は以下の通り（コメントとか書いておけばよかった……何か見づらい）。<br>
+<pre><code class="language-python">
+T = input()
+N = int(input())
+
+dp = [ [ 1000 for _ in range(len(T) + 1)] for __ in range(N + 1)]
+for i in range(N + 1):
+    dp[i][0] = 0
+
+for i in range(1, N + 1):
+    S = list(input().split())
+    A = int(S[0])
+    for j in range(len(T) + 1):
+        dp[i][j] = min(dp[i][j], dp[i - 1][j])
+        for k in range(1, A + 1):
+            ok_flag = True
+            for l in range(len(S[k])):
+                if j + l >= len(T) or T[j + l] != S[k][l]:
+                    ok_flag = False
+            if ok_flag:
+                dp[i][j + len(S[k])] = min(dp[i][j + len(S[k])], dp[i - 1][j] + 1)
+
+if dp[-1][-1] == 1000:
+    print(-1)
+else:
+    print(dp[-1][-1])
+</code></pre>
+言うことがあんまりない。<br>
+シンプルな問題というのも悪いわけではないと思う。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
