@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>第一回日本最強プログラマー学生選手権-予選-B Kleene Inversion</h1>
+問題文は<a href="https://atcoder.jp/contests/jsc2019-qual/tasks/jsc2019_qual_b">こちら</a>から。<br>
+長く繰り返した数列の転倒数を調べる問題。<br>
+<br>
+先頭から考えても同じ結論は出るが、後ろから見た方が分かりやすい。<br>
+\(K \times N\)回繰り返した数列\(B\)のうち、末尾の\(N\)項を見ると、これは与えられた数列\(A\)と一致する。転倒数の定義から、この\(B\)の末尾\(N\)項の転倒数については、単に\(A\)の対応する項の転倒数と一致するはずである。<br>
+それ以外の\(B\)の各項についての転倒数を考える。\(B\)の第\(i\)項目の転倒数を\(T_i\)とすると、\(T_i\)に対して以下の漸化式が成り立つ。<br>
+\(T_i = T_{i + N} + (Bの第i+1項目から第i+N項目まででB_i>B_jを満たすようなjの個数)\)<br>
+この、「第\(i+1\)項目の……\(j\)の個数」を考えてみる。数列\(B\)の\(i\)項目は、数列\(A\)のいずれか対応する項\(A_x\)と一致する。\(x\)は\(i mod N\)である。<br>
+よって、\(Bの第i+1項目から第i+N項目\)というのは、\(A_{x+1},A_{x+2},...,A_{x+N}\)のことを指している（添え字が\(N\)をオーバーしている場合は、\(modN\)の値として読み替える）。<br>
+これは考えてみると、\(A_x\)よりも大きい\(A\)の要素はいくつある？ と聞かれているのに等しい。よって、\(A_0,A_1,...A_{N-1})\について自身より大きい\(A\)の要素数をカウントし、それらをそれぞれ\(D_0,D_1,...,D_{N-1}\)とすると、\(D_x\)こそが今我々が知りたい「第\(i+1\)項目の……\(j\)の個数」の値である。<br>
+よって先ほどの漸化式は\(x\)を\(i mod N\)と改めた上で書くと、<br>
+\(T_i = T_{i + N} + D_{i mod N}\)<br>
+と書ける。したがって、\(i + sN \leqq K \times N - 1\)を満たすような最大の\(s\)を\(S\)とすると、漸化式を繰り返し用いて<br>
+\(T_i = T_{i + 2N} + 2 \cdot D_{i mod N}\)<br>
+……<br>
+\(T_i = T\{i + SN} + S \cdot D_{i mod N}\)<br>
+であるから、先の末尾\(N\)項の転倒数に関する議論を思い出すと、<br>
+\(T_i = (A_iの転倒数) + S \cdot D_{i mod N}\)<br>
+という式を得る。これは数列\(D)と\(Aの転倒数\)を先に計算しておけば定数時間で計算できる。<br>
+後は総和を取る方法だが、\(i mod N\)の値によって\(B\)の項を分類すると、分類後の各項について、転倒数は等差数列を為している（初項が\(A)\)の転倒数で、公差が\(D_{i mod N}\)である）。よって、等差数列の和の公式などを使えばこれも1回あたり定数時間で和が得られる。これが\(N\)回繰り返されても、時間計算量は高々\(O(N)\)だ。<br>
+よって全体としては最初の\(A\)の転倒数を求める部分についてがネックになり、時間計算量\(O(N^2)\)で完了し、これは充分に高速である。実装例は以下の通り。<br>
+<pre><code class="language-python">
+N, K = list(map(int,input().split()))
+A = list(map(int,input().split()))
+A = A
+mod = 1000000007
+
+# 繰り返し最後の数列に対する転倒数がB
+# A[i]とA[i - N]の間の差分がD
+B = [ 0 for _ in range(N)]
+D = [ 0 for _ in range(N)]
+for i in range(N):
+    for j in range(i + 1, N):
+        if A[i] > A[j]:
+            B[i] += 1
+for i in range(N):
+    for j in range(N):
+        if A[i] > A[(i + j) % N]:
+            D[i] += 1
+
+answer = 0
+# 各kに対し、i=0~K-1までのB[i] + K * D[i]の値の総和を取る
+for i in range(N):
+    answer += (B[i] * K + D[i] * K * (K - 1) // 2) % mod
+    answer %= mod
+print(answer % mod)
+</code></pre>
+如何に総和を取る回数を減らすかキャンペーンである。<br>
+\(N\)の制約が優しいので、愚直に色々やっていいのは助かる。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
