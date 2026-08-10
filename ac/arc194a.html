@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+ <h1>ARC194A Operations on a Stack</h1>
+問題文は<a href="https://atcoder.jp/contests/arc194/tasks/arc194_a">こちら</a>から。<br>
+スタックに入れるか、スタックから出すかを繰り返して値を大きくする問題。<br>
+<br>
+愚直な実験をすると失敗する。その場で取れる最大値を取っていく、みたいなのはあまりうまくいかない。<br>
+各\(i\)に対して2種類の選択ができるので、上手く選び方を考えるとDPで結果を握りつぶせるような気がしてくる。が、なかなかうまくいかない。「スタックが空の時はポップできない」みたいな制約が邪魔をしてくる。<br>
+こういう場合はある場所に遷移してくるパターンにどういうものがあるかを冷静に考えてみる。ちゃんと遷移を考えるのだ。<br>
+\(dp_i\)を「\(i\)番目までの要素を見て操作を終えたときの、スタック中の要素の総和の最大値」としたとき、\(dp_i\)への遷移は以下の通りだ。<br>
+・\(dp_{i-1} + A_i\)（\(i-1\)番目まで見たときの最大値に、\(A_i\)）を加える）<br>
+・\(max(dp_{i-2},dp{i-4},...)\)（\(i-2,i-4,...\)番目までの最大値。それ以降から\(i\)番目までの要素はpushとpopを繰り返してすべてなかったことにする）<br>
+この2つであって大きい方が\(dp_i\)である。<br>
+下の遷移は分かりにくいものの、結局、その要素を取るか取らないかに帰着していて、「取らない」のパターンをすべて列挙しているに過ぎない。思いつきにくいが、僕は遷移のグラフを描いて一旦配るdp的に見た後、受け取るdpの方が分かりやすいと思ってこう書いている。<br>
+よって、偶数添え字のうちでそれまでの最大値と、奇数添え字のうちでそれまでの最大値を管理する変数でも用意しておけば、下の遷移は定数時間で計算できる。上の遷移は言うまでもなかろう。<br>
+というわけで、dpの各回は定数時間で計算でき、それが\(N\)回行われるので、dp全体は時間計算量\(O(N)\)で処理できる。<br>
+求める答えは、上記と同様に考えると\(dp_{N},dp_{N-2},dp_{N-4},...\)のうちで最大のものである。<br>
+よって、全体の時間計算量は\(O(N)\)で、この制約下では十分高速である。実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+A = list(map(int,input().split()))
+dp = [ 0 for _ in range(N + 1)]
+A.insert(0, 0)
+
+odd_max = A[1]
+even_max = 0
+dp[1] = A[1]
+for i in range(2, N + 1):
+    if i % 2 == 0:
+        dp[i] = max(dp[i - 1] + A[i], even_max)
+        if dp[i] > even_max:
+            even_max = dp[i]
+    else:
+        dp[i] = max(dp[i - 1] + A[i], odd_max)
+        if dp[i] > odd_max:
+            odd_max = dp[i]
+
+pivot = N
+answer = -1 * 10 ** 50
+while pivot >= 0:
+    if answer < dp[pivot]:
+        answer = dp[pivot]
+    pivot -= 2
+print(answer)
+</code></pre>
+終わってみたら別に大した問題じゃないのだけれど、dpの遷移が見えなくて色々考えてしまった。反省。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
