@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>AGC058A Make it Zigzag</h1>
+問題文は<a href="https://atcoder.jp/contests/agc058/tasks/agc058_a">こちら</a>から。<br>
+数列をジグザグにする問題。<br>
+<br>
+要素が多すぎてどう見たらいいかが分かりにくい。<br>
+愚直に考えてみると、1,2番目、3,4番目、……、2N-1,2N番目は大小関係が異なっていたら困るので、入れ替えたくなる。<br>
+もし、これらすべてに入れ替え作業を適用するとそれだけで\(N\)回の入れ替えが行われてしまうので、これだけで対応できない悪意ある入力があったら困ってしまう。<br>
+現に、\(4,3,6,5,2,1\)という入力に対しては上手く動作しない。<br>
+なぜ上手くいかないのか考えてみると、1,2番目の\(4,3\)と3,4番目の\(5,6\)の大小関係が解決できないことに原因があると分かる。どうしたって2番目の要素は、3,4番目の要素より絶対に小さくなってしまうのだ。<br>
+こうなると、2番目の要素と3番目の要素を交換する必要がある。加えて、やっぱり1番目の要素と2番目の要素も交換しないとダメだ。<br>
+よって、上記の数列を入れ替えようとするなら、<br>
+①各奇数\(i\)について、\(P_i > P_{i+1}\)なら入れ替える。<br>
+②各奇数\(i\)について、\(P_{i+1}\)が\(P_{i+2},P_{i+3}\)のどちらと比べても小さいなら、\(P_{i+1},P_{i+2}\)を入れ替える。<br>
+という操作が必要なことになる。<br>
+これを適用すると、\(4,3,6,5,2,1\)→\(3,4,6,5,2,1\)→\(3,4,5,6,2,1\)→\(3,4,5,6,1,2\)と並び替えでき、確かに今回の\(N\)である3回以下でうまく並べ替えができた。<br>
+偶然だろうか。実はそうではない。<br>
+<br>
+説明のために、問題の条件の1つ目（\(i=1,3,5,...\)に対する条件）を「奇数に対する条件」と呼び、2つ目の方を「偶数に対する条件」と呼ぶことにする。<br>
+まず、操作①を行うと、奇数に対する条件は解決できる。<br>
+操作②を行うことで、偶数に対する条件も解決できる。ここで、<strong>操作②を行った直後において、操作①を行う必要はない</strong>ことに注意する。なぜなら、操作②を行う時には\(P_{i+1} < P_{i+3}\)が保証されているからだ。またこれにより、それ以前の部分に関する奇数に対する条件が崩れることもない。<br>
+これによって、操作を行う回数はグッと減らせる。具体的には、各要素が相異なる列において、\(N\)回以下で操作が完了することが示せる。<br>
+数学的帰納法を使う。\(N=1\)の時は自明としてよいだろう（操作①を行うか、何もしないか）。<br>
+\(N\)の時正しいと仮定して、\(N+1\)の時を考える。\(2N\)番目までは帰納法の仮定により、\(N\)回以下で並べ替えが可能である。<br>
+2N+1,2N+2番目の要素について、もし2N-1,2N番目の要素に対して操作②を行っていた場合、並べ替えはこの時点で完了している。そうでない場合、操作①を行えば並べ替えは完了する。いずれにせよ、\(N+1\)回以下で並び替えが完了する。<br>
+というわけでこの方法は正当である。時間計算量も、各要素をおよそ1度ずつ舐めることから\(O(N)\)程度で収まり、十分高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+P = list(map(int,input().split()))
+
+X = []
+for i in range(0, 2 * N, 2):
+    # i,i+1番目の大きさを比較して、もし後ろの方が大きければ入れ替える
+    if P[i] > P[i + 1]:
+        X.append(i + 1)
+        P[i], P[i + 1] = P[i + 1], P[i]
+    # 入れ替えた後の後ろ2つと大小比較して、後ろ2つの方が大きければ入れ替える
+    if i + 3 < 2 * N and P[i + 1] < P[i + 2] and P[i + 1] < P[i + 3]:
+        X.append(i + 2)
+        P[i + 1], P[i + 2] = P[i + 2], P[i + 1]
+
+print(len(X))
+if len(X) > 0:
+    print(*X)
+</code></pre>
+ちなみに僕は問題文を誤読して、30分くらいをどぶに捨ててしまった（偶数番目は降順、奇数番目は昇順だと思っていた。絶対\(N\)回でできるわけなくて草）。<br>
+問題文を読もう（戒め）。<br>
+結構問題を数学の言葉で整理するのが大事な良い問題だと思う。ハードなわけではない。こういうのが4年前のレベル感ということなのだろうか。現代のAGCは何年かかっても太刀打ちできる気が全くしない。
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
