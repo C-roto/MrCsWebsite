@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ARC138A Larger Score</h1>
+問題文は<a href="https://atcoder.jp/contests/arc138/tasks/arc138_a">こちら</a>から。<br>
+数列先頭の何項かを、隣接する2要素をスワップすることを繰り返して最初より大きくする問題。<br>
+<br>
+この問題は、数列の第\(K\)項目までのある項(\(p\)項目とする)と、数列の\(K + 1\)項目以降のある項(\(q\)項目とする)に着目して、\(A_p < A_q\)なる場合に以下のような操作を考えればよい。<br>
+・\(p\)項目が最初の\(K\)項から外れるようにスワップ操作を繰り返す<br>
+・\(q\)項目が最初の\(K+1\)項目以降から外れるようにスワップ操作を繰り返す<br>
+この操作回数は結局\(q - K + K - p = q - p\)回行われるから、後は適切にこれを探索すればよい。<br>
+ある\(q\)を固定した時、\(p\)は\(A_p < A_q\)を満たす中で最も後ろの方にあるものを選べばよい。よって先頭\(K\)項を要素の小さい順（同じならインデックスの小さい順）にソートして、条件を満たすギリギリのところまで調べることを繰り返せばよい。<br>
+\(q\)が小さい順に貪欲に調べていけば適切に処理できる。<br>
+最初のソートがボトルネックになり、時間計算量は\(O(N \log_{}{N})\)程度で済む。実装例は以下の通り。<br>
+<pre><code class="language-python">
+import collections
+
+N, K = list(map(int,input().split()))
+A = list(map(int,input().split()))
+
+initals = [ [A[i], i] for i in range(K)]
+initals.sort()
+initals = collections.deque(initals)
+D = dict()
+
+for i in range(K, N):
+    while initals:
+        p, q = initals.popleft()
+        if p < A[i]:
+            D[q] = i
+        else:
+            initals.appendleft([p, q])
+            break
+
+answer = 10 ** 10
+for k, v in D.items():
+    if answer > v - k:
+        answer = v - k
+if answer == 10 ** 10:
+    print(-1)
+else:
+    print(answer)
+</code></pre>
+あらゆるときにソートがネックがち。pythonのソートはちょっと調べただけでは何をしてるのかあんまり分からないので、いつか腰を据えて調べてみたい。<br>
+C++はヒープソートとクイックソートを組み合わせているらしく、これは何となくピンとくる（クイックソートの再帰の深さが一定を超えたらヒープソートに切り替える、みたいなことだと理解している）。<br>
+何をどうソートするかがカギになる問題だった。アルゴリズムはソートに始まると言っている人もいたが、ほんとにその通りだと思う。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
