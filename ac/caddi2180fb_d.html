@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>CADDi 2018 for Beginners D Harlequin</h1>
+問題文は<a href="https://atcoder.jp/contests/caddi2018b/tasks/caddi2018_b">こちら</a>から。<br>
+リンゴ取りゲームをする問題。<br>
+<br>
+頑張って不変量を探しましょう、或いはGrundy数とか考えましょう、みたいな問題。<br>
+Grundy数を考える時のポイントとして、「負け盤面（その状態で手番が回ってきたら負けになる盤面）の特徴量」を考えることがある。要は、<br>
+・「負け盤面と同じ特徴を持つ盤面」からは、どういう手を打っても「負け盤面と違う特徴を持つ盤面」に遷移するか、或いはどこにも遷移できない<br>
+・「負け盤面と違う特徴を持つ盤面」からは、うまい手を打てば「負け盤面と同じ特徴を持つ盤面」に遷移できる<br>
+という条件を満たすような特徴量を探せばよい。今回で言えば負け盤面とは、すべての色のリンゴが0個の状態を指す（正確には最後のリンゴを食べたら勝ちだが、「リンゴが取れなくなったら負け」と考えても意味は変わらず、そして考えやすくなる）。<br>
+加えて、1回の操作で1ずつ変化をさせると、偶奇性に着目したい気持ちになる。<br>
+以上を踏まえて考えると、今回の特徴量は「各色のリンゴの個数がすべて偶数かどうか」になる。これはもちろん、「すべての色のリンゴが0個の状態」を表す特徴である。<br>
+そして、上記の条件が満たされていることは以下のように調べられる。<br>
+・各色のリンゴの個数がすべて偶数であるときは、同色を1個ずつしか取れず、パスができない都合上、必ず1つ以上の色のリンゴが奇数になる。全部0個なら負けで、遷移できない。<br>
+・各色のリンゴの個数に奇数のものがあるとき、奇数個ある色のリンゴを1つずつ食べれば、すべてが偶数個の状態で相手に手番を回すことができる。<br>
+というわけで、勝利条件は<br>
+・すべての色のリンゴが偶数個である場合、ルンルン（後手）が勝つ。<br>
+・そうでない場合、あなた（先手）が勝つ。<br>
+という、至極単純な条件分岐にまとまる。各色のリンゴに対して個数を全て数える部分がネックとなり、時間計算量は\(O(N)\)。この制約下では充分高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+
+answer = "second"
+for i in range(N):
+    a = int(input())
+    if a % 2 == 1:
+        answer = "first"
+print(answer)
+</code></pre>
+考察が9割9分で、後は眠くても書けるようなコードを書くだけ。<br>
+Grundy数はGrundy数の概念そのものも面白いんだが、その背景にある証明手法は汎用性があって面白い。<br>
+<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
