@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC470D Inverse and Swap</h1>
+問題文は<a href="https://atcoder.jp/contests/abc470/tasks/abc470_d">こちら</a>から。<br>
+数列をスワップしたり、ちょっと複雑な場所入れ替えをする問題。<br>
+<br>
+入力例を見たり、ちょっと手を動かしてみると分かるが、2のパターンのクエリ（以下クエリ2）を実行した後に出てくる数列は、<br>
+「操作前の数列において、数\(i\)が何番目にあるかを順に並べたもの」<br>
+になっている。例えば、数列\(P=(3,2,4,1,5)\)にクエリ2を実行すると、実行後の数列\(P'\)は……<br>
+・数1は数列\(P\)の中で4番目にあるから、\(P'_1 = 4\)<br>
+・数2は数列\(P\)の中で2番目にあるから、\(P'_2 = 2\)<br>
+・数3は数列\(P\)の中で1番目にあるから、\(P'_3 = 1\)<br>
+・数4は数列\(P\)の中で3番目にあるから、\(P'_4 = 3\)<br>
+・数5は数列\(P\)の中で5番目にあるから、\(P'_5 = 5\)<br>
+であるので、\(P'=(4,2,1,3,5)\)となる。<br>
+このとき数列\(P\)と数列\(P'\)は、お互いにクエリ2を通じて行き来できることが重要である。つまり、数列\(P\)に対してクエリ2を実行し\(P'\)を作ったとき、\(P'\)に対して再びクエリ2を実行すると、\(P\)に戻る。<br>
+こうなると、各操作後の\(P\)と\(P'\)を常に保持しておけば、クエリ1が来た時は各数列の指定される2つの項を入れ替えればよいし、クエリ2が来た時は\(P\)と\(P'\)を入れ替える（実際に入れ替えるのではなく、次のクエリから操作する対象を変更すればよい）ことで、対応できる。<br>
+各操作について操作はすべて定数時間で出来るから、クエリを走査する時間か、\(P'\)を最初に構築する時間のいずれかがボトルネックとなり、時間計算量は\(O(N+Q)\)となり、この制約下では充分高速。<br>
+実装例は以下の通り。\(P'\)がIdsである。<br>
+<pre><code class="language-python">
+N, Q = list(map(int,input().split()))
+P = list(map(int,input().split()))
+Ids = [ -1 for _ in range(N)]
+for i in range(N):
+    P[i] -= 1
+    Ids[P[i]] = i
+
+# pattern=0の時、Pを主体として操作を行う
+# そうでないときはIdsを主体とする
+pattern = 0
+for q in range(Q):
+    query = list(map(int,input().split()))
+    if query[0] == 1:
+        x = query[1] - 1
+        y = query[2] - 1
+        if pattern == 0:
+            Ids[P[x]], Ids[P[y]] = Ids[P[y]], Ids[P[x]]
+            P[x], P[y] = P[y], P[x]
+        else:
+            P[Ids[x]], P[Ids[y]] = P[Ids[y]], P[Ids[x]]
+            Ids[x], Ids[y] = Ids[y], Ids[x]
+    else:
+        pattern += 1
+        pattern %= 2
+
+if pattern == 0:
+    print(*[i + 1 for i in P])
+else:
+    print(*[i + 1 for i in Ids])
+</code></pre>
+どう見てもC問題よりこっちの方が簡単。<br>
+2つの情報を互いに保持しておくのって大事ですよね。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
