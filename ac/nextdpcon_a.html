@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>Next DP Contest A ポリオミノ</h1>
+問題文は<a href="https://atcoder.jp/contests/ndpc/tasks/ndpc2026_a">こちら</a>から。<br>
+ポリオミノの敷き詰めを動的計画法にて考える問題。<br>
+<br>
+僕が競プロを始める遥か前に、Typical DP Contest、DP まとめコンテストというコンテストが開催された。<br>
+名の通り、動的計画法について学ぶための有志コンテストだったそうだが、此度それに続くコンテストが行われた（と説明を読む限りでは理解できる）。<br>
+今回はそんなNext DP ContestのA問題を取り上げてみる。<br>
+<br>
+ポリオミノの敷き詰めは大学入試でもよく見たことのある題材ではなかろうか。東大が大昔に漸化式を組ませるところまではやらせてた気がする。<br>
+漸化式を書く時にも大事なことだが、あり得る遷移条件を斬り分けて考えることが大切だ。<br>
+今回だと、自分は以下の3つに分けて考えた。<br>
+・左から\(N\)マス目の上下がともに埋まっている埋め方の数を\(perf_{N}\)とする。<br>
+・左から\(N\)マス目の上だけが埋まっていない埋め方の数を\(ubroke_{N}\)とする。<br>
+・左から\(N\)マス目の下だけが埋まっていない埋め方の数を\(dbroke_{N}\)とする。<br>
+こうすると、\(i \geqq 3\)において遷移は以下のように書ける。<br>
+・\(perf_{i} = perf_{i - 2} + perf_{i - 1} + dbroken_{i - 1} + ubroken_{i - 1}\)<br>
+(長方形ポリオミノを横に倒して2つ使う、長方形ポリオミノを縦に1つだけ使う、下の欠けたL字にL字を嵌める、上の欠けたL字にL字を嵌める)<br>
+・\(ubroken_{i} = perf_{i - 2} + dbroken_{i - 1}\)<br>
+(上の欠けたL字を使う、下の欠けたL字に横倒しのポリオミノを1つだけ使う)<br>
+・\(dbroken_{i} = perf_{i - 2} + ubroken_{i - 1}\)<br>
+(下の欠けたL字を使う、上の欠けたL字に横倒しのポリオミノを1つだけ使う)<br>
+後は適切に初期化してこの遷移を愚直に計算すればよい。\(N \leqq 40\)程度なら答えも大した大きさにならないので各部の計算はほぼ定数時間と見なせ、\(O(N)\)程度で処理できる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+
+dp_perf = [ 0 for _ in range(N + 1)]
+dp_u_broken = [ 0 for _ in range(N + 1)]
+dp_d_broken = [ 0 for _ in range(N + 1)]
+
+dp_perf[0] = 1
+
+for i in range(1, N + 1):
+    dp_perf[i] += dp_perf[i - 2] + dp_perf[i - 1] + dp_d_broken[i - 1] + dp_u_broken[i - 1]
+    dp_u_broken[i] += dp_perf[i - 2] + dp_d_broken[i - 1]
+    dp_d_broken[i] += dp_perf[i - 2] + dp_u_broken[i - 1]
+
+print(dp_perf[N])
+</code></pre>
+漸化式をある程度整理すると、数列\(perf\)についてのみのシンプルな漸化式を得ることができ、以下のようなコードでも通る。<br>
+<pre><code class="language-python">
+N = int(input())
+
+dp_perf = [ 0 for _ in range(40 + 1)]
+dp_sum = 2
+
+dp_perf[0] = 1
+dp_perf[1] = 1
+
+for i in range(2, N + 1):
+    dp_perf[i] = 2 * dp_sum - (dp_perf[i - 1] + dp_perf[i - 2])
+    dp_sum += dp_perf[i]
+
+print(dp_perf[N])
+</code></pre>
+なんか、A問題という割には意外と考えることあって大変じゃない？<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
