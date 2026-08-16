@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>Question-Data</h1>
+問題文は<a href="">こちら</a>から。<br>
+閉路のない単純有向グラフ上のパスの個数を求める問題。<br>
+<br>
+頂点1から行ける頂点に行き、そこから次々と行ける頂点を調べていく……という方法がベースであることはすぐにわかる。<br>
+一方で、どの頂点から調べるかというのは重要な関心ごとで、例えば以下のようなテストケースが与えられた時を考えてみよう。<br>
+5 6<br>
+1 2<br>
+1 3<br>
+1 4<br>
+2 3<br>
+3 5<br>
+4 5<br>
+この時、1から直接遷移できる頂点は2,3,4があるが、うっかり3からパスを数え始めると、2から3へ流れ込んでくるパスをうまくカウントできずWAする可能性が高い。<br>
+なので、「もう他に流れ込んでくるパスがない」という条件を満たす中で調べられる頂点を調べるのがよい。<br>
+そこで、この問題ではトポロジカルソートを行う必要がある。トポロジカル順に並び替えれば、その順に調べることで、「後から実はパスが流れ込んでくる可能性がありました」という状況をなくすことができる。<br>
+トポロジカルソートにかかる時間計算量が\(O(N+M)\)で、ソート後のdpも時間計算量\(O(N+M)\)なので、全体としても時間計算量\(O(N+M)\)で計算でき、これは十分高速である。<br>
+実装例は以下の通り。<br>
+<br>
+<pre><code class="language-python">
+mod = 998244353
+T = int(input())
+
+for t in range(T):
+    N, M = list(map(int,input().split()))
+    G = [ list() for _ in range(N)]
+    indeg = [ 0 for _ in range(N)]
+    for i in range(M):
+        u, v = list(map(int,input().split()))
+        u -= 1
+        v -= 1
+        indeg[v] += 1
+        G[u].append(v)
+    
+    dp = [ 0 for _ in range(N)]
+    dp[0] = 1
+    t_sorted = []
+
+    stack = []
+    for i in range(N):
+        if indeg[i] == 0:
+            stack.append(i)
+    
+    while stack:
+        p = stack.pop()
+        t_sorted.append(p)
+        for q in G[p]:
+            indeg[q] -= 1
+            if indeg[q] == 0:
+                stack.append(q)
+    
+    for p in t_sorted:
+        for q in G[p]:
+            dp[q] += dp[p]
+    
+    print(dp[N - 1] % mod)
+</code></pre>
+単なる数え上げに一ひねり加わった問題。<br>
+DPの基本テクニックを知ってるから解けるというより、DPだと知ったうえで何をしたいからどういう手順を踏みたいか考察することが重要なように思えた。<br>
+<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
