@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC471D Chargers</h1>
+問題文は<a href="https://atcoder.jp/contests/abc471/tasks/abc471_d">こちら</a>から。<br>
+充電器にバッテリ差したり抜いたりする問題。<br>
+<br>
+バッテリーを抜くときに、最大まで充電されていることが確定するバッテリーが持つ性質を考える。<br>
+クエリ全体において\(i\)番目に差すバッテリーを\(B_i\)とし、差し込み時刻を\(in_i\)、差し込み時点の充電量を\(w_i\)としよう。<br>
+クエリ全体において\(j\)番目にバッテリーを抜くときの抜く時刻を\(out_j\)と書くとすると、この時抜かれるバッテリーの充電量は、既に差されていてまだ抜かれていないバッテリーであって、\(w_i + (out_j - in_i)\)の値が最大となるような\(B_i\)である。<br>
+これは\(out_j\)の値に関係なく、\(w_i - in_i\)の値が最大であるものを引っこ抜いて来ればよい、と言っているに等しい。<br>
+よって、バッテリーを差すタイミングで\(w_i - in_i\)の値を何らかのデータ構造に格納しておき、抜くタイミングでそのデータ構造の中から最大の値を引っ張り出して\(out_j\)の値を足せばよい。勿論、バッテリーの最大容量を超えていた場合は、バッテリーの最大容量の方を出力する必要がある。そのデータ構造の中に値が入っていなければ、-1を出力する。<br>
+これは優先度付きキューを使えば実現できる(Pythonならheapqを使えばいいね)。<br>
+時間計算量についてはクエリ回数と優先度付きキューを操作する回数を考慮して、\(O(Q\log_{}{Q})\)程度で抑えられるだろう。勿論この制約なら充分高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import heapq
+
+Q, V = list(map(int,input().split()))
+HQ = []
+hqsize = 0
+heapq.heapify(HQ)
+
+for q in range(Q):
+  query = list(map(int,input().split()))
+  if query[0] == 1:
+    heapq.heappush(HQ, -1 * (query[2] - query[1]))
+    hqsize += 1
+  else:
+    if hqsize == 0:
+      print(-1)
+      continue
+    p = heapq.heappop(HQ)
+    print(min(query[1] - p, V))
+    hqsize -= 1
+</code></pre>
+簡単ではあるけど、良い感じに考えるのが大事。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
