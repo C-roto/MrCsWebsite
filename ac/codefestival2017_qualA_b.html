@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>CODE FESTIVAL 2017 qual A B fLIP</h1>
+問題文は<a href="https://atcoder.jp/contests/code-festival-2017-quala/tasks/code_festival_2017_quala_b">こちら</a>から。<br>
+行と列の色反転を使って、指定の個数の黒マスをちょうど得られるかを調べる問題。<br>
+<br>
+色の反転について、常に行全体か列全体を反転する性質上、「どこの行/列を反転したか」は重要でなく、「いくつの行/列」を反転したかが重要となる。<br>
+また、操作の順番も重要ではない（各マスについて操作が行われた回数の偶奇だけが最終的な色に寄与し、それは今見ているマスが属する行と列それぞれで操作が行われたかのみに関係するから）。<br>
+行と列の個数の組み合わせは全体で\((N+1)(M+1)\)個しかないわけだから、すべてについていくつの黒マスが得られるかを全列挙して、その中に\(K\)があるかを調べればよい。<br>
+<br>
+今、\(i\)個の行と\(j\)個の列について反転操作を行ったとしよう。<br>
+操作順は関係ないので、一旦列に関する操作のみを行い、まとめて行に関する操作を後で行ったとしよう。<br>
+すると、列に関する操作を終えた時点で黒マスの個数は\(Mi\)個になる。<br>
+この後、行に関する操作を1回行うと、その列の中には黒マスが\(j\)個、白マスが\(N-j\)個あるから、1回の操作ごとに黒マスの個数は\(-i+N-i=N-2i\)個ずつ増減する。<br>
+この操作を\(j\)回行うことで、行に関する操作全体で\(j(N-2i)=Nj-2ij\)個の黒マス増減が発生する。<br>
+よって、全体として得られる黒マスの個数は\(Mi+Nj-2ij\)個になる。これを\(0 \leqq i \leqq N\)と\(0 \leqq j \leqq M\)について考え、最終判定をすればよい。<br>
+<br>
+各回でいくつの黒マスが得られるかは定数時間で計算できるから、ループの回数が全体の計算量に最も影響を与える。<br>
+全体の時間計算量は\(O(NM)\)で抑えることができ、これはこの制約下では充分に高速だろう。実装例は以下の通り。<br>
+<pre><code class="language-python">
+N, M, K = list(map(int,input().split()))
+
+# スイッチは合計何個押したがだけが重要で、左から順に押した後、上から順に押すとしても問題ない。
+# 左からi行、上からj列までを押したときの黒マスの個数はNj + Mi - 2ij個
+
+# あり得る黒マスの個数をすべて列挙
+check = set()
+for i in range(N + 1):
+    for j in range(M + 1):
+        check.add(N * j + M * i - 2 * i * j)
+
+# ありうる黒マスの個数の中にKはある？
+if K in check:
+    print('Yes')
+else:
+    print('No')
+</code></pre>
+緑diffではあるけど古い問題ではある。現代基準だとどの程度だろう。茶か、下手したら灰か。<br>
+もっと"緑然"とした問題を解けるように力をつけていきたいところ。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
