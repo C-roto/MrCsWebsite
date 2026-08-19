@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ARC324D Square Permutation</h1>
+問題文は<a href="https://atcoder.jp/contests/abc324/tasks/abc324_d">こちら</a>から。<br>
+与えられた数列を並べ替えて作れる平方数の数を数える問題。<br>
+<br>
+並べ替えを実際にやると最大で\(13!=6227020800\)通りになる。また、平方数の判定方法は（私が知る限り）素因数分解を間に挟まないといけないので、愚直にやると各調べる数の平方根までは調べる必要がある。<br>
+それを高速化する方針は思いつかない。<br>
+逆に、平方数の側を全列挙して、それが上手くいくかどうかを調べる方が楽そうだ。これなら、\(\sqrt{10^{13}} = \sqrt{10} \cdot 10^6 \leqq 4 \cdot 10^6\)個程度を調べるだけなので、1回の判定時間が短ければ充分ワークするだろう。<br>
+<br>
+ある平方数\(Q\)が与えれらたとき、問題の数列\(S\)の全要素を使って、その平方数を作ることができるか調べる方法を考える。<br>
+・0以外の数字については、\(Q\)と\(S\)の中でその個数が異なる数字があると、その時点でダメだ。<br>
+・0については、\(Q\)に含まれている数が\(S\)に含まれている数より真に多かったときはダメで、そうでなければ\(S\)の余分な0を先頭に回せば問題ない。<br>
+というわけで、上記の2点を判定するアルゴリズムを書けばよい。配列(Pythonならリスト)とか連想配列みたいなものを使えば充分に作れる。<br>
+この判定は各平方数に含まれる数字の個数より多い回数回ることはないはずなので、時間計算量\(O(N)\)で回ると考えてよいはずだ。<br>
+<br>
+よって、全体としては<br>
+・平方数を列挙する<br>
+・列挙した平方数をそれぞれ処理する<br>
+あたりを考慮して、時間計算量\(O(\sqrt{10^N} \cdot N)\)程度で収まるはずだ。これは制約下においては充分高速であろう。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+S = input()
+
+D = [0 for _ in range(10)]
+for i in range(N):
+    D[int(S[i])] += 1
+
+answer = 0
+for i in range(3162278 + 1):
+    res = [0 for _ in range(10)]
+    check = i ** 2
+    if check == 0:
+        res[0] = 1
+    while check > 0:
+        res[check % 10] += 1
+        check //= 10
+
+    ok_flag = True
+    for j in range(10):
+        if j == 0 and D[j] < res[j]:
+            ok_flag = False
+            break
+        if j != 0 and D[j] != res[j]:
+            ok_flag = False
+            break
+
+    if ok_flag:
+        answer += 1
+
+print(answer)
+</code></pre>
+手元環境だと実行に3~4秒程度かかるが、Atcoderのジャッジでは300~400ms前後で終わったらしい。<br>
+環境の差？ どういう要因があるんだろうか。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
