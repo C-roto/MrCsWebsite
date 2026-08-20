@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC217D Cutting Woods</h1>
+問題文は<a href="https://atcoder.jp/contests/abc217/tasks/abc217_d">こちら</a>から。<br>
+木を切って、木材の長さを出力するぜって問題。<br>
+<br>
+二分探索がすぐに頭をよぎった。<br>
+つまり、c=2のクエリが与えられたとき、「この地点より左にある切れ目の中で座標最大のものは？」という問いの答えを切れ目aとすると、aの次の切れ目の座標からaの座標を引いた値がちょうど求める木材の長さになる。<br>
+右端や左端の木材の場合バグるので、座標0と座標Lにも仮想的に切れ目がある状態としてよい。<br>
+あとはc=1のクエリを突っ込む時点でソートされている状態が保てればよいから、sortedcontainersでも使ってソートと要素追加を両立すれば問題ない。<br>
+<br>
+sortedcontainersは現在持っている要素数を\(K\)としたとき、追加も要素の探索も\(O(\log_{}{K})\)で処理できるはずである。<br>
+よって、全体の時間計算量自体は\(O(Q\log_{}{L})\)で抑えられるし、この制約下なら充分に高速である。実装例は以下の通り。<br>
+<pre><code class="language-python">
+import sortedcontainers
+
+cutted = sortedcontainers.SortedList([])
+
+L, Q = list(map(int,input().split()))
+cutted.add(0)
+cutted.add(L)
+for _ in range(Q):
+    c, x = list(map(int,input().split()))
+    if c == 1:
+        cutted.add(x)
+    else:
+        a = cutted.bisect_left(x)
+        print(cutted[a] - cutted[a - 1])
+</code></pre>
+とりあえず今のAtcoder環境ならこれで通るが、問題出題の当時はSortedcontainersが使えなかったはず。<br>
+ユーザー解説にそのあたりを補足してくれている記事があったので読んでおきたい。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
