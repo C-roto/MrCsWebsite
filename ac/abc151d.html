@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC151D Maze Master</h1>
+問題文は<a href="https://atcoder.jp/contests/abc151/tasks/abc151_d">こちら</a>から。<br>
+迷路の中で、なるべくスタートとゴールを離す問題。<br>
+<br>
+H,Wの制約が小さいので総当たりできる、というちょっとメタなことを考えてしまう。<br>
+特に「ある頂点を始点としたとき、その頂点から最も遠い頂点の距離」を、始点となりうるすべての頂点に対して調べればよい。<br>
+<br>
+楽はできないだろうかと思ったが、木ではないのでグラフの直径を求めようとすると失敗するケースがありうる（小細工で回避できる可能性はあるが、本当にどうにかできるかどうかも含めて知らない）。<br>
+全点対全点で距離の最短を求めようとすると、ワーシャル・フロイド法的なアルゴリズムしか思いつかない。しかも今回は辺の重みが全部等しいわけだから、わざわざそれをする必要すらなく、普通にBFSを全頂点に対して行い、都度最も遠い点の距離を求めてやれば良い。<br>
+頂点数は最大\(HW\)個であり、BFSや全頂点の距離走査（時間計算量\(O(HW)\)）が各頂点の検索時にネックとなるのは明らかである。よって、全体の時間計算量はおよそ\(O(H^2W^2)\)で抑えることができ、これは充分に高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import collections
+def isin(h, w):
+    return 0 <= h <= H - 1 and 0 <= w <= W - 1
+m_1 = [1, -1, 0, 0]
+m_2 = [0, 0, 1, -1]
+def bfs_and_longest(h, w):
+    Count = [ [ -1 for _ in range(W)] for __ in range(H)]
+    que = collections.deque([[h, w]])
+    Count[h][w] = 0
+    while que:
+        p, q = que.popleft()
+        for i in range(4):
+            nh = p + m_1[i]
+            nw = q + m_2[i]
+            if isin(nh, nw) and S[nh][nw] == "." and Count[nh][nw] == -1:
+                Count[nh][nw] = Count[p][q] + 1
+                que.append([nh, nw])
+    res = 0
+    for i in range(H):
+        for j in range(W):
+            if res < Count[i][j]:
+                res = Count[i][j]
+    return res
+H, W = list(map(int,input().split()))
+S = []
+for i in range(H):
+    S.append(list(input()))
+answer = 0
+for i in range(H):
+    for j in range(W):
+        if S[i][j] == ".":
+            r = bfs_and_longest(i, j)
+            if answer < r:
+                answer = r
+print(answer)
+</code></pre>
+各頂点に重みが付いたりするとワーシャル・フロイド法だし、もしグラフが木である保証があるならもっと頂点の制約が大きくても対処できる気がする。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
