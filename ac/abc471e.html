@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC471E Sum of Square of Sum</h1>
+問題文は<a href="https://atcoder.jp/contests/abc471/tasks/abc471_e">こちら</a>から。<br>
+数字が書かれたボールをいくつか取り出し、その数字の総和の2乗の総和を求める問題。<br>
+<br>
+2乗しないなら、各値の寄与分を調べて主客転倒とかもできるかもしれないが、これは無理。<br>
+DP的な感じで総和が等しくなるものを握りつぶせるかとも思ったが、これも大して握りつぶせなさそう。<br>
+となると、式そのものをゴリゴリ掘り返してみるのが良いだろう。<br>
+\((a_{i_{1}} + a_{i_{2}} + ... + a_{i_{K}})^2\)を展開することを考えてみる。すると、<br>
+\(a_{i_{1}}^2 + a_{i_{2}}^2 + ... + a_{i_{K}}^2 + 2 \cdot \sum_{x < y}^{} a_{i_{x}}a_{i_{y}}\)<br>
+となる。つまり、ここに登場した各項の2乗と、それらを互い違いにとったものの2倍がそれぞれ登場することになる。<br>
+こうすれば各項の寄与分を考えることができ、対称性から\(a_1\)が使われる回数を考えると、これを他の項にも同様に適用できる。<br>
+\(a_1\)を含むものは、全体から\(a_1\)を含まないものを引いた個数と等しい。よって、\(\binom{N}{K} - \binom{N - 1}{K}\)個登場する。<br>
+同じように\(a_1a_2\)がいくつ登場するか考えると、いわゆる包除原理を用いることで\(\binom{N}{K} - 2\binom{N - 1}{K} + \binom{N - 2}{K}\)個あると分かる。<br>
+よって、求めるべき値は<br>
+\(({a_1}^2 + {a_2}^2 + ... + {a_N}^2)(\binom{N}{K} - \binom{N - 1}{K}) + 2(\sum_{x < y}^{} a_xa_y)(\binom{N}{K} - 2\binom{N - 1}{K} + \binom{N - 2}{K})\)<br>
+を998244353で割った余りであると分かる。<br>
+\({a_1}^2 + {a_2}^2 + ... + {a_N}^2\)は時間計算量\(O(N)\)程度で前計算すればすぐにわかるし、<Br>
+\(2(\sum_{x < y}^{} a_xa_y)\)については、少し考えると\(S=a_1+a_2+...+a_N\)としたときの\(\sum_{i = 1}{N} a_i(S-a_i)\)と等しいと分かる。<br>
+これも時間計算量\(O(N)\)ですぐに計算できる。<br>
+他の二項係数部分に対しては、フェルマーの小定理などを使って逆元を求めれば簡単に処理できる。特に今回は\(N\)の値も小さいので、時間計算量\(O(N)\)程度で抑えられる時間がかかるのは全く問題ない。<br>
+後は階乗逆元を求めるあたりで\(log_{}{998244353}\)程度の時間がかかるが、他はおよそ時間計算量\(O(N)\)で完了する部分しかなく、この制約下なら適切に実装すれば充分に高速に処理できるだろう。<br>
+実装例は以下の通り。<br>
+(階乗逆元を求めるライブラリを作っていなかったので、昔の問題から引っこ抜いて再利用しているうえに、変数名の名づけがあまりにも過ぎて読みにくい……ちょっと恥ずかしいのでいつか書き直したい)<br>
+<pre><code class="language-python">
+N, K = list(map(int,input().split()))
+A = list(map(int,input().split()))
+
+mod = 998244353
+
+squared_sum = 0
+ordinary_sum = 0
+for i in range(N):
+    squared_sum += (A[i] ** 2) % mod
+    ordinary_sum += A[i] % mod
+    squared_sum %= mod
+    ordinary_sum %= mod
+
+prod = [1]
+prod_inv = []
+for i in range(1, N + 1):
+    prod.append((prod[-1] * i) % mod)
+
+doubling = prod[-1]
+p = mod - 2
+check = 1
+while p != 0:
+    if p & 1 == 1:
+        check *= doubling
+        check %= mod
+    p = p >> 1
+    doubling = doubling ** 2
+    doubling %= mod
+
+prod_inv.append(check)
+for i in range(N, 0, -1):
+    prod_inv.append((prod_inv[-1] * i) % mod)
+prod_inv.reverse()
+
+answer = 0
+squared_num = (prod[N] * prod_inv[N - K] * prod_inv[K]) % mod
+if N - 1 >= K:
+    squared_num -= (prod[N - 1] * prod_inv[N - 1 - K] * prod_inv[K]) % mod
+while squared_num < 0:
+    squared_num += mod
+answer += (squared_sum * squared_num) % mod
+
+ordinary_sum_sum = 0
+for i in range(N):
+    ordinary_sum_sum += A[i] * (ordinary_sum - A[i]) % mod
+ordinary_num = (prod[N] * prod_inv[N - K] * prod_inv[K]) % mod
+if N - 1 >= K:
+    ordinary_num -= (2 * prod[N - 1] * prod_inv[N - 1 - K] * prod_inv[K]) % mod
+if N - 2 >= K:
+    ordinary_num += (prod[N - 2] * prod_inv[N - 2 - K] * prod_inv[K]) % mod
+while ordinary_num < 0:
+    ordinary_num += mod
+answer += (ordinary_sum_sum * ordinary_num) % mod
+
+print(answer % mod)
+</code></pre>
+二項係数の上の方が小さい値になる場合は0＝値を足し引きしない、という処理にするのを間違えまくって全然答えが合わなかった。<br>
+競技プログラミング的な部分としての階乗逆元と、数学的な考察としての組み合わせ計算をして、久しぶりに大変勉強になったような気がする。<br>
+最近やってた部分が生きたのでよかった。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
