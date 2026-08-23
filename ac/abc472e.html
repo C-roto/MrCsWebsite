@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC472E Odd Cycle</h1>
+問題文は<a href="https://atcoder.jp/contests/abc472/tasks/abc472_e">こちら</a>から。<br>
+単純連結無向グラフに奇数長閉路が存在するかを判定し、あるなら例の出力まで行う問題。<br>
+<br>
+存在判定はそれほど難しくない。2部グラフ(端的には、頂点を黒か白かのいずれかの色で塗り分ける時、隣接する頂点同士が同色にならないような塗分け方が存在するようなグラフ)であることと、奇数長の閉路を持つことは同値だからである。<br>
+証明は調べれば色々出てくる。<br>
+2部グラフの判定はDFSでもBFSでも書けるが、今回はBFSで書いてみる。<br>
+<br>
+実際に構築するのがやや面倒。<br>
+とりあえず2部グラフでない場合、BFSでの彩色中に隣接する同色頂点が生まれるのは間違いないので、最初に衝突する2頂点を記録しておく(以下、一方を\(P\)、もう一方を\(Q\))と呼ぶ。<br>
+点\(P\)から順に、頂点\(1\)まで辿ってきた道を遡っていき、通った辺を逐次記録しておく。<br>
+同様に、点\(Q\)から順に、頂点\(1\)まで辿ってきた道を遡っていき、通った辺を逐次記録しておく。<br>
+（BFS中に「直前どの頂点から遷移してきたか」を記録しておけばこれはすぐに可能である）<br>
+点\(P\)からの道と点\(Q\)からの道が最初に合流する頂点を\(R\)とすると、\(R→P→Q→R\)という閉路を取ることができる。この閉路は必ず奇数長になっていることが簡単に示せる。<br>
+(証明)<br>
+　\(R\)が既に彩色済みの頂点であることは明らかである。<br>
+　もし\(R\)が\(P,Q\)と同色ならば、\(R→P\)の間では白と黒が偶数回切り替わるので、辺も偶数本ある。これは\(Q→R\)間も同様である。<br>
+　\(P→Q\)間には1本しか辺がないので、偶数本+偶数本+1本は奇数本である。<br>
+　\(R\)と\(P,Q\)が異色の場合も同様にして奇数本+奇数本+1本は奇数本である。<br>
+よって、この閉路を提出すればよい。<br>
+時間計算量は（以下の例だとやや面倒なことをやっているが）BFSと、解答が存在する場合の構築部分がネックであろうか。<br>
+前者の計算量は\(O(N+M)\)で抑えられるし、後者の計算量は辺の数の定数倍で抑えられるはずだから、1回の入力の全体で扱う頂点の個数を\(N_{sum}\)、辺の本数を\(M_{sum}\)とすれば、全体の時間計算量は\(O(N_{sum}+M_{sum})\)で抑えらえるはずだ。<br>
+今回の入力制約下では充分に高速だろう。<br>
+実装例は以下の通り（解答構築部が明らかにごちゃごちゃしているのでそのうち直したい）<br>
+<pre><code class="language-python">
+import collections
+
+T = int(input())
+
+for t in range(T):
+    N, M = list(map(int,input().split()))
+    G = [ set() for _ in range(N)]
+    for i in range(M):
+        a, b = list(map(int,input().split()))
+        a -= 1
+        b -= 1
+        G[a].add(b)
+        G[b].add(a)
+    Color = [ -1 for _ in range(N)]
+    Parents = [ -1 for _ in range(N)]
+
+    # 2色で塗り分け可能か⇔奇数長の閉路を含むかの判定
+    que = collections.deque([0])
+    Color[0] = 0
+    Parents[0] = -2
+    Same_color = []
+    ok_flag = True
+    while que:
+        p = que.popleft()
+        for q in G[p]:
+            if Color[q] == -1:
+                que.append(q)
+                Parents[q] = p
+                if Color[p] == 0:
+                    Color[q] = 1
+                else:
+                    Color[q] = 0
+            # 色が衝突したら衝突した色を記録しておく
+            if Color[q] == Color[p]:
+                Same_color.append(p)
+                Same_color.append(q)
+                ok_flag = False
+                break
+        if ok_flag == False:
+            break
+
+    # 奇数長閉路の構築
+    if ok_flag == False:
+        answer = [Same_color[0] + 1]
+        p = Same_color[0]
+        founded = set([p])
+        # 衝突地点の一方から頂点1に向かって辺を伸ばす
+        while Parents[p] != -2:
+            answer.append(Parents[p] + 1)
+            founded.add(p)
+            p = Parents[p]
+        answer.reverse()
+        q = Same_color[1]
+        answer.append(q + 1)
+        # 衝突地点のもう一方から頂点1に向かって辺を伸ばす
+        # 先に通った頂点を再び通りそうになったらそこで止める（その時点で閉路ができている）
+        while Parents[q] != -2:
+            if q in founded:
+                break
+            answer.append(Parents[q] + 1)
+            q = Parents[q]
+        answer.reverse()
+        # 余分な頂点を削除する
+        while answer[-1] != answer[0]:
+            answer.pop()
+        # 合流地点が2重カウントされているので削除する
+        answer.pop()
+
+    if ok_flag:
+        print(-1)
+    else:
+        print(len(answer))
+        print(*answer)
+</code></pre>
+判定方法は以前勉強中にたまたま知ったが、実際の構築をどうするかはあまり考えたことがなかった。<br>
+コンテスト中ならたぶんこういう感じで書いて通したんじゃないだろうか。<br>
+<br>
+(思いつくなら)公式解説のやり方の方が明らかに楽なので、そっちを使った方が良い。<br>
+解答構築の方法も、公式解説のやり方で一度書いてみようと思う。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
