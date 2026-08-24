@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC217E Sorting Queries</h1>
+問題文は<a href="https://atcoder.jp/contests/abc217/tasks/abc217_e">こちら</a>から。<br>
+後ろの方に値をつけたし、時々ソートしながら、前の方の値を吐き出す問題。<br>
+<br>
+クエリ3のソートをどうするかが問題だ。勿論ソートクエリのたびに毎回ソートしていたらとてつもなく時間がかかってしまう。<br>
+例えば\(Q=2\cdot10^5\)のとき、奇数回目にクエリ1、偶数回目にクエリ3、後ろの方でクエリ2が何回か、みたいな感じにして、額面通り可変長配列などでこの操作を実施するとすると、簡単に撃墜ケースが出来上がってしまう。<br>
+データ構造を工夫して持つことにより、この問題を解決したい。<br>
+<br>
+「ある部分より前ではソートされており、その部分より後ろでは入れた順に処理する(FIFO)」という状況を作りたいので、それぞれに適したデータ構造を用意する。<br>
+Pythonであれば、前の方はSortedListが、後ろの方はqueue(collections.dequeを使うのが競技では一般的か)がそれぞれの操作を得意としている。<br>
+クエリ1で要素を追加するときはqueue側に追加し、クエリ2で要素を出すときはSortedList側を見ればよい（SortedList側に値がなければqueue側の先頭の値を出す）。<br>
+クエリ3では、queue側の要素をすべてSortedListに突っ込めばよい。こうすることで、自動的にソート済みの状態になる。すべての要素は高々1回だけこの操作によってqueueからSortedListに移動させられることと、各クエリ3における時間計算量が\(O(\log_{}{Q})\)で抑えられることを考えると、クエリ3全体での（償却）時間計算量は\(O(Q\log_{}{Q})\)程度で収まるはずだ。<br>
+クエリ1,2の各操作も、1回あたり\(O(\log_{}{Q})\)程度で時間計算量を抑えることができるので、結局全体としても時間計算量\(Q\log_{}{Q}\)で抑えられ、これは充分制約下においては高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import sortedcontainers
+import collections
+
+Q = int(input())
+
+A = sortedcontainers.SortedList([])
+B = collections.deque([])
+# 最大でも計算量自体はO(QlogN)で抑えが効く
+for q in range(Q):
+    query = list(map(int,input().split()))
+    # 配列の未ソート部分(queue)に値を突っ込む(O(1))
+    if query[0] == 1:
+        B.append(query[1])
+    # 既ソート部にデータがあればそこの最小値、なければ未ソート部の先頭を出す（O(1)もしくはO(logN)）
+    elif query[0] == 2:
+        if len(A) > 0:
+            p = A[0]
+            A.pop(0)
+            print(p)
+        else:
+            p = B.popleft()
+            print(p)
+    # ソートクエリが来たらSortedListに投げ込む(各logN)
+    else:
+        while B:
+            p = B.popleft()
+            A.add(p)
+</code></pre>
+Sortedcontainers様様な問題。<br>
+……と思って公式解説を見たら別のデータ構造での管理をしてて、確かにーとなった。<br>
+実際にソートをするか否かで割と本質的な違いがあるようにも思えるが、使用しているデータ構造自体は似ているので別に大した違いはないような気もする。まあ、実質一緒のことをしていると見なせる範疇か。<br>
+<br>
+こういう「前と後ろでデータ構造を分けて持つ」って問題は最近の出題でも覚えがある。<br>
+あれはSortedContainersで一発だった（し、公式解説にはなかったけど多分みんなそうやって解いてる気がする）けれど、これは割としっかり目に前後分割しないといけない問題なので、ちょっと勉強になったと思う。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
