@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC163B Favorite Game</h1>
+問題文は<a href="https://atcoder.jp/contests/arc163/tasks/arc163_b">こちら</a>から。<br>
+指定範囲内に数列を収める問題。<br>
+<br>
+\(A_3\)以降に対して操作をする必要がなさそうなことは何となく分かる（直観的には、\(A_1,A_2\)という範囲の外側をいじった方が効率が良さそうだろう）。<br>
+よって、\(A_1,A_2\)をいじることで、その間に\(M)\個の値が入るようにする方針で考える。<br>
+<br>
+\(A_1,A_2\)の間に入る\(M)\個の値は、与えられた数列を昇順にソートした際に連続していることが必要である。<br>
+ソート後の\(A_3,A_4,...,A_N\)を、改めて\(S_1,S_2,...,S_{N-2}\)と書くことにする。<br>
+この時、\(M)\個の両端となる点は\(S_i\)と\(S_{i+M}\)である（ただし、\(i=1,2,...,N-M-2\)）。<br>
+よって、各\(i\)について\(A_1とS_i\)が一致するように\(A_1\)を減算（ただし\(A_1\)の方がもともと小さいときは何もしない）、\(A_2とS_{i+M}\)が一致するように\(A_2\)を加算（ただし\(A_2\)の方がもともと大きいときは何もしない）してやると、少なくとも\(\[A_1,A_2\]\)の間に\(M\)個以上の値が入るのは明らかだ。<br>
+この時の操作回数は\(\max(0, A_1 - S_i) + \max(0, S_(i+M} - A_2)\)回だ。<br>
+この値の最小値を\(Y\)とする。また\(\max(0, A_1 - S_i) + \max(0, S_(i+M} - A_2) = Y\)となるような\(i\)を、そのような値が\(X\)個あるとして、\(1 \leqq x \leqq X\)なる整数\(x\)を用いて\(m_x\)と書くとする。<br>
+以下では、どのように操作を行っても、\(Y\)回以上の操作が必要であることを示す。<br>
+<br>
+まず、もともと\(\[A_1,A_2\]\)に\(M\)個の値があるなら、最小の操作回数は0回となる。<br>
+この時は\(S_j \geqq A_1\)を満たす最小の\(j\)を取れば、\(\max(0, A_1 - S_j) + \max(0, S_(j+M} - A_2) = 0\)を達成できる。<br>
+そうでない時について考える。<br>
+\(A_1 \ge A_2\)であるとき、一旦\(A_1=A_2\)となるように動かす必要があるから、\(A_2-A_1\)回の操作は最低限必要である。<br>
+そこから、\(S_i\)から\(S_{i+M}\)を\(\[A_1, A_2\]\)に入れるためには、最低\(\max(0, A_1 - S_i) + \max(0, S_(i+M} - A_2)\)回の操作が必要になる（S側を動かすにせよ、A側を動かすにせよ）。<br>
+\(A_1 \leqq A_2\)であるときは、今ほどの議論の\(A_2-A_1\)のくだりが無くなるだけで、やはり\(S_i\)から\(S_{i+M}\)を\(\[A_1, A_2\]\)に入れるためには、\(\max(0, A_1 - S_i) + \max(0, S_(i+M} - A_2)\)回は掛かる。<br>
+<br>
+よって、結局\(\max(0, A_1 - S_i) + \max(0, S_(i+M} - A_2)\)の値の最小値を求めるというのが正当な手順になる。<br>
+配列のソートがネックになるため、時間計算量は\(O(N\log_{}{N})\)程度で抑えられ、無論制約下では高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N, M = list(map(int,input().split()))
+A = list(map(int,input().split()))
+
+l = A[0]
+r = A[1]
+nA = A[2:]
+nA.sort()
+
+answer = 10 ** 10
+for i in range(N - 2):
+    if i + M - 1 <= N - 3:
+        check = max(0, l - nA[i]) + max(nA[i + M - 1] - r, 0)
+        if check < answer:
+            answer = check
+    else:
+        break
+
+print(answer)
+</code></pre>
+自明だと思っても最小性の議論をちゃんとやろうという気持ちになりました。<br>
+近年の緑diff問題にしては割と解きやすい。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
