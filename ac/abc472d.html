@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC472D Bomber Mad</h1>
+問題文は<a href="https://atcoder.jp/contests/abc472/tasks/abc472_d">こちら</a>から。<br>
+縦横を無尽蔵に爆破する爆弾から、規定歩数で逃れられる場所の数を探す問題。<br>
+<br>
+あるマスCについて、「CからK回以内の移動でいずれかの安全な空マスに移動できること」と、「ある安全な空マスSが存在して、SからK回以内の移動でCに移動できること」とは同値である。<br>
+→は、移動できる安全な空マスの有限集合から、1つ要素を選んでSとし、Sへ移動するための手順をPとすると、Pを逆順にして上下と左右を反転させた手順P'を使うことで、SからCへ戻ることができる。PがK回以内の移動で構成されているなら、P'も明らかにK回以内の移動で構成されている。<br>
+←も似た感じで証明できる。<br>
+よって、各マスについて安全な空マスに移動できるか調べる代わりに、ある空マスからK回以内の移動で辿り着けるマスの合計個数をカウントすれば、それが答えになる。<br>
+<br>
+なれば、まず安全な空マスを列挙しよう。<br>
+定義から、マス(i,j)が安全な空マスであることは、i行目に爆弾がなく、かつj列目に爆弾がないことと同値である。<br>
+よって、爆弾がある列と行の番号をメモしておき、すべてのマスについてそのマスの行番号と列番号がメモの中に含まれているか見れば、安全な空マスをすべて列挙することは可能である。<br>
+<br>
+安全な空マスをすべて列挙したら、各空マスからK回以下の移動で移動可能な場所を調べれば良い。<br>
+これはいわゆる多始点BFSを使えば正当に確かめることができる。<br>
+各頂点がBFSを行う際のキューに入るのは高々1回だけで、各頂点から延びる辺は定数本しかないので、全体としてもそれほど大きな時間はかからない。<br>
+全体としても全マスを1度ずつ舐める操作がネックになり、時間計算量は\(O(HW)\)程度になる。これは制約下において十分に高速である。<br>
+<pre><code class="language-python">
+import collections
+
+# 移動後のマスが盤面内部かの判定
+def isin(y, x):
+    return 0 <= x <= W - 1 and 0 <= y <= H - 1
+
+# 移動方向を記した配列をあらかじめ用意
+m_1 = [1, -1, 0, 0]
+m_2 = [0, 0, 1, -1]
+
+H, W, K = list(map(int,input().split()))
+S = []
+for i in range(H):
+    S.append(list(input()))
+
+# 爆弾がある行と列をメモ
+bomb_colmun = set()
+bomb_row = set()
+for i in range(H):
+    for j in range(W):
+        if S[i][j] == "#":
+            bomb_colmun.add(j)
+            bomb_row.add(i)
+
+# さっきメモした行にも列にも該当しないマス=安全な空マスをメモ
+searched = set()
+que = collections.deque([])
+for i in range(H):
+    for j in range(W):
+        if i not in bomb_row and j not in bomb_colmun:
+            que.append([i, j, 0])
+            searched.add((i, j))
+
+# 爆弾がないマスを中心に最短距離がK以下のマスを全探査(BFS)
+# すべてのマスは1度以上キューに入らないので、ループはマスの個数以上は回らない
+while que:
+    p, q, c = que.popleft()
+    for i in range(4):
+        np = p + m_1[i]
+        nq = q + m_2[i]
+        # 移動後が内部で空マスか？
+        if isin(np, nq) and S[np][nq] == ".":
+            # 移動後が探査済みでなく、かつ移動回数K回以下で到達できるか？
+            if (np, nq) not in searched and c + 1 <= K:
+                que.append([np, nq, c + 1])
+                searched.add((np, nq))
+
+print(len(searched))
+</code></pre>
+波がありがちなD問題の中では、割と難易度が下ぶれた感じのある問題。<br>
+各マスの距離を配列で持たず、集合で管理する形式にしているのは、単にその時それが楽だと思ったからであって、深い意味はない。<br>
+何度も全体走査するのが馬鹿らしいと思ったのかもしれない。実際、Kや安全な空マスの個数が小さいときは集合で管理したほうが早い気がする（明らかに調べなくていいマスの情報をはじめから持たずに済むから）、こっちの方が良いのかもしれない。<br>
+もっとも、内部のメモリ状態とかあまり詳しいことは知らないので、迂闊なことは言えないのだが。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
