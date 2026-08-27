@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC368F Dividing Game</h1>
+問題文は<a href="https://atcoder.jp/contests/abc368/tasks/abc368_f">こちら</a>から。<br>
+数1つを真に小さい約数に置き換える操作を続けて、操作できなくなった方が負けのゲームで勝敗を見る問題。<br>
+<br>
+結論：どう見てもニムです。本当にありがとうございました。<br>
+<br>
+要するにここからは、このゲームがいわゆるニムと同じように扱えて、同じように勝敗を決められることを示す。<br>
+ここで、ここでいうニムとはザックリ以下のようなゲームを指す。<br>
+・正の整数個の石からなる山が、正の整数個ある。<br>
+・手番のプレイヤーはいずれかの山を1つ選び、その山から石を好きなだけ取る。<br>
+・どの山にも石がない状態で手番が回ってきたら手番プレーヤーの負けで、もう一方のプレイヤーの勝利。<br>
+ニムは両者が最善手を尽くす前提ならば、初期状態によって先手必勝もしくは後手必勝が決まることが知られている。<br>
+しかも実際にゲームをしてみる必要もない。このゲームの盤面には特徴的な不変量があり、それを使うとゲームを行う前に先手が勝つか後手が勝つか分かるのだ。<br>
+その特徴量というのが、「各山に残っている石の個数のビット毎の排他的論理和」である。どうしてそうなるのかは調べると分かりやすい証明がたくさん出てくる。<br>
+<br>
+さて、では今回のゲームがニムとどう同じなのかを説明する。<br>
+今回のゲームのある盤面が、ニムのある盤面と対応付けられることを示せばよい。<br>
+まず、各\(A_i\)を山\(i\)に対応させ、\(A_i\)を「素因数分解したときの各素因数について、その次数の合計（以下、単に合計次数と呼ぶことにする）」を、山\(i\)の石の個数と対応させる。<br>
+例えば、盤面を表す数列\(A\)が以下のように与えられたとする。<br>
+\(3,2,6,8\)<br>
+この時、<br>
+・\(3=3^1\)の各素因数の次数の合計は1<br>
+・\(2=2^1\)の各素因数の次数の合計は1<br>
+・\(6=2^1 \cdot 3^1\)の各素因数の次数の合計は2<br>
+・\(8=2^3\)の各素因数の次数の合計は3<br>
+であるから、対応するニムの盤面は<br>
+\(1,1,2,3\)<br>
+になる（各山の石の個数を並べて書いたものである）。<br>
+そして、約数に置き換える操作は石を取る操作に対応させられる。理由は以下の通り。<br>
+・まず、各\(A_i\)に関して、\(A_i\)自身より小さい任意の約数\(D\)は、\(A_i\)が持っていない素因数を新たに持つことはなく、かつ、既に持っている素因数のいずれかは真に少ない個数しか持たないのだから、\(D\)の合計次数は\(A_i\)のそれよりも、必ず真に小さくなる。<br>
+・\(A_i\)の合計次数を\(p\)とすると、\(A_i\)の真の約数であって合計次数が\(0\)以上\(p - 1\)以下であるものが必ず存在する。<br>
+　合計次数\(k (0 \leqq k \leqq p - 1)\)であるような約数\(D\)は、以下のような手順で実際に作ることができる。<br>
+①係数用のカウンターを0で初期化して用意し、\(A_i\)の素因数であって最も小さいものを選ぶ。<br>
+②その素因数の次数を1ずつ減らし、カウンターを1増やす。<br>
+③②の途中でカウンターが\(p - k\)になったら止める。先にその素因数の次数が0になったら、次に大きい素因数を探して②の操作を続ける。<br>
+合計次数\(p\)の数に対して、最大でも②の操作は\(p\)回繰り返せるので、途中で操作不能になることはない。正当性は明らかだろう。<br>
+つまり、ある合計次数の数に対して、任意のそれ以下の非負の合計次数の数を作り出せるわけで、これはある山から好きな個数の石を取る操作と対応付けられる。<br>
+<br>
+以上より、各数の合計次数を算出し、それのビット毎のXORを取れば答えになる。<br>
+初期の数に対してその数の合計次数を求めるためには素因数分解をすればよく、素因数分解は時間計算量\(O(\sqrt{A_i}\)程度で実行できることを考えると、全体の時間計算量は\(O(N\sqrt{max(A)})\)程度で実行でき、これは制約下においては充分に高速……と言い切れるかは怪しいが、ギリギリでも通るとは考えられそうだ。<br>
+実装例は以下の通り。<br>
+<br>
+<pre><code class="language-python">
+N = int(input())
+A = list(map(int,input().split()))
+
+def devide(x):
+    count = 0
+    for i in range(2, x):
+        if i * i > x:
+            break
+        if x % i != 0:
+            continue
+        while x % i == 0:
+            x //= i
+            count += 1
+    if x != 1:
+        count += 1
+    return count
+
+XOR_List = []
+
+for i in range(N):
+    XOR_List.append(devide(A[i]))
+
+x = 0
+
+for i in range(N):
+    x ^= XOR_List[i]
+
+if x == 0:
+    print('Bruno')
+else:
+    print('Anna')
+</code></pre>
+本当に超ごくまれに起こる、なぜか解けるF問題の1つ。<br>
+G問題は過去の問題セットの中だと1問（えびまさんが取り上げてたアレ）ぐらいしか完全自力解決できたものはないので、FやGがいかにやべぇかということを思い知る次第だ。<br>
+こわいねぇ。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
