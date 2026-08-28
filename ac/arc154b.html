@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ARC154B New Place</h1>
+問題文は<a href="https://atcoder.jp/contests/arc154/tasks/arc154_b">こちら</a>から。
+先頭の文字を好きなところに挿入して、最小手数で目的の文字列を作る問題。<br>
+<br>
+まず、\(S\)と\(T\)を構成する要素が違ったら何度やっても絶対にうまくいかない。<br>
+逆にそうでないときは、挿入ソートの要領で変形できることは分かる（後ろの方に挿入していく）。<br>
+\(S\)の連続する先頭の何文字かを削った文字列であって、\(T\)の部分列(連続しているとは限らない)になっているもののうち、削った文字数が最も少ないものを\(M\)とする。<br>
+この時、\(|S| - |M|\)回操作をすれば\(S\)を\(T\)に一致できる。先述の通り、挿入ソートの要領でうまくいく。<br>
+逆に、\(|S| - |M|\)回未満の操作で一致しないことも分かる。<br>
+もし\(|S| - |M|\)回未満の操作回数\(X\)回で一致したとし、操作後の\(S\)を\(S'\)と書くことにする。<br>
+ここで、\(S'\)から\(S\)の\(X\)文字目までの文字を削除した文字列は明らかに\(T\)の部分列であって\(M\)より長い。<br>
+定義から\(M\)は「\(S\)の連続する先頭の何文字かを削った文字列であって、\(T\)の部分列(連続しているとは限らない)になっているもの」のうち長さが最大のものだったはずなので、これは矛盾。<br>
+よって、この問題の答えは\(|S| - |M|\)になるから、「\(S\)の連続する先頭の何文字かを削った文字列であって、\(T\)の部分列(連続しているとは限らない)になっているもの」を探せばよい。<br>
+これは貪欲法で後ろから文字を見ていけばすぐに分かる。<br>
+\(S\)を後ろから1文字ずつ\(T\)のある1文字と比較していけばいいので、全体の時間計算量は\(O(N)\)で抑えられ、制約下で充分高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+S = input()
+T = input()
+
+D_s = dict()
+D_t = dict()
+for i in range(N):
+    if S[i] not in D_s:
+        D_s[S[i]] = 1
+    else:
+        D_s[S[i]] += 1
+
+    if T[i] not in D_t:
+        D_t[T[i]] = 1
+    else:
+        D_t[T[i]] += 1
+
+if D_s != D_t:
+    print(-1)
+else:
+    answer = 0
+    pivot = N - 1
+    for i in range(N - 1, -1, -1):
+        if T[i] == S[pivot]:
+            pivot -= 1
+    print(pivot + 1)
+</code></pre>
+実装中は明らかにこれでいいだろうと思って作ってるけど、「これでいい理由」をちゃんと言語化するのは難しいと思った。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
