@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC317D President</h1>
+問題文は<a href="https://atcoder.jp/contests/abc317/tasks/abc317_d">こちら</a>から。<br>
+選挙で勝つために何人派閥の鞍替えをさせるか調べる問題。<br>
+<br>
+貪欲法……例えば、鞍替えさせるべき青木派が少ないところから順に鞍替えさせていく、みたいな方法は上手く行かない。<br>
+なぜなら、青木派が多いけど議席数が過半数を超えているところ1つを鞍替えさせた方が楽か、青木派が比較的少ないけど議席数が少ないところを複数鞍替えさせた方が楽かは貪欲に判断することはできないからだ。<br>
+かといってどの選挙区を取るかを全部律義に判断していくのも、\(N\)個の選挙区に対して時間計算量が\(O(2^N)\)程度かかり、とても上手く行かなさそうだ。<br>
+各選挙区に対して、その選挙区を取るか/取らないかの2択しかないことや、その2択に応じて獲得できる議席数の遷移を簡単に書けそうなところから、動的計画法が視野に入る。実際、\(N\)や\(\sum Z_i\)の値からdpテーブルを作るのはギリギリできそうに見える。<br>
+具体的には「最初から\(i\)個目の選挙区までを見た時、ちょうど\(A\)議席獲得するのに必要な最小の鞍替え人数」を\(dp[i][A]\)とする（ただし、青木派から高橋派に何人鞍替えさても到達できない\((i,A)\)の組に対しては、\(dp[i][A] = \inf\)とする）。<br>
+dpテーブルは最初、すべての要素を無限大で初期化しておくものとしよう。<br>
+<br>
+すると、初期条件(\(i=1\)の場合)は以下の通りになる。<br>
+・もし最初から青木派が過半数を超えていた場合(\(X_1 > Y_1\)の場合)、高橋君は\(Z_1\)議席を獲得する他ないので、\(dp[1][Z_1] = 0\)にする。<br>
+・そうでない場合、高橋君はこの選挙区を取らないことも取ることもできる。選挙区を取る場合は高橋君は最終的に\(\frac{X_1 + Y_1 + 1}{2}\)人を獲得する必要があるので、鞍替えに必要な人数は\(\frac{X_1 + Y_1 + 1}{2} - X_1\)人となる。<br>
+　以上より、\(dp[0][0] = 0\)と、\(dp[0][Z_1] = \frac{X_1 + Y_1 + 1}{2} - X_1\)とすればよい。<br>
+（すでに取っている選挙区をあえて取らないことに意味がないのは明らかだ。もしそうして最小値が得られるなら、そうしなくても最小値が得られる）<br>
+<br>
+\(i=1,2,...,N-1\)に対する遷移条件は以下の通り。<br>
+・もし\(X_{i+1} > Y_{i+1}\)ならば、選挙区\(i+1\)はどうあっても必ず取ることになる。<br>
+　よって、\(i\)番目までで\(z\)議席獲得する最小の鞍替え人数は、\(i+1\)番目までで\(z+Z_{i+1}\)議席獲得する最小の鞍替え人数の候補になりうる（すでにそれより小さい値で遷移できる方法が見つかっていれば話は別）。<br>
+　この時、\(dp[i + 1][z + Z_{i+1}] = min(dp[i][z], dp[i + 1][z + Z_{i+1}])\)という更新を行うことは妥当になる。<br>
+・そうでない場合、選挙区\(i+1\)を取ることもとらないこともできる。<br>
+　もし取らないなら<br>
+\(dp[i + 1][z] = min(dp[i][z], dp[i + 1][z])\)
+として遷移を考えればよい。<br>
+　取るなら先ほど同様に過半数を取るための人数を算出して、<br>
+\(dp[i + 1][z + Z_{i+1}] = min(dp[i + 1][z + Z_{i+1}], dp[i][z] + \frac{X_{i+1} + Y_{i+1} + 1}{2} - X_{i+1})\)<br>
+として遷移を考えればよい。<br>
+<br>
+後は\(dp[N]\)の要素であって、全体議席数の半分以上を取るための最小要素を調べれば良い。これは\(\frac{\sum Z_i}{2}\)個程度の要素を全走査すればよい。<br>
+\(N \cdot \sum Z_i \)回の遷移を考えるDP部分や配列作成部分がネックになり、全体の時間計算量も\(O(N \cdot \sum Z_i)\)になる。<br>
+制約下では充分に高速だろう。実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+
+# i個目の選挙区まででぴったりZ議席を獲得するために必要な最小限の鞍替え人数=dp[i][Z]
+dp = [ [ 10 ** 20 for _ in range(10 ** 5 + 1)] for _ in range(N)]
+whole_counts = 0
+
+# 初期状態調整
+X, Y, Z = list(map(int,input().split()))
+whole_counts += Z
+if X > Y:
+    dp[0][Z] = 0
+else:
+    dp[0][0] = 0
+    dp[0][Z] = (X + Y) // 2 + 1 - X
+for i in range(N - 1):
+    X, Y, Z = list(map(int,input().split()))
+    whole_counts += Z
+    for j in range(10 ** 5 + 1):
+        # この選挙区を取らない場合
+        if X < Y:
+            dp[i + 1][j] = min(dp[i][j], dp[i + 1][j])
+        # この選挙区を取る場合
+        if 0 <= j + Z <= 10 ** 5:
+            dp[i + 1][j + Z] = min(dp[i + 1][j + Z], dp[i][j] + max(0, (X + Y) // 2 + 1 - X))
+
+answer = 10 ** 20
+for i in range(whole_counts // 2 + 1, 10 ** 5 + 1):
+    if answer > dp[-1][i]:
+        answer = dp[-1][i]
+print(answer)
+</code></pre>
+　DPの問題だが、「ある場合においては取らない選択ができない」という制約がある状態で解く必要のある問題だった。<br>
+　だからと言って難問というわけでもないかなとも感じる。少なくとも、Next DP Contestとかよりはまあ……(比較して良い対象かは定かではない)。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
