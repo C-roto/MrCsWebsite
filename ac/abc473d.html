@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC473D Coefficient Stair</h1>
+問題文は<a href="https://atcoder.jp/contests/abc473/tasks/abc473_d">こちら</a>から。<br>
+インデックスと数の積の和が一定となる数列を辞書順に出力する。<br>
+<br>
+最終的な解答の数が\(3 \cdot 10^5\)以下と限定されているので、全部見つけた後ソートすればよい。<br>
+なので最初から辞書順に生成する必要はない。<br>
+ここで、なるべく後ろのインデックスから候補を選んでいけば、最後に\(1 \cdot A_1\)の値でいかようにでも調整が効くから、後ろから順に数列を確定させていけば無駄がない。<br>
+再帰で全探索しても、探索回数は\(3 \cdot 10^5\)回以下で収まるから、上手く実装すれば全然問題ないはずである。<br>
+<br>
+が、なんかあんまりうまい実装ができなかった。<br>
+なるべく再帰の際に重たい処理をさせたくないので、外部に現在の数列の状態をメモしておき、答えとなる状態まで来たら配列answerの中にコピーした値を格納する、みたいな感じのことをやった。<br>
+答えは高々\(3 \cdot 10^5\)個しかなく、\(N \leqq 10\)なので、すべての答えを毎回コピーするにしても時間計算量はおよそ\(O(N \cdot num(answer)\)程度で済むはずだから大したことはないと高をくくっていた。が、実際に書いて通してみるとことごとくダメ。最大ケースで上限に引っかかる。<br>
+無駄なループは回していないので、定数倍の重みが効いたのか……と推察している。<br>
+しかし論理的に正しいはずなのでCodonを使って通してみると、あっさりと通った。Codonがあってよかった。<br>
+PyPyで通す方法は（軽く目を通した限りだと）公式解説に書いてある。前から順に処理するとダメかなーと思っていたが、やりようはあるみたいだった。あとでちゃんと見ておこう。<br>
+とりあえずCodonで通した実装例が以下の通り。<br>
+<pre><code class="language-python">
+import sys
+
+def seq_rec(Whole_sum, leng):
+    if leng == N - 1:
+        Seq.append(K - Whole_sum)
+        answer.append(list(reversed(Seq)))
+        Seq.pop()
+        return
+    q = 0
+    while Whole_sum + q *(N - leng) <= K:
+        Seq.append(q)
+        seq_rec(Whole_sum + q * (N - leng), leng + 1)
+        q += 1
+        Seq.pop()
+
+N, K = list(map(int,input().split()))
+if N == 1:
+    print(K)
+    sys.exit()
+
+answer = []
+Seq = []
+p = 0
+while p * N <= K:
+    Seq = []
+    Seq.append(p)
+    seq_rec(p * N, 1)
+    p += 1
+answer.sort()
+for a in answer:
+    print(" ".join(map(str, a)))
+</code></pre>
+多分pypyで通せるはずの問題を通せないのは何とも言えない悲しさがある。<br>
+上手い方法が見つかったら更新しておこう。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
