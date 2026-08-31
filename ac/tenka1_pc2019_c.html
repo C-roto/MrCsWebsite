@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>Tenka1 Programmer Contest 2019 C Stones</h1>
+問題文は<a href="https://atcoder.jp/contests/tenka1-2019/tasks/tenka1_2019_c">こちら</a>から。
+一列に並んだ白黒の石であって、特定の並びが出ないように石の色を変える問題。<br>
+<br>
+最終的な形としては"...…..##…#"のように、左の方が"."で、右の方が"#"になっている状態を作れれば良い。<br>
+この時「例えば右の方にある"."を"#"に置き換える」のような、雑な貪欲法を使うと失敗する（N=10,S="##.#....##"などの例が分かりやすい）。<br>
+ゴールの形が決まっているという話をもう少し掘り下げたい。左の方がずっと"."で、右の方がずっと"#"という形というのは、左から\(i(i=0,1,2...,N)\)番目までを"."にするということを指す。<br>
+つまり\(i\)の選び方\(N + 1\)通りを調べればすべてのあり得るゴールを調べたことになる。<br>
+<br>
+調べ方について考える。具体的にどこに白石と黒石があるかは問題ではなく、ある地点より前に黒石がいくつあって、ある地点より後ろに白石がいくつあるかさえわかれば、その合計が色を変えるべき石の数になる。<br>
+これは白石と黒石の各累積和を取れば、毎回定数時間で算出できる。<br>
+というわけで、先の各ゴールに対応する地点に対して、毎回定数時間で操作すべき石の個数が分かるので、ループの回数がネックとなり、全体の時間計算量は\(O(N)\)程度で抑えられる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+S = list(input())
+
+white = 0
+for i in range(N):
+    if S[i] == ".":
+        white += 1
+    else:
+        break
+
+B = [ 0 for _ in range(N)]
+W = [ 0 for _ in range(N)]
+for i in range(N):
+    if S[i] == ".":
+        W[i] = 1
+    else:
+        B[i] = 1
+
+for i in range(N - 1):
+    W[i + 1] += W[i]
+    B[i + 1] += B[i]
+
+answer = min(W[-1], B[-1])
+for i in range(N - 1):
+    s = B[i] + (W[-1] - W[i])
+    if answer > s:
+        answer = s
+
+print(answer)
+</code></pre>
+未来の自分が読んで分かる内容ではあるかもしれないけど、もう少し丁寧に言葉を使って解説を書きたいですね。<br>
+いつかはいくつかの記事を全面改稿できたらいいなー。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
