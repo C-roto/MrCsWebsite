@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>第二回全国統一プログラミング王決定戦予選 B Counting of Trees</h1>
+問題文は<a href="https://atcoder.jp/contests/nikkei2019-2-qual/tasks/nikkei2019_2_qual_b">こちら</a>から。<br>
+頂点間の距離から作れるグラフの個数をあてる問題。<br>
+<br>
+グラフを1つも作れない場合のカウントがちょっと面倒。<br>
+「距離0の頂点が1つじゃない」、「頂点の距離が飛び飛び(距離iの頂点があり、かつ距離i+1の頂点がなく、かつ\(i < j\)を満たす距離jの頂点が存在する)」がまずいことはわかるが、うっかり「頂点1が頂点1から距離0ではない」場合を見落としてWAした。<br>
+ともあれ、これら3条件が満たされていない場合はたやすい。<br>
+距離iの頂点が\(C_i\)個あるとする。<br>
+このとき、距離i+1の頂点は、距離iの頂点のいずれかとつながっている必要があり、また、どの距離iの頂点とつないでも木であるという条件を保つことはできる。<br>
+よって、距離i+1の頂点について、可能な辺のつなぎ方は\({C_i}^{C_{i+1}}\)通りだけある。これをすべての\(i\)に関して出して総和をとればよい。<br>
+あまり工夫しなくても、毎回modをとるだけで大した計算量にはならない。<br>
+最悪ケースでも時間計算量は\(O(N)\)で抑えられ、このケースにおいては問題ない。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+D = list(map(int,input().split()))
+mod = 998244353
+
+Vernum = dict()
+nums = list()
+for i in range(N):
+    if D[i] not in Vernum:
+        Vernum[D[i]] = 1
+        nums.append(D[i])
+    else:
+        Vernum[D[i]] += 1
+
+nums.sort()
+ok_flag = True
+# 気ができない条件を1つずつはじく
+# 距離0の頂点が1つもないか、あるいは複数ある場合
+if 0 not in Vernum or Vernum[0] != 1:
+    ok_flag = False
+# 頂点1から頂点1の距離が0でない場合
+if D[0] != 0:
+    ok_flag = False
+# 距離iの頂点があるのに距離i+1の頂点がなく、かつi < jなる距離jの頂点がある場合
+for i in range(len(nums)):
+    if nums[i] != i:
+        ok_flag = False
+
+if ok_flag:
+    answer = 1
+    for i in range(len(nums) - 1):
+        tmp = 1
+        for j in range(Vernum[i + 1]):
+            tmp *= Vernum[i]
+            tmp %= mod
+        tmp %= mod
+        answer *= tmp
+        answer %= mod
+    print(answer % mod)
+else:
+    print(0)
+</code></pre>
+組み合わせ爆発って怖いね。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
