@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC178D Redistribution</h1>
+問題文は<a href="https://atcoder.jp/contests/abc178/tasks/abc178_d">こちら</a>から。<br>
+再分配する問題。<br>
+<br>
+項数が\(n)\で条件を満たす数列を考えよう。<br>
+この時、各項は3以上の整数であるから、\(S - 3n\)を\(n\)個の各項へと割り振る方法の数だけ数列は存在する。<br>
+要するに、\(S - 3n\)個の丸と\(n-1\)個の仕切りを並べる方法の数に対応して、数列も同じだけ存在する。<br>
+よって項数が\(n\)で求める数列は\(\frac{S - 2n - 1}{(S-3n)(N-1)}\)通りあるので、これを\(S - 3n\)が0以上である範囲で\(n\)を1ずつ増やしながら足し合わせればよい。<br>
+<br>
+階乗の前計算とループの回数がネックで、全体の時間計算量はおよそ\(O(S + \log_{}{mod})\)程度だろうか。<br>
+いずれにせよ十分高速に計算できる。実装例は以下の通り。<br>
+<pre><code class="language-python">
+S = int(input())
+mod = 1000000007
+
+p = mod - 2
+fact_rev = 1
+doubleing = 1
+facts = [1, 1]
+for i in range(2, S + 1):
+    facts.append(facts[-1] * i % mod)
+    doubleing *= i
+    doubleing %= mod
+while p != 0:
+    if p & 1 == 1:
+        fact_rev *= doubleing
+        fact_rev %= mod
+    p = p >> 1
+    doubleing = doubleing ** 2
+    doubleing %= mod
+
+revs = [fact_rev]
+for i in range(S, 0, -1):
+    revs.append(revs[-1] * i % mod)
+revs.reverse()
+
+n = 1
+answer = 0
+while S - 3 * n >= 0:
+    answer += (facts[S - 2 * n - 1] * revs[n - 1] * revs[S - 3 * n]) % mod
+    n += 1
+print(answer % mod)
+</code></pre>
+疲れた。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
