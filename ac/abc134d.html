@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC134D Preparing Boxes</h1>
+問題文は<a href="https://atcoder.jp/contests/abc134/tasks/abc134_d">こちら</a>から。<br>
+箱の中にボールを入れて、各倍数の箱に指定の偶奇のボールが入っている状態を作る問題。<br>
+<br>
+前から見るときついが、後ろから（つまり箱\(N\)から）見ると結構素直に解ける。<br>
+箱\(i\)にボールを入れるか考えるとき、\(i\)の倍数は自分自身とその前にしかないので、自分より大きい番号の\(i\)の倍数の箱であって、ボールが入っているものの個数を数えてみる。この値は箱\(i\)を調べる段階で確定しており、この値を\(R_i\)と書くことにする。<br>
+もし\(R_i\)と\(A_i\)の偶奇が一致すれば箱\(i\)にボールを入れる必要はなく、そうでないなら入れる必要がある。この操作で必ず\(A_i\)の値に関しては処理できるし、箱\(i\)より小さい番号の箱に勿論\(i\)の倍数はないので、後から「やっぱりつじつま合わせのためにボールを抜きます」みたいなことはしなくてよい。<br>
+よって、箱\(N\)から順に、自分より大きい番号で、自分の倍数の箱に入っているボールの個数をカウントし、\(A_i\)と偶奇を比較して自分にボールを入れるか決定する、という方法は正当である。<br>
+時間計算量について考察する。<br>
+\(N\)個の箱の中に、各\(i\)の倍数はおよそ\(\frac{N}{i}\)個ある。<br>
+よって、\(N\)個の箱について、各箱の倍数番目の箱にボールが入っているかを判定する合計回数は\(\sum_{i=1}^{N} \frac{N}{i} < N (1 + \log_{}{N})\)回程度と見積もることができる（調和級数を上からlogで抑えられることを使った）。<br>
+各箱の中にボールが入っているかを判定すること自体は、集合なりなんなりを使えば定数時間で可能だから、結局ループ回数がネックになり、全体の時間計算量は\(O(N \log_{}{N})\)程度で抑えられる。勿論この制約下なら問題ない。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+A = list(map(int,input().split()))
+
+inball_boxes = set()
+for i in range(N, 0, -1):
+    balls = 0
+    p = 1
+    while i * p <= N:
+        if i * p in inball_boxes:
+            balls += 1
+        p += 1
+    if balls % 2 != A[i - 1]:
+        inball_boxes.add(i)
+
+print(len(inball_boxes))
+print(*inball_boxes)
+</code></pre>
+調和級数がlogで抑えられる事実は数IIICでもよく見る。<br>
+高校生当時は何となくそんな話がある程度にしか思っていなかったけれど、実際の問題の計算量解析に立ち現れると何とも奇妙な感覚になる。知識はやはりどこかで繋がっているんだなあと思わされるなど。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
