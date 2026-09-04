@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ARC149A Repdigit Number</h1>
+問題文は<a href="https://atcoder.jp/contests/arc149/tasks/arc149_a">こちら</a>から。<br>
+一定の値未満である値の倍数であるレプデジット数を求める問題。<br>
+<br>
+十進法表記の各桁が1のみであるような数をレピュニット数と呼ぶ。<br>
+レピュニット数に対し、1以上9以下の正の整数を1回だけ掛けた値を今回はレプデジット数と呼ぶことにする。<br>
+すると、今回は\(N\)桁以下（\(10^N\)未満なら\(N+1\)桁未満=\(N\)桁以下）のレプデジット数であって、\(M\)の倍数であるものの最大値を求める問題と言い換えられる。<br>
+答えの候補となるレプデジット数は\(9N\)個なので、\(N\)の制約から見ても、上手い方法で全探索すれば答えが分かるように思える。<br>
+かといって桁数が大きいレプデジット数の余りを直接計算すると時間がかかりすぎてしまう。ここで、各桁が\(i (1 \leqq i leqq 9,iは整数)\)で\(n\)桁のレプデジット数を\(a_{i,n}\)と書くことにすると、以下の関係式が成り立つことを使う。<br>
+\(a_{i,n+1} = 10 \cdot a_{i,n} + i\)<br>
+これはあまりに関しても利用でき、各\(i\)に対して\(a_{i,1}\)を\(M\)で割った余りを求めておき、それを10倍して\(i\)を足し、\(M\)で割る操作を繰り返すことで\(a_{i,n}\)が\(M\)で割れるかどうかは判断ができる。<br>
+この計算自体は各定数時間で行えると見なせ、ループ回数は\(N\)の多項式回であるから、この部分の時間計算量は\(O(N)\)程度である（各桁の数の種類数も変数と見ればまた変わってくるが、とりあえずNだけに注目しても問題ないはずだ）。<br>
+後は条件を満たすものの中で最大のものを選べばよい。それは各数を調べる過程で現在条件を満たす最大の数の桁数と各桁に使っている数字をメモしておき、今調べている数がそれと比べてどうか調べれば良い。<br>
+最後にメモしてある数の情報から数の10進法表記を復元すればよく、これは「各桁の数字」という文字を桁数分繋げた文字列として表現すれば、文字数の長さに比例する時間で構築できる。<br>
+よって、最後の文字復元かループ回数がネックとなり、時間計算量は\(O(N)\)で押さえられ、これは制約下で充分に高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N, M = list(map(int,input().split()))
+
+# 答えの[桁数, 各桁の数字]
+answer = [-1, -1]
+
+for i in range(1, 9 + 1):
+    r = i % M
+    for j in range(N):
+        if r == 0:
+            if answer[0] < j or answer[0] == j and answer[1] < i:
+                answer[0] = j
+                answer[1] = i
+        r *= 10
+        r += i
+        r %= M
+
+if answer[0] == -1 and answer[1] == -1:
+    print(-1)
+else:
+    print("".join([str(answer[1]) for _ in range(answer[0] + 1)]))
+</code></pre>
+数学的に処理することを考えたが、別にそんなことしなくても全探索すればよいと気が付くのにちょっとだけ時間がかかった。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
