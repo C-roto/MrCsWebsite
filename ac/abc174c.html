@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC174C Repsept</h1>
+問題文は<a href="https://atcoder.jp/contests/abc174/tasks/abc174_c">こちら</a>から。<br>
+7だけでできた数が割れる条件を探す問題。<br>
+<br>
+今回扱うような、十進法表記で7が\(n\)個並んだ数を\(a_n\)と書き、\(n\)番目のレプセブン数と呼ぶことにする。<br>
+まず、明らかに\(K\)が2や5の倍数の場合、いかなるレプセブン数も\(K\)で割り切れない（下1桁が偶数や5になることがないから）。<br>
+以下、\(K\)は2でも5でも割り切れない正の整数だとする。<br>
+結論から言えば、このとき、1以上\(9K\)以下の正の整数\(m\)が存在して、\(a_m\)は\(K\)で割り切れる。<br>
+証明はオイラーの定理を認めれば容易い。\(K\)と互いに素な1以上\(K-1\)以下の整数の個数を\(f(K)\)と書くとすると、オイラーの定理から\(10^{f(k)} \equiv 1\)となることがわかる。<br>
+\(a_n = 7 \cdot \frac{10^n-1}{9}\)であるから、\(K\)が3の倍数でないとき、\(a_{f(K)}\)は明らかに\(K\)で割り切れる。<br>
+\(K\)が3の倍数の時でも、\(9f(K) < 9K\)であるから、\(\frac{10^{9f(K)}-1}{9}\)は\(9K\)で割り切れて、特に\(a_{9f(k)}\)は\(K\)で割り切れる。<br>
+したがって、高々\(9K\)個の数を調べれば、条件を満たす最小の\(n\)を見つけることが確実に可能である。今回の制約上、それは難しくない。<br>
+単純に最大9K回のループを回して、漸化式\(a_1=7,a_{n+1}=10a_n+7(n=1,2,..)\)を繰り返し使用して各\(n\)に関する余りを求めればよい。<br>
+ループ内の各計算は定数時間とみなせ、全体の時間計算量は\(O(K)\)で抑えることが可能である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import sys
+
+K = int(input())
+
+if K % 2 == 0 or K % 5 == 0:
+    print(-1)
+    sys.exit()
+
+counter = 1
+a = 7
+for _ in range(9 * K):
+    if a % K == 0:
+        break
+    a *= 10
+    a += 7
+    a %= K
+    counter += 1
+print(counter)
+</code></pre>
+最大値を保証することで解法を正当化する問題は好き。<br>
+でも何かわからないのに通ったというもやもやが残ることもあり、それは好きじゃないのかも。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
