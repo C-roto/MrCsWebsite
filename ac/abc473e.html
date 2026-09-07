@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC473E K-Divisible Subarrays</h1>
+問題文は<a href="https://atcoder.jp/contests/abc473/tasks/abc473_e">こちら</a>から。<br>
+要素の総和がKの倍数になる連続部分列をなるべく多く切り出す問題。<br>
+<br>
+端的に言えば「貪欲法が効きそう」という直観がそのまま当たったので解けた問題。<br>
+何をどうしたのかを説明するために、後付けでいくつか説明をする。<br>
+<br>
+結論から書くと、以下のようなアルゴリズムが有効である。<br>
+①変数\(i,R\)を\(i=1,R=0\)で初期化する。配列\(L\)を空で初期化しておく。連想配列\(D\)をD[0]=0して初期化しておく。<br>
+②\(i\)の値を1から\(N\)まで更新しながら③,④,⑤をこの順に繰り返す。
+-③\(R\)の値を\(R+A_i \hspace{0.5em} (mod K)\)に更新する。
+-④もし\(D\)の中にkey\(R\)が含まれていれば、\(i\)を\(L\)の最後尾に追加し、\(D\)を空にする。そうでないなら何もしない。<br>
+-⑤D[R]=\(i\)とする。<br>
+⑥\(L\)に含まれる要素の数が答えである。<br>
+一見すると意味不明だが、順を追って説明していく。<br>
+（追記：書き終わった後で読みなおしたが、あまり伝わる書き方ができた気がしない……。厳密な数学的議論になっていないことは付記しておきたい。あくまでメモだと思って、なんとなくで読んでほしい）<br>
+<br>
+まず、④で\(L\)の末尾に\(i\)を追加する場合、この1回前に\(L\)の末尾に値が追加されたときの\(i\)の値を\(prev\)とする（この前に1度も値の追加が行われていないなら、\(prev=0)とする）。また、この操作が行われる場合、\(D\)はkey\(R\)に対して整数値のvalueを持つはずだが、そのvalueを\(j\)とする。<br>
+このとき、整数列\(A_{j + 1},….A_{i}\)の各要素の総和は\(K\)で割り切れる値になっている（\(R\)の定義から\(A_{prev+1}+…+A_{j}\)と、\(A_{prev+1}+…+A_{i}\)を\(K\)で割った余りが等しくなるので、\(A_{j+1}+...+A_{i}\)は\(K\)の倍数になっていると言えるから）。<br>
+よってとりあえず、\(L\)の各要素に対応する\(j,prev\)の値をそれぞれ\(j_i,prev_i\)と書くとすると、半開区間\((prev_i, j_i], (j_i, i]\)毎に分けていくことで、\(L\)の要素数と等しいスコアの分割を得ることはできる（\(prev_i = j_i\)のときは\((prev_i, j_i]\)のことは考えない。後ろの方が余ったら、\(((Lの最後尾の要素), N]\)という分割を考えればよい。いずれにせよ結果は変わらない）。<br>
+<br>
+仮に、より大きなスコアを持つ分割\(S'\)が得られたと仮定する。<br>
+\(L\)に1つ以上の要素が含まれるとしたとき、そのうちで最小のものを\(i_0\)とする。もし、\(0 < p < j_{i_0}\)なる正整数\(p\)が存在して、区間\((p, q]\)の総和が\(K\)の倍数だったとする。\(q < i_0\)なら最初のアルゴリズムで分割される際に、\(i_0\)より前に\(q\)が\(L\)に追加されるはずだから矛盾する。\(i_0 < q\)だとすると、区間\((p, j_{i_0}],(j_{i_0}, i_0],(i_0, q],\)はそれぞれ総和が\(K\)の倍数になるはずなので、適切に分割すればより多くのスコアを得られることになって矛盾する。<br>
+よって、スコア最大の分割においても\((0, j_{i_0}]\)は\(K\)の倍数である区間には含まれないことになる。<br>
+一方で、\((j_{i_0}, i_0]\)はもともと総和が\(K\)の倍数になる分割であることは保証されており、かつ\(i_0\)で切らない理由はない（後ろの方で切れるとき、\(i_0\)でも切った方が1つ多く\(K\)の倍数の区間が1つ生まれる）ので、ここで切る。<br>
+こうした議論を繰り返して、結局\(S'\)が最初のアルゴリズムで分割する区間と一致することが分かる。<br>
+<br>
+結局\(A\)のすべての要素を1度ずつ舐めれば良いので、時間計算量は\(O(N)\)となる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N, K = list(map(int,input().split()))
+A = list(map(int,input().split()))
+
+D = dict()
+D[0] = -1
+L = []
+R = 0
+for i in range(N):
+    R += A[i]
+    R %= K
+    if R in D:
+        L.append(i)
+        R = 0
+        D = dict()
+    D[R] = i
+
+print(len(L))
+</code></pre>
+直感に従って書いたコードが通ってしまったとき、直感を解きほぐせないと辛いことがよく分かった。<br>
+こういう時どういう風に書いたらいいのか、勉強しておかないといけない……。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
