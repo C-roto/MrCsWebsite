@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC147C HonestOrUnkind2</h1>
+問題文は<a href="https://atcoder.jp/contests/abc147/tasks/abc147_c">こちら</a>から。<br>
+正直者と不親切者がいるなかで、正直者があり得る最大人数を求める問題。<br>
+<br>
+制約が小さいのでビット全探索すれば事足りる。<br>
+「不親切な人」の扱いに一瞬困るが、要するに発言が正直でも嘘でもいいということは、その人の発言の内容を完全に無視しても良いということになるので、次のような方針が妥当になる。<br>
+・各人に正直者と不親切な人のいずれかの属性を割り振る<br>
+・正直者属性を割り振った人の発言のみ見て、矛盾がないか確かめる<br>
+これをあり得る属性の割り振り方の分だけ回せばおしまい。<br>
+全体の時間計算量は\(O(N \cdot 2^N\))程度で収まり、これは充分に高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+Cnum = []
+Clame = []
+for i in range(N):
+    A = int(input())
+    tmp = []
+    for j in range(A):
+        tmp.append(list(map(int,input().split())))
+    Cnum.append(A)
+    Clame.append(tmp)
+
+answer = 0
+for i in range(2 ** N):
+    trueman_num = 0
+    # 0は真偽不明、1は正直
+    Condition = [ -1 for _ in range(N)]
+    for j in range(N):
+        Condition[j] = (i >> j) & 1
+
+    ok_flag = True
+    for j in range(N):
+        if Condition[j] == 0:
+            continue
+        trueman_num += 1
+        for k in range(Cnum[j]):
+            if Clame[j][k][1] != Condition[Clame[j][k][0] - 1]:
+                ok_flag = False
+
+    if ok_flag:
+        answer = max(answer, trueman_num)
+
+print(answer)
+</code></pre>
+簡単な問題だけに実装事故しないようにしたいね。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
