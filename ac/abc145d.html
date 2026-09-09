@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC145D Knight</h1>
+問題文は<a href="https://atcoder.jp/contests/abc145/tasks/abc145_d">こちら</a>から。<br>
+特定のマスに移動するためのナイトの移動方法の数を調べる問題。<br>
+<br>
+ああはいはいDPですね～とか思ってたら、制約上全マスを舐めている余裕がないことに気が付く。安易な決めつけはよろしくないね。<br>
+つまりもっと効率の良い計算方法があるというわけだ。<br>
+\((0,0)\)からの遷移の過程を書いてみると、とりあえずマス\((i,j)\)に到達できる必要条件として\(i+j\)が3の倍数であることや、\(min(i,j)\)が\(\frac{i+j}{3}\)以上であることが分かる（そして実は十分でもある）。<br>
+以下、\(X+Y\)は3で割り切れ、\(min(X,Y)\)が\(\frac{X+Y}{3}\)以上であると仮定して進めていく。<br>
+遷移図を書いてにらんでみると、見たことのある図形と同じ形をしていることに気が付くのではなかろうか。そう、パスカルの三角形と呼ばれるアレである。<br>
+というわけで\(Z=\frac{X+Y}{3}\)とすると、答えは\(\binom{Z}{min(X, Y) - Z}\)と書けることが分かる。<br>
+\(Z\)の値は最大でも\(2 \cdot 10^6\)程度なので、愚直に値を掛け算しながらmodを取って、その逆元を1つずつ見つけていくという方針で\(\binom{Z}{min(X, Y) - Z} (mod 10^9+7)\)は問題なく計算できる。<br>
+全体の時間計算量は逆元を求める部分か、もしくは階乗を計算する部分になるだろうから、\(O(X+Y+\log_{}{mod})\)程度で押さえられ、これは制約下で十分高速だろう。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+X, Y = list(map(int,input().split()))
+mod = 1000000007
+
+def modfrac(x):
+    res = 1
+    for i in range(1, x + 1):
+        res *= i
+        res %= mod
+    return res % mod
+
+def modintrev(x):
+    doubling = x
+    p = mod - 2
+    res = 1
+    while p != 0:
+        if p & 1 == 1:
+            res *= doubling
+            res %= mod
+        p = p >> 1
+        doubling = doubling ** 2
+        doubling %= mod
+    return res % mod
+
+def modintcomb(N, K):
+    return (modfrac(N) * modintrev(modfrac(K)) * modintrev(modfrac(N - K))) % mod
+
+if (X + Y) % 3 != 0:
+    print(0)
+elif min(X, Y) < (X + Y) // 3:
+    print(0)
+else:
+    # X + Y // 3 = Zとすると、答えはcomb(Z, min(X, Y) - Z)になる
+    Z = (X + Y) // 3
+    print(modintcomb(Z, min(X, Y) - Z))
+</code></pre>
+考えてみると「チェス盤上にパスカルの三角形が描ける」って事実は面白い。ないはずのものがそこに見えるっていうのは、趣すらあるかもしれない。<br>
+<br>
+不思議なもので、DPだなと思うと思考がそっち方向に誘導される。<br>
+「下を再帰的に求められるな～」というのは嘘ではないけど、効率的ではないという事実に気が付くのにだいぶ時間がかかってしまった。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
