@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC216D Pair of Balls</h1>
+問題文は<a href="https://atcoder.jp/contests/abc216/tasks/abc216_d">こちら</a>から。
+筒に入れたボールをペアにして上から取り出していく問題。<br>
+<br>
+筒の一番上に入っているボールを毎回走査していると、時間計算量の見積もりは\(O(M \cdot max(k))\)あたりになり、間に合うとは言い切れなくなる。<br>
+計算の無駄を減らすなら、可能な限り1度見たボールを見ずとも判断できるように工夫をしたい。<br>
+今回の問題の制約なら、あるペアを取り出すことができるのなら、いつでも取り出してよい（=取り出したことが原因で損をしない）ことが容易にわかる。<br>
+あるペアを取り出さずに取り出せる他のすべてのペアは、そのペアを取り出したとしてもすべて取り出せるからだ。<br>
+よって、取り出せるペアを見つけ次第取り出していくような仕組みを考えればよい。<br>
+<br>
+今回は次のような実装方針が適切だろう。<br>
+・キューを用意し、今筒の最上部に入っているすべてのボールを詰める。<br>
+・キューから1つずつボールを取り出す。<br>
+→取り出したボールと同じ色のボールが場になければ、そのボールを場に出す。<br>
+→あれば、当該の色の置いてあるボールと取り出したボールを両方消して、各ボールの入っていた筒の次のボールをキューに詰める。<br>
+こうすることで、キューと場に出ているボールは、あるタイミングにおける筒の最上部に入っているボールたちの集合になっている。<br>
+また、同じ色のボールがあったときに必ず見つけて消せることも明らかだ。<br>
+この方針ならば、すべてのボールは高々1回以下の回数キューに詰めまれ、ほかの計算は定数時間でできると考えられるから、全体の時間計算量は\(O(N + M)\)で抑えることができ、今回の制約下では十分に高速である。<br>
+実装方針は以下の通り。<br>
+<pre><code class="language-python">
+import collections
+
+N, M = list(map(int,input().split()))
+Balls = []
+lenBalls = []
+for i in range(M):
+    lenBalls.append(int(input()))
+    Balls.append(list(map(int,input().split())))
+
+que = collections.deque()
+for i in range(M):
+    que.append([Balls[i][0], i, 0])
+
+counter = 0
+catched = dict()
+while que:
+    p, b, t = que.popleft()
+    if p not in catched:
+        catched[p] = (b, t)
+    else:
+        c, s = catched[p]
+        if lenBalls[c] - 1 > s:
+            que.append([Balls[c][s + 1], c, s + 1])
+        if lenBalls[b] - 1 > t:
+            que.append([Balls[b][t + 1], b, t + 1])
+        catched.pop(p)
+        counter += 1
+
+if counter < N:
+    print('No')
+else:
+    print('Yes')
+</code></pre>
+こういう問題こそ「ボールを見る回数をなるべく減らして高速化したい」みたいな発想がキーになる感じがある。<br>
+大事にしたいですね、そういう発想力。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
