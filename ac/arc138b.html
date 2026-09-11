@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ARC138B 01 Generation</h1>
+問題文は<a href="https://atcoder.jp/contests/arc138/tasks/arc138_b">こちら</a>から。<br>
+条件を満たす数列を生成できるか答える問題。<br>
+<br>
+以下、問題で与えられている2つの操作A,Bを「生成操作」とか、単に「生成」とか呼ぶことにする。<br>
+生成の逆操作として以下の2つを考える（以下2つの操作A',B'を「生成の逆操作」と総称することにする）。<br>
+操作A':数列の先頭から0を除き、数列の全要素をflipする。<br>
+操作B':数列の末尾から0を除く。<br>
+全要素が0,1からなる任意の数列\(X\)に対して、空数列から生成操作を繰り返して数列\(X\)を作れることと、数列\(X\)に生成の逆操作を繰り返して空数列にできることは同値である（ほぼ自明としてよいのではないだろうか）。<br>
+よって、与えられた数列に生成の逆操作を繰り返して、空数列を作れるか考えてみることにしよう。<br>
+<br>
+まず、操作B'が行える時は、常に操作B'を行うこととしても問題ない。<br>
+<details>
+    <summary>▶証明</summary>
+要素が1つしかない場合は操作A'を行っても操作B'を行っても同じ結果になるから、特に操作B'を選んでよい。<br>
+要素が2つしかない場合は、操作A'もB'も行える状況というのが\((0,0)\)しかなく、この時は先に操作B'を選ばなければ詰むのは明らかだろう。<br>
+以下、数列の要素は3つ以上あるとする。<br>
+<br>
+あるタイミングで操作A'も操作B'も行える時、そのタイミングを「分岐点」と呼ぶことにしよう。分岐点のうち最も早い時点は一意に定まるため、以降単に「分岐点」と言った場合、「分岐点の内であって最も早くに来る地点」を指すとする。<br>
+<br>
+分岐点で操作A'を行ったとしよう。<br>
+このとき、操作A'を行った直後、操作B'を行うことはできなくなる（もともと操作B'が行える状態だったということは、末尾の要素が0だったということであり、flipによって末尾は1になっているからである）。<br>
+すると必然的に次に行える操作は操作A'しかない。<br>
+・もしこの時点で操作A'が行えない場合、操作はここで詰む。<br>
+・もしここで操作A'ができるのであれば、それを実行することになる。これにより末尾の要素が再び0に戻るはずなので、次で操作B'は少なくとも行える。<br>
+→操作後の状態について、もし操作B'しか行えないのであれば、先頭の数が1であることになる。この時、どうやっても先頭の1を操作A'または操作B'で取り除けないので操作は詰む。<br>
+→操作A'も操作B'も行えるとすると、分岐点から先頭の0,1を削って、長さが2だけ短くなった数列に対して考察を行うことになる。このタイミングを新たな分岐点として設定し、同様の考察を再度繰り返していく。<br>
+　するといずれ、操作が詰む状態か、もしくは長さ1または2の場合に帰着できる。長さ1,2に帰着できる場合というのは、要するに先頭から0,1,0,1,....と数が並んでおり、末尾に0か0,0が並んでいるという状態である。<br>
+　この状況下において、分岐点の時点で操作B'を先に行い、後から操作A'を繰り返しても空数列が作れることは明らかである。<br>
+<br>
+　よって、分岐点の時点では操作B'を選んだことによって損をすることはないため、操作B'が行えるときには操作B'を行っても問題ないことが示された。<br>
+</details>
+<br>
+よって、<br>
+①行えるだけ操作B'を行い、操作A'しか行えなくなった時点で操作A'を行うことを試みる。<br>
+②操作A'を行えた場合、手順①に戻る。操作A'が行えない場合、数列が空数列になっていなければ'No'を出力、なっていれば'Yes'を出力する。<br>
+というアルゴリズムが正当になる。<br>
+<br>
+flip操作がネックになりそうだが、要するに数列から消せるのが0か1かが変わるだけなので、今消せる値が0なのか1なのかだけメモっておいて、flipのタイミングではメモった数値を1つflipすれば済むようにしておけば定数時間で実質的にflipしたことにできる。<br>
+要素の削除は配列の要素をガチャガチャいじってもいいが、両側キューなどを使えば比較的単純に実装できる。<br>
+よって、結局数列の要素全体を高々1回ずつ舐めれば計算は終わるので、時間計算量は\(O(N)\)程度で押さえられ、この制約下なら十分速い。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import collections
+
+N = int(input())
+A = collections.deque(map(int,input().split()))
+
+s = 0
+leng = N
+ok_flag = False
+while True:
+    while leng > 0 and A[-1] == s:
+        A.pop()
+        leng -= 1
+
+    if leng > 0 and A[0] == s:
+        A.popleft()
+        s = (s + 1) & 1
+        leng -= 1
+    else:
+        if leng == 0:
+            ok_flag = True
+        break
+
+if ok_flag:
+    print('Yes')
+else:
+    print('No')
+</code></pre>
+直観的には明らかであることをちゃんと言葉を尽くして説明するのは大変。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
