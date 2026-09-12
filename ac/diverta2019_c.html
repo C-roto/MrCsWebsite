@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>Diverta 2019 Programming Contest C AB Substrings</h1>
+問題文は<a href="https://atcoder.jp/contests/diverta2019/tasks/diverta2019_c">こちら</a>から。<br>
+文字列を上手く連結して特定の文字の並びをいっぱい作る問題。<br>
+<br>
+まず、文字列中に"AB'が直接含まれていれば、どう連結しても必ずその並びは保たれるので、この数をカウントしておく（以下これを「'AB'の個数」と呼ぶ）。<br>
+また、'B'が先頭にある文字列と'A'が末尾にある文字列は、繋げ方次第で'AB'を作ることができる。<br>
+「'B'が先頭にあるが、'A'が末尾にない文字列」と「'B'が先頭になく、'A'が末尾にある文字列」と「'B'が先頭にあり、'A'が末尾にある文字列」という3つのパターンがあるので、これらを別々に数える。<br>
+以下ではこれらの個数をそれぞれ「先頭が'B'の個数」、「末尾が'A'の個数」、「先頭が'B'で末尾が'A'の個数」と称する。<br>
+<br>
+まず、「先頭が'B'の個数」と「末尾が'A'の個数」が一致する場合は、これらを順に組み合わせることで「先頭が'B'の個数」個の'AB'を得ることができる。<br>
+あとは「'B'が先頭にあり、'A'が末尾にある文字列」を順に組み合わせることで、「先頭が'B'で末尾が'A'の個数」-1個の'AB'を得ることができる（「'B'が先頭にあり、'A'が末尾にある文字列」がない場合は0個）。<br>
+<br>
+「先頭が'B'の個数」と「末尾が'A'の個数」が一致しない場合は、この2つのうち少ない方の個数の'AB'を連結によって得ることができる。<br>
+余ったそれと「'B'が先頭にあり、'A'が末尾にある文字列」を上手く組み合わせて、「先頭が'B'で末尾が'A'の個数」個の'AB'を得ることができる。<br>
+<br>
+よって、答えは以下の通り。<br>
+・「先頭が'B'の個数」と「末尾が'A'の個数」が一致する場合、「'AB'の個数」+「先頭が'B'の個数」+\(max(0,「先頭が'B'で末尾が'A'の個数」-1)\)<br>
+・そうでない場合、「'AB'の個数」+\(min(「先頭が'B'の個数」,「末尾が'A'の個数」)\)+「先頭が'B'で末尾が'A'の個数」<br>
+<br>
+全ての文字列のすべての文字を1度ずつ走査することが必要であり、かつそれがネックとなるので全体の時間計算量は\(O(N \cdot max(s_i))\)程度で抑えられ、これは制約下で充分高速である。<br>
+実装例は以下の通り。<br>
+<br>
+<pre><code class="language-python">
+N = int(input())
+
+ab = 0
+a_end = 0
+b_start = 0
+a_and_b = 0
+zero_flag = False
+for _ in range(N):
+    s = input()
+
+    for i in range(len(s) - 1):
+        if s[i] == 'A' and s[i+1] == 'B':
+            ab += 1
+
+    if s[0] == 'B' and s[-1] == 'A':
+        a_and_b += 1
+    elif s[-1] == 'A':
+        a_end += 1
+    elif s[0] == 'B':
+        b_start += 1
+
+answer = 0
+answer += ab
+answer += min(a_end, b_start)
+
+a_end -= min(a_end, b_start)
+b_start -= min(a_end, b_start)
+
+if a_end == 0 and b_start == 0:
+    answer += max(0, a_and_b - 1)
+else:
+    answer += a_and_b
+
+print(answer)
+</code></pre>
+0個の時を見逃してWAするなどした。<br>
+よくないね。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
