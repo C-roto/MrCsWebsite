@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>クラスカル法を使って迷路を掘ろう</h1>
+<br>
+迷路をいっぱい生成する動画を見て、そんな方法があるのか→いわれてみれば確かに、と思ったので実装してみた。<br>
+迷路と言えば正方形のものが生成できればまあいいかなと思ったので、1辺の長さを入力すると良い感じに迷路を作ってくれるようにした。<br>
+<br>
+方針としては、まず\(N \times N\)のマス目を用意し、左上の方をスタート、右下の方をゴールに設定し、1つ飛ばしで通行可能な道マスを配置していく。<br>
+例えば\(7 times 7\)マスだったら、こういう感じにするわけだ。<br>
+<pre><code>
+#######
+#S#.#.#
+#######
+#.#.#.#
+#######
+#.#.#G#
+#######
+</code></pre>
+で、この時のスタート、ゴール、通行可能マスを頂点とするグラフを考え、クラスカル法の要領で全域木を作ると、孤立点の無い迷路が出来上がるという寸法だ。<br>
+<br>
+あまりうまい方法が思いつかなかったのでこんな感じにしてみる。<br>
+・入力\(N\)が奇数値になるよう調整する（実装を簡単にし、かつ、外周全体を壁で覆うため）<br>
+・\(W = \frac{N - 1}{2}\)とおく。
+・\(W^2\)個の頂点を持つグラフを考える。頂点名は今後を考えて0-indexedとする。<br>
+・グラフについて、頂点\(p\)と頂点\(p + W\)の間に辺を張る
+・グラフについて、頂点\(p\)と頂点\(p + 1\)の間に辺を張る（ただし\(p\)が\(W\)で割って\(W-1\)余る数のときは張らない）
+　このような操作によって得られるグラフは、最終的な迷路を抽象化したような図になる。<br>
+　つまり、グラフの各頂点を\(W\)個ずつに区切って並べる。<br>
+0 1 2 ... W-1<br>
+W W+1 W+2 ... 2W - 1<br>
+...<br>
+という感じである。この時、上記の操作によって上下に並んだ頂点と、左右に並んだ頂点同士が結ばれているのが分かるだろうか。<br>
+　あとはこのグラフに対して辺の順番をぐちゃぐちゃにしてクラスカル法を実施すればよい。<br>
+　で、後はこれによって得られた全域木を上手いこと迷路にすればよい。<br>
+・\(N \times N\)のマス目を用意する。最初、これらのマスはすべて通過不能の壁マスとして考える。<br>
+・上から\(i\)行目、左から\(j\)列目のマスを\((i,j)\)と呼称することにする。これは0-indexedにする。<br>
+・先のグラフの頂点\(p\)と\(q\)の間に頂点があるという状態を、以下のように反映させる。
+・頂点\(p\)と、マス\((2 \times (pをWで割った商) + 1, 2 \times (pをWで割った余り) + 1)\)を対応させる。頂点\(q\)も同様に対応させ、この2マスと、その間にあるマスを通過可能な道マスにする。<br>
+という操作をすることで、さっきのグラフとマス目を対応させることができる。<br>
+時間計算量がどれくらいになるかだが、およそ\(O(N^2)\)か\(O(N^2\alpha(N^2))\)程度で押さえられるのではないだろうか。多分グラフをぐちゃぐちゃしているタイミングが一番大変だろうし。<br>
+余りにも大きな迷路は生成できないが、\(100 \times 100\)マスの迷路程度なら余裕のよっちゃんで生成できるので、まあ実用上は何の問題もない。<br>
+実装は以下のとおり行った。<br>
+<pre><code class="language-python">
+import random
+import pyxel
+
+class DisjointSetUnion:
+    def __init__(self, N: int):
+        self.number = N
+        self.parent = [ -1 for _ in range(N)]
+        self.size = [ 1 for _ in range(N)]
+
+    def find(self, v : int):
+        compress = []
+        while self.parent[v] != -1:
+            compress.append(v)
+            v = self.parent[v]
+        for c in compress:
+            self.parent[c] = v
+        return v
+
+    def union(self, u: int, v: int):
+        ru = self.find(u)
+        rv = self.find(v)
+        if ru != rv:
+            if self.size[ru] < self.size[rv]:
+                ru, rv = rv, ru
+            self.parent[rv] = ru
+            self.size[ru] += self.size[rv]
+
+    def same(self, u: int, v: int):
+        return self.find(u) == self.find(v)
+
+def isin(x, W):
+    return 0 <= x <= W ** 2 - 1
+
+N = int(input())
+
+if N % 2 == 0:
+    N += 1
+
+# 抽象化した迷路をクラスカル法で繋ぐ
+W = (N - 1) // 2
+uf = DisjointSetUnion(W ** 2)
+Edges = []
+for i in range(W ** 2):
+    if i < W ** 2 - W and isin(i + (N - 1) // 2, W ** 2):
+        Edges.append([i, i + (N - 1) // 2])
+    if i % W != W - 1 and isin(i + 1, W ** 2):
+        Edges.append([i, i + 1])
+
+# 頂点の生成順は毎回固定になるので、シャッフルしておく
+random.shuffle(Edges)
+Used_Edges = []
+while Edges:
+    u, v = Edges.pop()
+    if uf.same(u, v):
+        continue
+    uf.union(u, v)
+    Used_Edges.append([u, v])
+
+# マス目を生成し、左上にスタート、右下にゴールを設置
+# 各頂点に対応する部分を通行可能マスに変化
+S = [[ "#" for _ in range(N)] for _ in range(N)]
+for i in range(N):
+    for j in range(N):
+        if i == 1 and j == 1:
+            S[i][j] = "S"
+        elif i == N - 2 and j == N - 2:
+            S[i][j] = "G"
+        elif i % 2 == 1 and j % 2 == 1:
+            S[i][j] = "."
+
+# グラフをマス目に反映させる
+while Used_Edges:
+    p, q = Used_Edges.pop()
+    uy, ux = p // W, p % W
+    vy, vx = q // W, q % W
+    uy, ux = 2 * uy + 1, 2 * ux + 1
+    vy, vx = 2 * vy + 1, 2 * vx + 1
+    S[(uy + vy)// 2][(ux + vx) // 2] = '.'
+
+for i in range(N):
+    print("".join(S[i]))
+</code></pre>
+出力された迷路は見る限り割といい感じ。<br>
+ちょーっと横に伸びすぎな感じはあるけれど、まあ遠めに見ればちゃんとした迷路な感じはある。<br>
+<br>
+実は今一つ迷路生成アルゴリズムについては理解ができていないところが多く、棒倒し法や穴掘り法が上手く動く理由を自分はまだうまく説明できない。<br>
+一方で、クラスカル法やプリム法といった「全域木を作る」というアルゴリズムが、迷路に応用できるというところは非常に腑に落ちた。<br>
+何のことはない、迷路を作るというのはつまり全域木を作るということだと言い換えられるのだ。考えてみればある意味当たり前なのだが、今の今までこれに気が付けなかった！<br>
+勿論、出来上がった迷路は特定の地点が必ず通過可能な道マスになっているなど、弱点もあるが、「どうしてこれがループを持たない迷路になるのか」については結構よく分かった。<br>
+<br>
+手作業での実装は割と早く終わったが、結構行き当たりばったりに方針を考えてこういう形になった部分はあり、経験がいるなあなどと思った。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
