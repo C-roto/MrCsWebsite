@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC475D Alphametic Prime</h1>
+問題文は<a href="https://atcoder.jp/contests/abc475/tasks/abc475_d">こちら</a>から。<br>
+与えられた文字列とある意味で「同型」な素数を探す問題。<br>
+<br>
+\(10^7\)以下の素数を毎回全列挙するのにそんなに時間はかかるまい。何せ664579個しかないのだから。<br>
+というわけで、\(10^7\)以下の素数をすべて列挙し、それらの素数に対して文字列との比較を行って条件を満たすものを探せばよい。<br>
+文字列比較については、以下のような論理で変形を行うことを考える。2つの命題A,Bを以下のように定義する（len(S)=len(T)とする）。<br>
+任意の整数\(1 \leqq i < j \leqq len(S)\)について、<br>
+A:\(S_i = S_j\)である。<br>
+B:\(T_i = T_j\)である。<br>
+AとBが同値であるということは「AならばB、かつBならばA」が成り立っているということである。<br>
+これは「AでないまたはBである、かつ、BでないまたはAである」ということであり、これの否定についてド・モルガンの法則で変形したものを判定に使えばよい。<br>
+あとは判定すべき素数すべてについて、すべてのi,jについて上記の判定を行えばいいから、判定すべき素数の個数を\(P\)として、全体の時間計算量は\(O(PS^2)\)程度であり、これは制約下においては十分高速だろう。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+def primes(x):
+    isprime = [ True for _ in range(x + 1)]
+    isprime[0] = False
+    isprime[1] = False
+    for i in range(2, x + 1):
+        if isprime[i]:
+            for j in range(2 * i, x + 1, i):
+                isprime[j] = False
+    res = list()
+    for i in range(x + 1):
+        if isprime[i]:
+            res.append(str(i))
+    return res
+
+S = input()
+N = len(S)
+P = primes(10 ** 7)
+
+answer = '-1'
+for t in P:
+    if len(t) != N:
+        continue
+    ok_flag = True
+    for i in range(N):
+        for j in range(i, N):
+            if ((S[i] != S[j]) and (t[i] == t[j])) or ((t[i] != t[j] and (S[i] == S[j]))):
+                ok_flag = False
+    if ok_flag:
+        answer = t
+
+print(answer)
+</code></pre>
+全列挙&ぶん殴りな問題。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
