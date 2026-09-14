@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+ <h1>ABC127D Integer Cards</h1>
+問題文は<a href="https://atcoder.jp/contests/abc127/tasks/abc127_d">こちら</a>から。<br>
+整数の書かれたカードを書き換える問題。<br>
+<br>
+カードの並び順は関係ないので、今後のことを考えてソートする。<br>
+そして実は、クエリの適用順も与えられた順番でなくとも全く問題ない。<br>
+クエリ順をめちゃくちゃにしても、最終的にどのカードが何の数字になったのかにさえ注目すれば、元のクエリ順で得られる結果と同じものが得られるからだ（逆にどんなにクエリ順をめちゃくちゃにしても、元のクエリ順でそれを実現できる）。<br>
+よって、クエリも\(C\)の大きさ順でソートしておく。<br>
+<br>
+後は\(A\)とクエリをそれぞれ先頭から見ていき、変えた方が得になるなら変えていく操作を続ければよい。<br>
+→なるべく変更後の列と変更前の列とで、各要素の絶対値が大きくなるように貪欲に変えていけばよい（もし貪欲な手順以外で最良の結果が得られる場合、その部分を貪欲手順と同一に変えたものの方が明らかに良い結果になる）。<br>
+変えた方が損になる場合、以降はどこを変えても損になるのが確定しているから、そこで操作を打ち切る。<br>
+各カードについて高々1回ずつしか操作されないことと、カードの枚数が多いときはクエリの数しかループが回らないことから、全体の時間計算量は\(O(min(N + sum(B)))\)程度で収まり、制約下では充分に高速だろう。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N, M = list(map(int,input().split()))
+A = list(map(int,input().split()))
+query = []
+for _ in range(M):
+    query.append(list(map(int,input().split())))
+
+A.sort()
+query.sort(key = lambda x: -x[1])
+
+idx = 0
+for b, c in query:
+    ng_flag = False
+    for _ in range(b):
+        if idx == N:
+            ng_flag = True
+            break
+        
+        if A[idx] < c:
+            A[idx] = c
+            idx += 1
+        else:
+            ng_flag = True
+            break
+    if ng_flag:
+        break
+
+print(sum(A))
+</code></pre>
+流石に初期の問題だけあってそれほど大変でもないか……。<br>
+一方で初期の問題でも全然解けない奴はあるので舐めてはいけない気もする。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
