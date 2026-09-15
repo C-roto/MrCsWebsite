@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC361D Go Stone Puzzle</h1>
+問題文は<a href="https://atcoder.jp/contests/abc361/tasks/abc361_d">こちら</a>から。<br>
+石を移動させて、目的の形を作る問題。<br>
+<br>
+以前類題を解いたときの経験から、数学的にどうこう処理するより、あり得る状態を列挙して遷移を全部試すという発想には比較的すぐに辿り着いた。
+まあ、あと、\(2 \leqq N \leqq 14\)という制約が嫌でも目に入るから、そういう処理ができてしまいそうだなと思ってしまったところもある。<br>
+ともあれ、"."が2つと"B"が\(b\)個,"W"が\(w\)個(\(b+w+2=N\))の並び替えが何通りあるかを確かめてみる。これは"."を(連続して)置く位置と、"B"を置く位置の数に等しいので、\((N+1) \cdot \binom{N}{b}\)通りと言える。最大値は\(N=14,b=7\)のときで、\(51,780\)通り。全然いけそうな気がする。<br>
+<br>
+というわけで、スタートとゴールの文字列の後ろに".."をつけ、これらと同じ個数の"B","W","."からなる\(N+2\)文字の文字列を全列挙する。<br>
+これはさっきの通り、"."の位置と"B"の位置を全列挙し、それをforループで回して文字列を構成する方法で処理できる。itertoolsにそのものズバリで出してくれるものはないと思うが、実装例のような工夫でこれは実現可能だ。<br>
+あとはできた文字列に数字でidを与え、現在のidから遷移可能なidを列挙する関数を作れば、bfsの要領で最短距離の特定が可能である。<br>
+現在のidから遷移可能なidを列挙する方法がちょっとめんどいが、あり得る文字列はすべて"."同士が隣り合っているので、先に"."の位置を探しておいて、隣り合う2文字同士で"."を含まないものをスワップして得られる文字列を全列挙すればよい。<br>
+これは1つのidに対して高々\(N-1\)個程度しかないわけだから、遷移先としてありえる先もそれほど多くはない。<br>
+以上より、上記を上手い子と実装すればこの問題に答えることができる。<br>
+bfsに時間がかかるところだが、両方ともあり得る状態の個数に依存することを考えると、全体の時間計算量もおよそ\(O(N^2 \cdot \binom(N, \lfloor \frac{N}{2} \rfloor)\)あたりで押さえられる（この書き方って許容されるだろうけどあまり意味をなさないよな～……。この辺りは公式解説の方を参照したい）。<br>
+まあ、充分高速に処理できるはずである。実装例は以下の通り。<br>
+<pre><code class="language-python">
+import itertools
+import collections
+import sys
+
+# ある頂点から遷移できる別の頂点を列挙する
+def next_pos(p):
+    res = set()
+    C = list(Num_to_pos[p])
+    b_1, b_2 = -1, -1
+    for i in range(N + 2):
+        if C[i] == ".":
+            b_1 = i
+            b_2 = i + 1
+            break
+    for i in range(N + 1):
+        if C[i] != "." and C[i + 1] != ".":
+            C[i], C[b_1] = C[b_1], C[i]
+            C[i + 1], C[b_2] = C[b_2], C[i + 1]
+            R = "".join(C)
+            res.add(Pos_to_num[R])
+            C[i], C[b_1] = C[b_1], C[i]
+            C[i + 1], C[b_2] = C[b_2], C[i + 1]
+    return res
+
+N = int(input())
+S = input()
+T = input()
+S = S + ".."
+T = T + ".."
+
+# 白と黒の個数を数える
+b_num = 0
+w_num = 0
+t_b_num = 0
+t_w_num = 0
+for i in range(N + 2):
+    if S[i] == "B":
+        b_num += 1
+    if S[i] == "W":
+        w_num += 1
+
+    if T[i] == "B":
+        t_b_num += 1
+    if T[i] == "W":
+        t_w_num += 1
+
+# 白と黒の個数がそもそも違ったらダメ
+if b_num != t_b_num:
+    print(-1)
+    sys.exit()
+
+# ".."を置く場所と"B"を置く場所の列挙
+dot_pos = [(i, i + 1) for i in range(N + 1)]
+black_pos = list(itertools.combinations([i for i in range(N)], b_num))
+
+counter = 0
+Pos_to_num = dict()
+Num_to_pos = dict()
+# あり得る置き方の全列挙
+for d in dot_pos:
+    for b in black_pos:
+        pos = [ "#" for _ in range(N + 2)]
+        c = 0
+        for i in range(N + 2):
+            if i in d:
+                pos[i] = "."
+                c += 1
+            elif i - c in b:
+                pos[i] = "B"
+            else:
+                pos[i] = "W"
+        s = "".join(pos)
+        Pos_to_num[s] = counter
+        Num_to_pos[counter] = s
+        counter += 1
+
+# bfs
+start = Pos_to_num[S]
+goal = Pos_to_num[T]
+Visited = [ -1 for _ in range(counter)]
+que = collections.deque([start])
+Visited[start] = 0
+while que:
+    p = que.popleft()
+    nexts = next_pos(p)
+    for x in nexts:
+        if Visited[x] == -1:
+            Visited[x] = Visited[p] + 1
+            que.append(x)
+        if x == goal:
+            break
+
+# 答え
+print(Visited[goal])
+</code></pre>
+一見ヤバそうだけど全然ヤバくない問題。<br>
+水diffとは言うけれど、ある種一番基本に忠実な問題かも。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
