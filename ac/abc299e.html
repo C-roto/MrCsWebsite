@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC299E Nearest Black Vertex</h1>
+問題文は<a href="https://atcoder.jp/contests/abc299/tasks/abc299_e">こちら</a>から。<br>
+条件を満たすように頂点を黒く塗る問題。<br>
+<br>
+まずは全探索的な手法からあたってみる、という基礎的な話からスタート。<br>
+例えば、2頂点間の距離をすべて求め、それをうまく活用することで問題を解くという方法が思いつく。実際、2頂点間の距離は、すべての頂点を始点としてBFSを行えば求められるわけなので、時間計算量としては\(O(N(N+M))\)程度で収まるはずで、今回の制約下だと余裕だ。<br>
+すると、任意の2点間の距離を得られるので、結構なゴリ押しが効く。<br>
+<br>
+すべての点について「この点を黒に塗ると与えられた条件に矛盾するか？」を考えてみることにしよう。<br>
+例えば、ある\(v,i\)について、頂点\(v\)と頂点\(p_i\)の距離が\(d_i\)未満だったとしよう。この時、頂点\(v\)を黒に塗ると、少なくとも頂点\(p_i\)については最も近くにある黒い頂点との距離は\(d_i\)未満になってしまい、矛盾する。<br>
+よって、すべての頂点に対して、すべての条件を見て、その頂点を塗ったことで矛盾が起きるなら黒に塗らない、としてよい。<br>
+逆に、塗っても矛盾が起きないなら黒に塗っても良い。<br>
+もし、黒に塗ったことである条件が満たせなくなるのだとしたら、判定の段階でそれが分かるはずだからである。<br>
+<br>
+以上より、各頂点について塗っていいかどうかを判定し、塗って矛盾するなら塗らない、そうでないなら塗る、というアルゴリズムは、少なくとも「各条件\(p_i, d_i\)について、頂点\(p_i\)から最短の黒頂点が\(d_i\)以上になる塗り分け方」があればそれを返すし、なければ全部の頂点が白であると返す。<br>
+<br>
+後は、矛盾しないように最大限塗った盤面が、本当に各条件を満たしているかどうかを調べればよい。さっきの条件で調べたのは、各条件\(p_i, d_i\)について、頂点\(p_i\)から最短の黒頂点が\(d_i\)"以上"になる塗り分け方であるから、それらが本当に各頂点\(p_i\)に対しぴったり距離\(d_i\)になっているかどうかとは別の話だからである。<br>
+もしチェック中に条件を満たしていない頂点が現れた場合、条件を満たす塗り分け方はないと言い切れる。なぜならば、その頂点は最短の黒い頂点との距離が\(d_i\)より大きいことになるが、先に塗り分け方を出したアルゴリズムの性質上、これ以上黒く塗ることができる頂点は存在しないからだ。勿論、黒く塗った頂点を白く戻しても最短距離が小さくなることはあり得ないので、さっきのように言い切ってしまって問題ない。<br>
+<br>
+チェックの方法について、各条件に対し、頂点\(p_i\)に対して、黒く塗られている頂点すべてを見て、それらとの最短距離を出し、それが\(d_i\)と等しいかどうかを全部チェックすればよい。<br>
+初期値を適切に設定すれば、全部の頂点が白いときも上手く判定できる（距離∞と判断できれば良い）。<br>
+<br>
+全体の時間計算量は、bfsと塗り分け方の提案と最終チェックがネックになるわけだから、\(O(N(N+M+K))\)程度で押さえられるはずなので、この制約下であれば十分に高速だろう。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import collections
+
+N, M = list(map(int,input().split()))
+G = [ set() for _ in range(N)]
+for _ in range(M):
+    u, v = list(map(int,input().split()))
+    u -= 1
+    v -= 1
+    G[u].add(v)
+    G[v].add(u)
+
+Verdist = []
+K = int(input())
+for k in range(K):
+    p, d = list(map(int,input().split()))
+    p -= 1
+    Verdist.append([p, d])
+Verdist.sort()
+
+# 全点に対するbfs
+# Distances[i][j] = 頂点iから見て頂点jの距離
+Distances = [ [ -1 for _ in range(N)] for _ in range(N)]
+for i in range(N):
+    Distances[i][i] = 0
+    que = collections.deque([i])
+    while que:
+        p = que.popleft()
+        for q in G[p]:
+            if Distances[i][q] == -1:
+                Distances[i][q] = Distances[i][p] + 1
+                que.append(q)
+
+# 各点について、この点を黒にしても矛盾しないか検証する
+answer = [ 0 for _ in range(N)]
+for i in range(N):
+    b_flag = True
+    # 頂点iと指定頂点同士の距離が、希望距離より近かったら矛盾
+    for p, d in Verdist:
+        if Distances[i][p] < d:
+            b_flag = False
+            break
+    # 黒にして良ければ、黒にする
+    if b_flag:
+        answer[i] = 1
+
+# 逆に、指定頂点について、本当に最短黒が希望距離になっているかの検証
+# 1マスも黒に塗られていない可能性についても検出
+ok_flag = True
+for p, d in Verdist:
+    minimum_distance = 10 ** 10
+    for i in range(N):
+        if answer[i] == 1:
+            minimum_distance = min(minimum_distance, Distances[i][p])
+    if minimum_distance != d:
+        ok_flag = False
+
+if ok_flag:
+    print('Yes')
+    print("".join(map(str,answer)))
+else:
+    print("No")
+</code></pre>
+必要条件と十分条件を正しく行き来しないと片手落ちの解答になりうる問題。<br>
+解説を書きながら考察を深めたり、正しい道筋を言語化できたように思うので、割と意義はあったんじゃないだろうか。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
