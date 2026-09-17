@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>AGC020B Ice Rink Game</h1>
+問題文は<a href="https://atcoder.jp/contests/agc020/tasks/agc020_b">こちら</a>から。<br>
+n人組を作らせ続けた結果から、初期人数を逆算する問題。<br>
+<br>
+以下、司会が「\(A_i\)人組を作って！」と言うことを単に「コール」と呼ぶ。<br>
+<br>
+状況を書き起こして実験してみるとかなり分かりやすい。<br>
+例えば、最後に2人残っている都合上、最後に作られる組は2人組以外ありえない。<br>
+だから最後で3人組が宣言されていたらその時点で出力結果は-1だ。<br>
+こう考えると、最後から1つ前では2人もしくは3人いる状態しかありえないことが分かる。では、最後から2つ前としてあり得る人数は何人だろうか？<br>
+最後から1つ前のコールで4人組以上が宣言されていたら、先と同様の理屈で矛盾することが分かる。つまり、この時は2人組か3人組しか宣言されず、2人組の場合は同じく2人か3人、3人組の場合は3人から5人の間しかありえない。<br>
+<br>
+上記の理屈を広げてみる。<br>
+\(i \hspace{0.5em}(i=1,2,...,K)\)回目のコールが終わった時点であり得る人数の上限と下限が既に判明しているとしよう。この上限を\(R_i\)人、下限を\(L_i\)人とする。<br>
+この時、\(A_i\)の値から、\(i - 1\)回目のコールが終わった時点であり得る人数の上限\(R_{i-1}\)と下限\(L_{i-1}\)を求めてみよう(ただし、0回目のコールというのはないため、そのときは初期状態を示していると考える)。<br>
+まず、残る人数は必ず\(A_i\)の倍数となっているはずである。<br>
+これを考えると、\(L_{i-1}\)は\(L_{i}\)以上で最小の\(A_i\)の倍数であり、\(R_{i-1}\)は\(R_{i}\)以上で最小の\(A_i\)の倍数より1小さい数になるので、そのように更新すればよい。<br>
+もし、\(A_i\)の値が不正な（つまり、その値がコールされたときに最終的な初期値の値としてあり得るものがない）場合、\(L_{i-1}\)より\(R_{i-1}\)の方が小さくなる。<br>
+なぜなら、\(A_i\)の値が不正であることは、\(L_{i}\)と\(R_{i}\)の間に\(A_i\)の倍数がないことと同値であり（ちゃんと証明したほうが良いんだろうけどここは明らかとさせてほしい）、この時は「\(L_{i}\)以上の最小の\(A_i\)の倍数」と「\(R_i\)最小の\(A_i\)の倍数」が一致してしまうからである。<br>
+（例えば、\(L_{i}=6\),\(R_{i}=7\)の場合に\(A_{i}=5\)が指定された場合、先ほどの定義に従って計算すると\(L_{i-1}=10\),\(R_{i-1}=9\)になる）<br>
+<br>
+以上より、変数\(L,R\)を\(L=2,R=2\)と初期化した上で、\(i=N,N-1,...,1\)の順に以下の操作を行うというアルゴリズムが正当である。<br>
+・\(L\)以上の最小の\(A_i\)の倍数を求め、\(L\)に代入する。<br>
+・\(R\)以上の最小の\(A_i\)の倍数を求め、それより1小さい値を\(R\)に代入する。<br>
+・操作後に\(L > R\)であったら\(-1\)を出力して終了。<br>
+・\(i=1\)までの操作を終えた上で\(L \leqq R\)を保っていたら、\(L, R\)を出力して終了。<br>
+上記の計算は各ステップごとについて定数時間で行えると考えられ、ループの回数が計算時間においてはネックになる。全体の時間計算量は\(O(K)\)であり、この制約下ならば十分に高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+K = int(input())
+A = list(map(int,input().split()))
+
+L = 2
+R = 2
+ok_flag = True
+for i in range(K - 1, -1, -1):
+    sl = L // A[i]
+    sr = R // A[i]
+    dl = L % A[i]
+
+    if dl == 0:
+        L = A[i] * sl
+    else:
+        L = A[i] * (sl + 1)
+    R = A[i] * (sr + 1) - 1
+    if L > R:
+        ok_flag = False
+        break
+
+if ok_flag:
+    print(L, R)
+else:
+    print(-1)
+</code></pre>
+高校数学をしっかりやろうの会という感じ。<br>
+AGCで水diffとはいえ古代の問題なら太刀打ちできるものもある、という例に思える。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
