@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+<div class = "main">
+<h1>すべての要素が\(N\)以下のピタゴラス数を探すプログラムについて</h1>
+<br>
+\(a^2+b^2=c^2\)かつ\(a < b < c\)を満たす正整数の組\((a,b,c)\)をピタゴラス数と呼称する。<br>
+以下のような問題を考える。<br>
+<div style="border: 1px solid #00bc3f; padding: 10px; width: 700px; text-align: left;">
+3つの正の整数の組\((a,b,c)\)であって、\(a^2+b^2=c^2\)かつ\(a < b < c\)を満たすものを「ピタゴラス的組」と呼ぶことにする。<br>
+2つの相異なるピタゴラス数の組\((a_1,b_1,c_1), (a_2,b_2,c_2)\)に対して、辞書順を以下のように定義します。<br>
+(1) \(c_1 < c_2\)ならば、\((a_1, b_1, c_1)\)の方が\((a_2, b_2, c_2)\)よりも辞書順で小さい。<br>
+(1) \(c_1 = c_2\)かつ\(b_1 < b_2\)ならば、\((a_1, b_1, c_1)\)の方が\((a_2, b_2, c_2)\)よりも辞書順で小さい。<br>
+これによりすべてのピタゴラス的組に対して、一意に辞書順が定まることが示せます。<br>
+<br>
+正の整数\(N\)が与えられます。<br>
+全ての要素が\(N\)以下であるようなピタゴラス的組を辞書順で小さいものから順に出力してください。<br>
+ただし、\(1 \leqq N \leqq 10^6\)とし、計算はおよそ20秒以内で終了することが望ましいです。<br>
+</div>
+<h2>小問題1に対する解</h2>
+もっとも単純なプログラムは以下のようなものだろう。<br>
+<pre><code class="language-python">
+N = int(input())
+
+for c in range(1, N + 1):
+    for b in range(1, c):
+        for a in range(1, b):
+            if a ** 2 + b ** 2 == c ** 2:
+                print(a, b, c)
+</code></pre>
+上記のプログラムだが、時間計算量\(\Theta (N^3)\)のプログラムである。<br>
+どれくらいかというと、\(N=10^2\)は1秒以下で実行が終わるが、\(N=10^3\)になるとこの時点で10秒の制約を超えそうになる。多分\(N = 10^4\)だと絶対にオーバーする。<br>
+正しいアルゴリズムだが、遅すぎるというわけである。<br>
+<br>
+<h2>小問題2に対する解</h2>
+時間計算量\(\Theta (N^2)\)のプログラムを実装してみる。<br>
+<pre><code class="language-python">
+N = int(input())
+
+square = dict()
+for i in range(1, N + 1):
+    square[i ** 2] = i
+for a in range(1, N + 1):
+    for b in range(1, a):
+        if a ** 2 - b ** 2 in square:
+            if b < square[a ** 2 - b ** 2]:
+                print(b, square[a ** 2 - b ** 2], a)
+</code></pre>
+アイデアの根幹は「\(a^2+b^2\)が平方数かを素早く判定する」という点にある。<br>
+\(a\)を\(1\)から\(N\)まで、\(b\)を\(a+1\)から\(N\)までループさせるという部分は変わらない。3重目のループを軽くするわけだ。<br>
+そのためには、\(c \leqq N\)なので\(c^2 \leqq N^2\)であるから、\(N^2\)以下の平方数をすべて列挙しておいて、\(a^2+b^2\)が平方数かどうかをすぐにチェックできるようにしておけばいいのではないだろうか。<br>
+set型を活用し、平方数を列挙する方針を取った。<br>
+\(N=10^3\)程度なら1秒以下で回るし、\(N=10^4\)だとちょっと遅いが、まあ計算できる。\(N=10^5\)は多分、20秒は無理。<br>
+<br>
+<h2>小問題3に対する解</h2>
+さて、現状考えうる中で、上の2つより早いプログラムはあるだろうか。実は、ある。<br>
+以下のプログラムにて、各要素が与えられた正整数\(N\)以下のピタゴラス数をもれなくダブりなく表示でき、かつその時間計算量が\(O (N\log_{}{N})\)であることを示す。<br>
+<div style="border: 1px solid #0071BC; padding: 10px; width: 700px; text-align: left;">
+<pre><code class="language-python">
+def gcd(x, y):
+    if x < y:
+        x, y = y, x
+    while y != 0:
+        x, y = y , x % y
+    return x
+
+def floor_sqrt(x):
+    L = 0
+    R = x
+    mid = (L + R) // 2
+    while L < R:
+        if mid ** 2 == x:
+            return mid
+        elif mid ** 2 > x:
+            R = mid
+        else:
+            L = mid + 1
+        mid = (L + R) // 2
+    if mid ** 2 == x:
+        return mid
+    else:
+        return mid - 1
+
+N = int(input())
+
+results = []
+counter = 0
+# 時間計算量はO(NlogN)程度で、まあまあ早い
+# ループは(\sqrt{N})^2=N回回る
+for p in range(1, floor_sqrt(N) + 1):
+    for q in range(p + 1, floor_sqrt(N) + 1):
+        # 原始ピタゴラス数の可能性がある3つ組(a,b,c)を生成
+        a = q ** 2 - p ** 2
+        b = 2 * p * q
+        c = q ** 2 + p ** 2
+        if a > b:
+            a, b = b, a
+        # cがNより大きければループを打ち切る
+        if c > N:
+            break
+        # 全て互いに素なら原始ピタゴラス数である
+        if gcd(gcd(a, b), c) == 1:
+            # その原始ピタゴラス数から生成できるピタゴラス数をすべて生成する
+            t = 1
+            while t * c <= N:
+                results.append([t * a, t * b, t * c])
+                counter += 1
+                t += 1
+results.sort(key=lambda x: (x[2], x[1]))
+
+for p, q, r in results:
+    print(p, q, r)
+</code></pre>
+</div>
+<br>
+このアルゴリズムが正当であることを示す（停止性については自明としてよいだろう）。<br>
+まず、各要素が互いに素ではないピタゴラス数は、各要素の最大公約数で各要素を割ることにより、各要素が互いに素なピタゴラス数になる。割った後の各要素は、元が\(N\)以下なら勿論\(N\)以下である。<br>
+よって、各要素が\(N\)以下で、かつ互いに素であるピタゴラス数を全列挙し、それらすべてに対し、1以上の整数を各要素に掛けてみるという方法で、\(N\)以下のピタゴラス数をすべて生成することができる。<br>
+各要素が互いに素であるピタゴラス数を、以下「原始ピタゴラス数」と呼ぶ。<br>
+ここで、以下の補題を用いる。<br>
+<div style="border: 1px solid #00bc19; padding: 10px; width: 700px; text-align: left;">
+【補題】<br>
+任意の原始ピタゴラス数\((a,b,c)\)に対して、ある正の整数の組\((m,n)\)が存在して、以下の等式のうちいずれかを満たす。<br>
+\(a = m^2 - n^2, b = 2mn, c = m^2 + n^2\)<br>
+\(a = 2mn, b = m^2 - n^2, c = m^2 + n^2\)<br>
+</div>
+証明は色々調べると出る。要は\(\frac{c - b}{2},\frac{c + b}{2}\)が平方数になることを示せばよい。<br>
+これを利用することで、\(c = m^2 + n^2\)と書けるので、\(m = 2 ～ \lfloor \sqrt{N} \rfloor, n = 1 ～ m - 1\)までループを回せば\(N\)以下の原始ピタゴラス数はすべて列挙できる。<br>
+このループの中で実際に\(a,b,c\)を計算する部分はほぼ定数時間とみなせるため、ループ全体での原始ピタゴラス数を求める部分の時間計算量は\(O(N)\)で抑えることができる。<br>
+<br>
+次に、原始ピタゴラス数からピタゴラス数を生成する過程を考える。<br>
+これはループ条件に書いてある通りで、各原始ピタゴラス数\((a,b,c)\)について\(1 \leqq t \leqq \frac{N}{c}\)を満たす整数\(t\)の個数のピタゴラス数を生成できる。<br>
+よって、\(N\)以下の原始ピタゴラス数の集合を\(P_N\)とすると、\(N\)以下のピタゴラス数は全体でおよそ<br>
+\(\displaystyle \sum_{(a,b,c) \in P_N} \frac{N}{c}\)<br>
+個だけ存在する。これは先ほど原始ピタゴラス数を求めた時の結果から<br>
+\(\displaystyle \sum_{(a,b,c) \in P_N} \frac{N}{c} \leqq \sum_{m,nは整数, m < n, m^2+n^2 \leqq N} \frac{N}{m^2 + n^2}\)<br>
+と押さえることができる。これはさらに以下のように変形できる。<br>
+\(\begin{align}
+    \sum_{m,nは正の整数, m > n, m^2+n^2 \leqq N} \frac{N}{m^2 + n^2}
+    \\ = \sum_{m = 2}^{\lfloor \sqrt{N} \rfloor} \sum_{n = 1}^{m - 1} \frac{N}{m^2 + n^2}
+    \\ < \sum_{m = 2}^{\lfloor \sqrt{N} \rfloor} \sum_{n = 1}^{m - 1} \frac{N}{m^2}
+    \\ \leqq \sum_{m = 2}^{\lfloor \sqrt{N} \rfloor}  \frac{N \cdot (m - 1)}{m^2}
+    \\ < \sum_{m = 2}^{\lfloor \sqrt{N} \rfloor}  \frac{N}{m}
+    \\ = N \cdot \sum_{m = 2}^{\lfloor \sqrt{N} \rfloor}  \frac{1}{m}
+    \\ < N (1 + \log_{}{\sqrt{N}})
+\end{align}\)<br>
+ただし、最終行での変形には調和級数を対数関数で押さえられることを用いた。積分などを使えば高校範囲で証明可能である。<br>
+つまり、\(N\)以下のピタゴラス数全体は\(N (1 + \frac{1}{2} \log_{}{N})\)より少なく、特に\(O(NlogN)\)個だと言える。<br>
+各ピタゴラス数の出力は単なる数値計算であり、定数時間でできると見なすと、ループ全体での時間計算量は確かに\(O(NlogN)\)で押さえられると分かった。<br>
+<br>
+以上より、プログラムの各部に関して、ネックとなる場所の動作時間は\(O(NlogN)\)で押さえられることが分かったので、全体としてもこれで押さえることができた。<br>
+<br>
+このコードだと、\(N=10^6\)をピックアップするのに15秒程度で済む。早いね。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
