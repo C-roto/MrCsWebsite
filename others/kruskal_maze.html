@@ -173,6 +173,157 @@ for i in range(N):
 勿論、出来上がった迷路は特定の地点が必ず通過可能な道マスになっているなど、弱点もあるが、「どうしてこれがループを持たない迷路になるのか」については結構よく分かった。<br>
 <br>
 手作業での実装は割と早く終わったが、結構行き当たりばったりに方針を考えてこういう形になった部分はあり、経験がいるなあなどと思った。<br>
+<br>
+pyxelを使って100回迷路を生成して、迷路を解くコードを書いた。<br>
+疲れたときとかこれ見てる。<br>
+<pre><code class = "language-python">
+import random
+import pyxel
+import time
+
+class DisjointSetUnion:
+    def __init__(self, N: int):
+        self.number = N
+        self.parent = [ -1 for _ in range(N)]
+        self.size = [ 1 for _ in range(N)]
+
+    def find(self, v : int):
+        compress = []
+        while self.parent[v] != -1:
+            compress.append(v)
+            v = self.parent[v]
+        for c in compress:
+            self.parent[c] = v
+        return v
+
+    def union(self, u: int, v: int):
+        ru = self.find(u)
+        rv = self.find(v)
+        if ru != rv:
+            if self.size[ru] < self.size[rv]:
+                ru, rv = rv, ru
+            self.parent[rv] = ru
+            self.size[ru] += self.size[rv]
+
+    def same(self, u: int, v: int):
+        return self.find(u) == self.find(v)
+
+def isin(x, W):
+    return 0 <= x <= W ** 2 - 1
+
+def isin_grid(h, w):
+    return 0 <= h <= N - 1 and 0 <= w <= N - 1
+
+m_1 = [1, -1, 0, 0]
+m_2 = [0, 0, 1, -1]
+
+def dfs(u, v):
+    if u == N - 2 and v == N - 2:
+        return True
+    for i in range(4):
+        pyxel.pset(u, v, 10)
+        pyxel.flip()
+        nu = u + m_1[i]
+        nv = v + m_2[i]
+        if isin_grid(nu, nv) and S[nu][nv] != "#" and Visited[nu][nv] == -1:
+            Visited[nu][nv] = Visited[u][v] + 1
+            if not(u == 1 and v == 1):
+                pyxel.pset(u, v, 0)
+            else:
+                pyxel.pset(u, v, 8)
+            if dfs(nu, nv):
+                return True
+            pyxel.pset(u, v, 10)
+            pyxel.flip()
+    pyxel.pset(u, v, 0)
+    return False
+
+N = int(input())
+
+if N % 2 == 0:
+    N += 1
+
+pyxel.init(N, N, title="Maze", fps=60)
+
+for __ in range(100):
+    # クラスカル法の要領による全域木構成
+    # 抽象化した迷路をクラスカル法の要領で繋ぐ
+    W = (N - 1) // 2
+    uf = DisjointSetUnion(W ** 2)
+    Edges = []
+    for i in range(W ** 2):
+        if i < W ** 2 - W and isin(i + (N - 1) // 2, W ** 2):
+            Edges.append([i, i + (N - 1) // 2])
+        if i % W != W - 1 and isin(i + 1, W ** 2):
+            Edges.append([i, i + 1])
+
+    # 頂点の生成順は毎回固定になるので、シャッフルしておく
+    random.shuffle(Edges)
+    Used_Edges = []
+    while Edges:
+        u, v = Edges.pop()
+        if uf.same(u, v):
+            continue
+        uf.union(u, v)
+        Used_Edges.append([u, v])
+
+    # マス目を生成し、左上にスタート、右下にゴールを設置
+    # 各頂点に対応する部分を通行可能マスに変化
+    S = [[ "#" for _ in range(N)] for _ in range(N)]
+
+    for i in range(N):
+        for j in range(N):
+            if i == 1 and j == 1:
+                S[i][j] = "S"
+            elif i == N - 2 and j == N - 2:
+                S[i][j] = "G"
+            elif i % 2 == 1 and j % 2 == 1:
+                S[i][j] = "."
+
+    # グラフをマス目に反映させる
+    while Used_Edges:
+        p, q = Used_Edges.pop()
+        uy, ux = p // W, p % W
+        vy, vx = q // W, q % W
+        uy, ux = 2 * uy + 1, 2 * ux + 1
+        vy, vx = 2 * vy + 1, 2 * vx + 1
+        S[(uy + vy)// 2][(ux + vx) // 2] = '.'
+
+    for i in range(N):
+        for j in range(N):
+            if S[i][j] == "S":
+                pyxel.pset(i, j, 8)
+            elif S[i][j] == "G":
+                pyxel.pset(i, j, 11)
+            elif S[i][j] == "#":
+                pyxel.pset(i, j, 7)
+        pyxel.flip()
+
+    # dfs
+    Visited = [[ -1 for _ in range(N)] for _ in range(N)]
+    Visited[1][1] = 0
+    dfs(1, 1)
+
+    # bfsによる復元
+    y = N - 2
+    x = N - 2
+    for _ in range(Visited[N - 2][N - 2] - 1):
+        for i in range(4):
+            nx = x + m_1[i]
+            ny = y + m_2[i]
+            if isin_grid(ny, nx) and Visited[ny][nx] == Visited[y][x] - 1:
+                x = nx
+                y = ny
+                pyxel.pset(y, x, 14)
+                pyxel.flip()
+                break
+
+    time.sleep(3)
+    for i in range(N):
+        for j in range(N):
+            pyxel.pset(i, j, 0)
+        pyxel.flip()
+</code></pre>
 <a href="index.html">一覧へ</a>
 </div>
 </body>
