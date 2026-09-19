@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC398E Tree Game</h1>
+問題文は<a href="https://atcoder.jp/contests/abc398/tasks/abc398_e">こちら</a>から。<br>
+奇閉路ができないようにグラフに対して辺を追加していく問題。<br>
+<br>
+インタラクティブジャッジの問題。ものによっては正当の検証がしにくく困るが、今回の問題はそれほどでもない。<br>
+まず、あるグラフに奇閉路が存在しないというのは、そのグラフが二部グラフであることと同値である。よって、ある頂点を始点として頂点を白と黒に塗り分けておき、同色の頂点が接しない状態を保ちながら辺を増やし続けることを考えればよい。<br>
+ある塗り分け方について、同色同士が接するように辺を引いてしまうと、奇閉路ができることは明らかなので、最初に適当に塗り分け方を決めて、それの上で考えれば問題ない。<br>
+今回頂点の数が少ないため、2頂点間を全探索して「この頂点同士は結べるか？」を調べることは容易い。また、二部グラフである状態を保ちながら辺を追加する限り、どの辺をどんな順番で追加したとしても、それが原因で引けなくなる辺は生まれない。<br>
+よって、先に辺を引ける箇所の候補をすべてピックアップしておき、引ける限り引いていくという戦略で問題ない。候補箇所の個数が偶数個なら後手を選び、奇数個なら先手を選べば、引ける辺の候補が無くなったタイミングでちょうど相手の手番に回るので必勝である。<br>
+全体では頂点間の全探索がネックになり、時間計算量は\(O(N^2)\)程度で収まり、これは充分に高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import collections
+
+N = int(input())
+G = [ set() for _ in range(N)]
+for _ in range(N - 1):
+    u, v = list(map(int,input().split()))
+    u -= 1
+    v -= 1
+    G[u].add(v)
+    G[v].add(u)
+
+Color = [ -1 for _ in range(N)]
+Color[0] = 0
+
+que = collections.deque([0])
+while que:
+    p = que.popleft()
+    for q in G[p]:
+        if Color[q] == -1:
+            Color[q] = (Color[p] + 1) % 2
+            que.append(q)
+
+Edges = set()
+for p in range(N):
+    for q in range(p + 1, N):
+        if Color[p] != Color[q] and q not in G[p]:
+            Edges.add((p, q))
+
+if len(Edges) % 2 == 0:
+    print("Second")
+else:
+    print("First")
+    p, q = Edges.pop()
+    print(p + 1, q + 1)
+
+while Edges:
+    s, t = list(map(int,input().split()))
+    Edges.discard((s - 1, t - 1))
+    p, q = Edges.pop()
+    print(p + 1, q + 1)
+
+win, lose = list(map(int,input().split()))
+</code></pre>
+知識一発ゲーという意味ではワクワクはしないが、こういう問題をちゃんと実装できるようにはしておきたい。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
