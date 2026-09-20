@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC349E Weighted Tic-Tac-Toe</h1>
+問題文は<a href="https://atcoder.jp/contests/abc349/tasks/abc349_e">こちら</a>から。<br>
+盤面に重みが付いた三目並べの勝者を求めるゲーム。<br>
+<br>
+盤面サイズとマスの状態数が非常に小さいので、あり得る盤面全体の状態も少ない。<br>
+よって、あり得る状態を全探索するという手段を取りやすい。<br>
+<br>
+今回中心となるアイデアは「再帰的に勝敗を求める」というものになる。<br>
+ある盤面において、その手番のプレイヤーが勝つ方法があるかを知るにはどうすればよいだろう？<br>
+これはすべての打ちうるところに手を打ってみて、その先のすべての盤面について再び勝敗を求める、ということをやってみるのが良いだろう。<br>
+いつか勝敗が付く(これは認めることにする)わけなので、勝敗が付いたタイミングから勝敗の情報を遡っていくと、今勝敗を求めたい盤面から打てるあらゆる手について、それを打った先の盤面の勝敗が決まる。<br>
+もしその中に、打つことで自分が勝つ盤面があるなら、そうなるように手を打てば勝てるので、現在の盤面は手番プレイヤーの勝ちになる。そうでないなら、どのように手を打っても手番プレイヤーは負けるので、現在の盤面は手番プレイヤーでない方の勝ちになる。<br>
+<br>
+上記の発想を中心として、以下のような関数\(\g\)を用意する。<br>
+・まず、ある盤面が与えられた際に、勝敗が付いていれば勝者を出力し、付いていなければ未確定であることを返す関数\(f\)を用意する<br>
+<br>
+・盤面と手番プレイヤーが与えられたときに、最終的な勝者を返す再帰関数\(g\)を以下のように定義する(与えられた盤面を\(B\)とする)<br>
+→もし\(f(B)\)が勝者を返して来たら、\(g(B)=f(B)\)とする。<br>
+→そうでないなら、\(B\)から手を打って遷移できる盤面\(C_1,C_2,...,C_k\)について、\(g(C_1),g(C_2),...,g(C_k)\)をそれぞれ再帰的に計算する。この中に手番プレイヤーを返してくるものがあれば、\(g(B)\)の値は手番プレイヤーであるし、そうでなければ\(g(B)\)は手番プレイヤーでない方のプレイヤーになる。<br>
+<br>
+再帰関数が各盤面に対して一意に、かつ常に値が定まることには本来証明が必要だが、今回は省略する（盤面がループしないし、高橋君と青木君が同時に縦横斜めをそろえることもないし、盤面の個数は有限個しかないし、必ず値が確定する盤面が存在する……あたりを厳密に言えばいいか）。<br>
+関数\(f\)の用意が大変だが、これは実装例を見てもらった方が早いと思う。定義に従って愚直に書いているだけだ。<br>
+<br>
+ともあれ、あり得る盤面を全部一度ずつ舐めてみることで最終的な勝者も分かるため、盤面の一辺を\(N\)として\(\Omega(N^2 (N^2)!)\)程度はかかる。<br>
+実装例だと多分forループ内のlist生成がネックで、全体の時間計算量は\(O(N^4 (N^2)!)\)程度になると思うが、制約下ではこのオーダーでも十分高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+# 高橋君をプレイヤー0,青木君をプレイヤー1とする
+# 以降、「勝者を返す」とは「勝者のプレイヤー番号を返す」という意味である
+
+# 盤面について、[A[0][0], A[0][1], A[0][2], A[1][0], A[1][1], A[1][2], A[2][0], A[2][1], A[2][2]]の順に一列で受け取る
+
+# 状態を与えられたらある色がすべて揃っているかを確かめる関数
+# 揃っていればその色のプレイヤー番号を、そうでなければ-1を返す
+def liner(x):
+    # 縦
+    for i in range(0, 9, 3):
+        if x[i] == x[i + 1] and x[i + 1] == x[i + 2] and x[i] != ".":
+            return int(x[i])
+    # 横
+    for i in range(3):
+        if x[i] == x[i + 3] and x[i + 3] == x[i + 6] and x[i] != ".":
+            return int(x[i])
+    # 斜め
+    if x[0] == x[4] and x[4] == x[8] and x[0] != ".":
+        return int(x[0])
+    if x[2] == x[4] and x[4] == x[6] and x[2] != ".":
+        return int(x[2])
+
+    # 揃っていない場合
+    return -1
+
+# 状態と盤面の得点が与えられたとき、勝者が確定していればそれを返す関数
+# 勝者未確定の場合は-1を返す
+def winner(x, Board):
+    p = liner(x)
+
+    # 一列に揃っている色があるなら返す
+    if p != -1:
+        return p
+
+    # 埋まっていないマスがあるなら(揃っている色がないので)勝者未確定
+    if "." in x:
+        return -1
+
+    # 全マスが埋まっている状態なら得点計算をする
+    t = 0
+    a = 0
+    for i in range(9):
+        if x[i] == "0":
+            t += Board[i]
+        else:
+            a += Board[i]
+
+    # 得点をより取っている方が勝者
+    if t > a:
+        return 0
+    else:
+        return 1
+
+# ある盤面における勝者を再帰的に求める関数
+# staが盤面の状態、turnはターンプレイヤーのプレイヤー番号
+def total_winner(sta, turn):
+    p = winner(sta, A)
+    # 勝者が確定しているならその勝者を返す
+    if p != -1:
+        return p
+
+    # 打てうる手を打った時の勝敗を見て、現在の盤面の勝者を決めて返す
+    for i in range(9):
+        # そもそも手が打てて、かつ今がプレイヤーxのターンで、かつ次の手はxが勝者か？
+        # そうならこの盤面もプレイヤーxが勝者
+        if sta[i] == "." and total_winner(sta[:i] + [str(turn)] + sta[i+1:], (turn + 1) % 2) == turn:
+            return turn
+
+    # 次の手をどこに打っても自分が勝てないなら、相手の番号を返す
+    return (turn + 1) % 2
+
+# 盤面情報の受け取り（上→左順で一列に受け取る）
+A = []
+for i in range(3):
+    a = list(map(int,input().split()))
+    A.extend(a)
+
+# 最初の盤面から行けるすべての盤面を再帰的に辿って、最初の盤面の勝者を求める
+# 2色以上が並んでいる状態には辿り着かない
+if total_winner(["." for _ in range(9)], 0) == 0:
+    print("Takahashi")
+else:
+    print("Aoki")
+</code></pre>
+大昔にマンカラで人間と戦ってくれるプログラムを書いたことがあったが、そのときよりも圧倒的に小さい盤面で、再帰というまた別の形の処理を使って書くことになった。<br>
+やってることはゲーム木に対して深さ優先探索をしているだけとも言える。<br>
+盤面が小さいのでこちらの方が単純だし、こっちは確実に勝てる解を探すのに対して、あちらは良さそうな方を選ぶという違いはあるけれど、再帰を組むのは割と大変でちょっと時間がかかった。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer><!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC476E Min-Max Swap</h1>
+問題文は<a href="https://atcoder.jp/contests/abc476/tasks/abc476_e">こちら</a>から。<br>
+数列内の特定範囲における最小値と最大値のスワップを行う問題。<br>
+<br>
+競技プログラミングの勉強過程で、様々なデータ構造や典型アルゴリズムを自分で書くという経験は多いと思う。<br>
+今回はセグメント木を書いた経験があれば多分解ける問題だろう。<br>
+<br>
+今回はセグメント木に関する説明は大幅に省略するが、要するに「数列のある区間内における最大値や最小値を時間計算量\(O(logN)\)で取得できるデータ構造」だと思ってもらってそんなに外してはいない（実際は特定の条件を満たす演算なら何でもできるのだが、今回の問題においては重要ではない）。<br>
+<details>
+<summary>どうしてそんなデータ構造が欲しいのか</summary>
+以下のような問題を考える。<br>
+・長さ\(N\)の数列\(P\)が与えられる。この数列に対し、以下の操作\(1,2\)を合計\(Q\)回行う。<br>
+操作1：数列の先頭から\(n\)番目の要素を値\(X\)に更新する<br>
+操作2：数列の先頭から\(L\)番目から\(R\)番目までの要素のうち、最小のものを出力する<br>
+<br>
+上記の問題に対し、数列をlist型などを用いて愚直に管理・更新・出力しようと思ったとき、操作1は定数時間で可能だろうが、操作2は最悪で時間計算量\(O(NQ)\)程度かかってしまう。要するに、各操作で要求される区間の幅に広いものが多いときや、クエリの回数が多いときにめっちゃ時間がかかる可能性があるのだ。<br>
+セグメント木と呼ばれるデータ構造は、データの持ち方を工夫することで操作1と操作2をともに時間計算量\(O(\log_{}{N})\)で処理できるデータ構造である。操作1の処理が遅くなる代わりに、操作2が爆速になって、全体の時間計算量\(O(N\log_{}{N})\)程度に改善するのである。<br>
+=========================<br>
+</details>
+<br>
+セグメント木2本を用意する。片方は各区間の最大値を記録しておくためのセグメント木(MAXセグ木とする)、もう片方は各区間の最小値を記録しておくためのセグメント木(MINセグ木とする)。<br>
+イメージとしてはこんな感じのことをやる。<br>
+・与えられた区間について、MINセグ木から最小値を、MAXセグ木から最大値を取得する（折り畳み部における操作2）<br>
+・その値がそれぞれ数列のどこにあるかを調べる（dict型でも持っておけば簡単に処理できる）<br>
+・両セグ木において、最小値、最大値がある位置をスワップする（折り畳み部における操作1）<br>
+セグ木の更新に係る部分がネックになり、1回あたりの時間計算量は\(\log_{}{N}\)程度になる。全体の時間計算量は\(O(N\log_{}{N})\)程度で押さえられ、この制約下なら十分に高速だろう。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+class segmentTree:
+    def __init__(self, dataPieces, data, cal):
+        self.dataPieces = dataPieces
+        self.data = data
+        self.cal = cal
+        cellnumpow = 0
+        while not(2 ** (cellnumpow - 1) < dataPieces <= 2 ** cellnumpow):
+                cellnumpow += 1
+        self.cnp = cellnumpow
+        self.contena = [ 0 for _ in range(2 ** (cellnumpow + 1))]
+        for i in range(dataPieces):
+            self.contena[2 ** cellnumpow + i] = data[i]
+        cellnumpow -= 1
+        while cellnumpow >= 0:
+            c = 2 ** cellnumpow
+            for j in range(c):
+                if cal == "MAX":
+                    self.contena[c + j] = max(self.contena[2 * (c + j)],self.contena[2 * (c + j) + 1])
+                else:
+                    self.contena[c + j] = min(self.contena[2 * (c + j)],self.contena[2 * (c + j) + 1])
+            cellnumpow -= 1
+
+    def update(self, n: int, x: int):
+        cnp = self.cnp
+        self.contena[2 ** cnp + (n - 1)] = x
+        now = 2 ** cnp + (n - 1)
+        while now > 1:
+            if now % 2 == 0:
+                now //= 2
+            else:
+                now -= 1
+                now //= 2
+            if self.cal == "MAX":
+                self.contena[now] = max(self.contena[2 * now], self.contena[2 * now + 1])
+            else:
+                self.contena[now] = min(self.contena[2 * now], self.contena[2 * now + 1])
+
+
+    def answerToQuestion(self, l: int , r: int):
+        segment_maximums = []
+        cnp = self.cnp
+        now_l = 2 ** cnp + (l - 1)
+        now_r = 2 ** cnp + (r - 1)
+        while now_l <= now_r:
+            if now_l % 2 == 1:
+                segment_maximums.append(self.contena[now_l])
+                now_l += 1
+                now_l //= 2
+            else:
+                now_l //= 2
+
+            if now_r % 2 == 0:
+                segment_maximums.append(self.contena[now_r])
+                now_r //= 2
+                now_r -= 1
+            else:
+                now_r -= 1
+                now_r //= 2
+        if self.cal == "MAX":
+            return max(segment_maximums)
+        else:
+            return min(segment_maximums)
+
+N, M = map(int,input().split())
+P = list(map(int,input().split()))
+# 何番目にどの値があり、どの値が何番目にあるかを検索する辞書をそれぞれ用意する
+IDX_to_VAL = dict()
+VAL_to_IDX = dict()
+for i in range(N):
+    IDX_to_VAL[i] = P[i]
+    VAL_to_IDX[P[i]] = i
+# 最大セグ木と最小セグ木の2本を用意する
+MAXseg = segmentTree(N, P, "MAX")
+MINseg = segmentTree(N, P, "MIN")
+
+for _ in range(M):
+    L, R = list(map(int,input().split()))
+
+    # L番目からR番目までの最大の値pとその番号p_i,最小の値qとその番号q_iを取得
+    p = MAXseg.answerToQuestion(L, R)
+    q = MINseg.answerToQuestion(L, R)
+    p_i = VAL_to_IDX[p]
+    q_i = VAL_to_IDX[q]
+
+    # セグ木内での最小値と最大値の入れ替え
+    MAXseg.update(p_i + 1, q)
+    MAXseg.update(q_i + 1, p)
+    MINseg.update(p_i + 1, q)
+    MINseg.update(q_i + 1, p)
+
+    # 辞書内での最大値と最小値位置の入れ替え
+    IDX_to_VAL[p_i] = q
+    IDX_to_VAL[q_i] = p
+    VAL_to_IDX[p] = q_i
+    VAL_to_IDX[q] = p_i
+
+print(*[IDX_to_VAL[i] for i in range(N)])
+</code></pre>
+強い人が見たら「セグ木を貼っておしまい」とか言いそう。<br>
+<br>
+大昔に自分で書いたときの記憶をたどって、毎回インデックスの値とか微調整してる。いつか自分でも何を書いているのか分からなくなって破綻しそう。怖い。<br>
+これを書いたころは「コメントをコードの中に残しておく」なんていう気の利いたことを全くやらなかったので、そろそろもう一度自分で書いてみるべきかなあと思っている。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
