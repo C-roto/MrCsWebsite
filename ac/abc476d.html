@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC476D Automat</h1>
+問題文は<a href="https://atcoder.jp/contests/abc476/tasks/abc476_d">こちら</a>から。<br>
+高額紙幣しか受け付けてくれない自販機と通常自販機で物を買う問題。<br>
+<br>
+以下、デザート自販機を自販機A、ドリンク自販機を自販機Bと呼称する。<br>
+<br>
+まず、最終的に買ったものの個数を最大化する場合、安いものから順番に買うことにして良い。これは自販機Bについても同じだ。安いものの方が使うKドル紙幣の枚数は少なくて済む。<br>
+であれば、後は自販機Aからいくつの商品を買い、自販機Bからいくつの商品を買うかを調べれば良い。愚直にやると時間計算量が\(O(NM)\)になってしまうので、工夫が必要だ。<br>
+ここでは、配列\(S\)を用意し、「自販機Aから安い順に\(i\)個目までの商品を購入するのにかかる累計金額は？」の答えを\(S_i\)とすれば、累積和としてこの値を計算することができる。<br>
+後は自販機Bから安い順に商品を買う際に残る金額を都度算出し、その金額でSを二分探索すれば全体の時間計算量は(ソートと上記の部分がネックになって)\(O((N+M)(\log_{}{N}+\log_{}{M}))\)で押さえられ、無論十分に高速である。<br>
+使った紙幣とお釣りの合計をメモっておけば、これらは新しく商品を買う際に更新すれば事足りる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import bisect
+
+N, M, K = list(map(int,input().split()))
+X, Y = list(map(int,input().split()))
+A = list(map(int,input().split()))
+B = list(map(int,input().split()))
+S = X + K * Y
+
+# 商品金額を安い順に整理
+A.sort()
+B.sort()
+
+# Aの商品を安い順に買うといくら？(累積和)
+A_price = [ 0 for _ in range(N)]
+
+A_price[0] = A[0]
+for i in range(N - 1):
+    A_price[i + 1] = A_price[i] + A[i + 1]
+
+# Bの商品を買うのに使った累計紙幣枚数
+used_bill = 0
+# Bの商品を買って余ったお金の累計
+rem_money = 0
+
+answer = bisect.bisect(A_price, X + K * Y)
+for i in range(M):
+    # i番目までのBの商品を買うのに使った紙幣の合計枚数を算出
+    # 累計枚数が初期所持数Y枚よりも大きくなったらストップ
+    used_bill += B[i] // K
+    r = 0
+    if B[i] % K != 0:
+        r = 1
+        used_bill += 1
+    rem_money += K * (r + B[i] // K) - B[i]
+    if used_bill > Y:
+        break
+
+    # Bの商品を買った残りのお金
+    p = rem_money + X + K * (Y - used_bill)
+    # Aの商品をどこまで買えるか
+    x = bisect.bisect_right(A_price, p)
+    answer = max(answer, i + 1 + x)
+
+print(answer)
+</code></pre>
+bisectで調べる位置をleftにすると、自販機Aの商品の累計金額と残金がぴったりになったときにWAになってしまうので注意。<br>
+コーナーケースを認識しよう。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
