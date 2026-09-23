@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC400E Ringo's Favorite Numbers 3</h1>
+問題文は<a href="https://atcoder.jp/contests/abc400/tasks/abc400_e">こちら</a>から。<br>
+ちょうど2つの偶数個の素因数を持つ数であって、与えられた数以下のものを求める問題。<br>
+<br>
+真面目に数式で押さえていけば計算量が抑えられることはすぐにわかる。<br>
+まず、任意の400-number\(M\)に対し、ある相異なる2つの素数\(p,q\)と2つの正整数\(a,b\)があって\(M = p^{2a} q^{2b}\)と書ける。また、ある数\(M\)が400-numberであることは上記のように書けるときだけである。<br>
+この式を変形して、\(\sqrt{M} = p^a q^b\)が言え、\(M\)は最大で\(10^{12}\)以下であるから、\(\sqrt{M}\)は\(10^6\)以下である。<br>
+よって、最大\(10^12\)以下の400-numberをすべて求めたいと思った場合、\(10^6\)以下であって、\(p^a q^b\)と表せるような正の整数をすべて列挙すればよい。<br>
+これらの数は最大でも\(10^6\)個しかないわけで、しかも列挙していく中でダブることもあり得ない（素因数が違うから）ので、もしほぼ定数時間(歯切れが悪い言い方だが、多倍長整数は長さに比例して計算に時間がかかる)で計算が終わるのであれば、全列挙してもそれほど時間はかからないはずである。<br>
+もちろん必要以上に長いループを組むと長くなるので、なるべく短くなる上界を見定めると、\(p < q\)を仮定した場合\(p \leqq 10 ^3\)と\(q \leqq 10^6\)がすぐにわかるので、小さい方の素因数は\(10^3\)まで調べれば充分で、大きい方の素因数も\(10^6\)程度まで調べれば充分。<br>
+以上より、上記の方針で\(10^6\)以下で先の条件を満たすものを全部列挙していけばよい。実装例を見てもらった方が何してるか分かって早いと思う。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import bisect
+
+# エラトステネスの篩+素数リストの出力
+def elato(n: int) -> list:
+    isprime = [ True for _ in range(n + 1)]
+    isprime[0] = False
+    isprime[1] = False
+    for i in range(2, n + 1):
+        if not(isprime[i]):
+            continue
+        for j in range(2 * i, n + 1, i):
+            isprime[j] = False
+    res = []
+    for i in range(n + 1):
+        if isprime[i]:
+            res.append(i)
+    return res
+
+# 10^6までの素因数を列挙
+P = elato(10 ** 6)
+fourhundred_like = []
+for i in range(len(P)):
+    p = P[i]
+    if p > 10 ** 3:
+        break
+    for j in range(i + 1, len(P)):
+        q = P[j]
+        for k in range(1, 100):
+            # p^k * q > 10^6 なら掛け始めるまでもなくダメ
+            C = (p ** k) * q
+            if C > 10 ** 6:
+                break
+            else:
+                fourhundred_like.append(C ** 2)
+            for _ in range(100):
+                # qの指数を1ずつ増やしてオーバーしないかチェック
+                C *= q
+                if C > 10 ** 6:
+                    break
+                fourhundred_like.append(C ** 2)
+# ソートを後からしてもそんなもん
+fourhundred_like.sort()
+
+# クエリを処理する
+Q = int(input())
+for _ in range(Q):
+    A = int(input())
+    if A >= fourhundred_like[-1]:
+        print(fourhundred_like[-1])
+        continue
+    x = bisect.bisect(fourhundred_like, A)
+    print(fourhundred_like[x - 1])
+</code></pre>
+今日はAtCoder Novistepsに提示された問題も分からず、なんか解けそうで解けない問題が増えた1日だった。昨日知って使い始めたが、まだまだ知らない(そして今知るべきであろう)話が多数あると分かったのは結構大きい。<br>
+別に競技で強くなるために勉強をしているわけではない、というスタンスは一貫しているつもりだが、それはそれとして「どのようなアルゴリズムやデータ構造があり、そしてなぜ上手く行くのか」ということには関心がある。<br>
+そろそろ毎日何かの解説を乗っけながら勉強するのにも限界が見えつつある気がするし、スタンスを見直して勉強していくことにしようかな……。とりあえずやみくもに数を解けば分かることが増える、という段階は過ぎ去った気もする。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
