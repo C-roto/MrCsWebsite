@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ARC114A Not coprime</h1>
+問題文は<a href="https://atcoder.jp/contests/arc114/tasks/arc114_a">こちら</a>から。<br>
+与えられた数たちと互いに素でないような最小の数を求める問題。<br>
+<br>
+\(Y\)の候補は、50以下の素数のうち幾つかを高々1つずつ選んで掛け合わせたものになる（50より大きい素数を掛けたら無駄で、2回以上同じ整数を掛けるのも無駄）。<br>
+50以下の素数は全部で15個しかなく、この15個のうち幾つかを掛け合わせる方法をすべて試せばよい。<br>
+よって、\(2^{15}\)通りについて数をすべて列挙し、各数について\(N\)個の数と互いに素かをチェックすればよい。<br>
+最大公約数はユークリッドの互除法を使って調べても、小さい方の数の\(\log\)の値程度までしかかからず、今回は小さいの数は50を超えないことが明言されているので、せいぜい6回以下の割り算で収まるはずだ。<br>
+それが\(2^{15}\)個の各数に対して、\(N \leqq 49\)個以下発生しても、大した計算量にはならないと考えられる。<br>
+以上より、上記をbit全探索などの方針で実装すればよい。実装例は以下の通り。<br>
+<pre><code class="language-python">
+def gcd(a, b):
+    if a < b:
+        a, b = b, a
+    while b != 0:
+        a, b = b, a % b
+    return a
+
+N = int(input())
+X = list(map(int,input().split()))
+
+primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47]
+
+answer = 10 ** 100
+for i in range(2 ** 15):
+    tmp = 1
+    for j in range(15):
+        if (i >> j) & 1 == 1:
+            tmp *= primes[j]
+
+    ok_flag = True
+    for x in X:
+        if gcd(tmp, x) == 1:
+            ok_flag = False
+
+    if ok_flag and answer > tmp:
+        answer = tmp
+
+print(answer)
+</code></pre>
+茶diffだけど1Qクラスの問題らしい。bit全探索だ！ とは言われなかったら気づけないような気がするが、言われたら素数を列挙しようというのは思いつきやすい気も。<br>
+ちょっと意外なものに対するbit全探索、面白い。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
