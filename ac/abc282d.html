@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC282D Make Bipartite 2</h1>
+問題文は<a href="https://atcoder.jp/contests/abc282/tasks/abc282_d">こちら</a>から。<br>
+辺を増やしても二部グラフにできる2頂点の組数を答える問題。<br>
+<br>
+まず、最初から二部グラフだったらどう繋いでも絶対二部グラフにならないので、この時点で答えは0になる。<br>
+また、グラフ全体が二部グラフの場合、各連結部も明らかに二部グラフであるので、各連結部を白と黒で彩色してみる（この彩色の仕方は実質的に1通りである。正確には白黒反転した形でもう1通りできるが、それを実質同じとみなす）。実装例ではBFSを利用して塗り分けている。<br>
+<br>
+塗り分けた各頂点について、その頂点と結べる頂点は以下のものであり、かつそれですべてを網羅する。<br>
+・自分と違う連結成分に入っている任意の頂点<br>
+・自分と同じ連結成分にある異色の点であり、かつ現在自身との間に直接の辺がない頂点<br>
+前者について、もし同色であれば、どちらかの連結成分の白黒を丸々反転させれば良い。これで数えられる頂点の個数は、全体の頂点数から自分が属する連結成分の頂点数を引いた値である。<br>
+後者について、自分と接している頂点はすべて異色であるから、これで数えらえる頂点の個数は、自分が所属する連結成分の異色の頂点数から、単に自分の次数を引けば求められる。<br>
+これらは工夫次第で時間計算量\(O(N)\)程度で求められるので、この制約下ならあまり問題はない。実装例ではBFSでの塗分けの際に各連結成分ごとに頂点リストを作成し、各頂点リストごとに白の個数と黒の個数を求め、リスト内の各頂点に対して個別に上記の値を計算した。<br>
+こうして数えた頂点数の半分が求める答えである（全体として同じ頂点のペアを2回ずつ数えていることになるため）。
+<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import collections
+
+N, M = list(map(int,input().split()))
+G = [ set() for _ in range(N)]
+for _ in range(M):
+    u, v = list(map(int,input().split()))
+    u -= 1
+    v -= 1
+    G[u].add(v)
+    G[v].add(u)
+
+Groups = []
+C = [ -1 for _ in range(N)]
+# Sは未探索の頂点を入れておく
+S = set([i for i in range(N)])
+unbiparate_flag = False
+# グラフの二部性を判断しつつ、連結部分ごとに分ける
+# 未探索の頂点が無くなったらおわり
+while S:
+    s = S.pop()
+    C[s] = 0
+    que = collections.deque([s])
+    res = [s]
+    while que:
+        p = que.popleft()
+        for q in G[p]:
+            if C[q] == -1:
+                res.append(q)
+                que.append(q)
+                C[q] = (C[p] + 1) % 2
+                if q in S:
+                    S.discard(q)
+            else:
+                if C[p] == C[q]:
+                    unbiparate_flag = True
+    Groups.append(res)
+
+answer = 0
+if not(unbiparate_flag):
+    for g in Groups:
+        Conum = len(g)
+        D = dict()
+        for g_e in g:
+            if C[g_e] not in D:
+                D[C[g_e]] = 1
+            else:
+                D[C[g_e]] += 1
+        for g_e in g:
+            r = (C[g_e] + 1) % 2
+            # 非連結な部分とはどこをくっつけてもいい
+            answer += N - Conum
+            # 連結している部分は今くっついている異色とは違う場所のみ欲しい
+            # 連結部分の異色から次数引けばいい
+            if r in D:
+                answer += D[r] - len(G[g_e])
+print(answer // 2)
+</code></pre>
+考えてみれば単純な問題だけれど、上手い実装ができるかの方が大事な気もする。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
