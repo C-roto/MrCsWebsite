@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC477E Wheel Distance</h1>
+問題文は<a href="https://atcoder.jp/contests/abc477/tasks/abc477_e">こちら</a>から。<br>
+車輪状のグラフで各頂点間の最短距離を求める問題。<br>
+<br>
+負の重みがないそれなりに大きめの重み付きグラフで最短経路を求めようと思った場合、ダイクストラ法をまず疑いたくなる。<br>
+だが、クエリのたびに頂点間に対してダイクストラ法を行うのはちょっと厳しいように思う（時間計算量を上から押さえようとした場合、\(O(QN)\)程度の時間がかかることが予想され、悪意のあるケースに対しても早いかどうかはだいぶ怪しい）。<br>
+グラフの形状が特徴的なので、実は最短経路の形がだいぶ限られるのではないか？ ということを疑ってみる。<br>
+具体的には、頂点\(N + 1\)を経由するか否か、という点である。<br>
+以下、頂点\(X,Y\)間の最短距離を\(dist(X,Y)\)と書くことにする。<br>
+<br>
+まず、頂点\(N + 1\)を経由するルートについてだが、最短経路において、頂点\(N + 1\)を2回以上通ることはあり得ない（複数回頂点\(N + 1\)を通る経路については、最後に頂点\(N + 1\)を通るときだけを見れば、元のルートよりも短い経路を構築できるからである）。<br>
+よって、頂点\(N + 1\)を経由する場合は1回だけでよく、その際の最短は\(dist(S, N + 1) + dist(N + 1, T)\)で与えられる（それ以外の頂点\(X\)を頂点\(N + 1\)への「入口」や「出口」に選んだ場合、最低でも\(dist(X,S)\)や\(dist(X,T)\)分だけ余分に時間がかかるからである）。<br>
+というわけで、最短距離の候補の1つは\(dist(S, N + 1) + dist(N + 1, T)\)である。<br>
+これは頂点\(N + 1\)を始点とするダイクストラ法1回で求めることができる（無向グラフなので、頂点\(S\)から頂点\(N + 1\)への最短距離は、明らかに頂点\(N + 1\)から頂点\(S\)までの最短距離と等しい）。<br>
+<br>
+あとは、頂点\(N + 1\)を経由しない場合だが、これは外周の辺だけを回って\(S,T\)間を移動する最短経路であるから、時計回りに回ったときと反時計回りに回ったときのいずれかが最短になる。<br>
+頂点1から頂点\(X\)までを時計回りに回った距離を\(D_X\)としたとき、頂点\(D\)を始点に時計回りに頂点\(T\)へと回った際の最短経路は\(D_T - D_S\)で求められる（各\(D_X\)は各\(D_X\)は累積和などで事前計算が容易に済み、事前計算が済んでさえいればこれは定数時間で求められる）。反時計回りに回ったときの値は、今の距離を全体一周したときの距離から引けば定数時間で求められる。<br>
+<br>
+以上より、最短経路の候補となる値である「外周を時計回りに回った距離」、「外周を反時計回りに回った距離」、「中心を経由するときの距離」をすべて求めることができた。<br>
+以上の方法はダイクストラ法での事前計算がネックになり、時間計算量は\(O(N\log_{}{N})\)程度になる（ただし定数倍を非常に軽視しているので、注意は必要である）。<br>
+全体としてはループ中の各クエリの処理もしくは事前計算がネックとなり、全体の時間計算量は\(O(N+Q)\)ということになる。こうなれば間に合う可能性は非常に高くなる。<br>
+PyPyでもちょっとギリギリだが、通った。心配ならC++やCodonを使うのが良さそうだ。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import heapq
+
+N, Q = list(map(int,input().split()))
+G = [ set() for _ in range(N + 1)]
+A = list(map(int,input().split()))
+B = list(map(int,input().split()))
+for i in range(N):
+    j = (i + 1) % N
+    G[i].add((j, A[i]))
+    G[j].add((i, A[i]))
+    G[i].add((N, B[i]))
+    G[N].add((i, B[i]))
+
+# 中央頂点を経由しない際の最短経路は累積和の応用で求められる
+cycle_dist = [ 0 for _ in range(N + 1)]
+cycle_dist[0] = 0
+for i in range(N):
+    for v, d in G[i]:
+        if v == (i + 1) % N:
+            cycle_dist[i + 1] = cycle_dist[i] + d
+            break
+
+# 中央頂点を経由する際の最短経路はダイクストラ法で求められる
+INF = 10 ** 20
+dist = [ INF for _ in range(N + 1)]
+dist[N] = 0
+
+que = []
+heapq.heapify(que)
+heapq.heappush(que, [dist[N], N])
+
+while que:
+    d, v = heapq.heappop(que)
+
+    if d > dist[v]:
+        continue
+
+    for u, w in G[v]:
+        if dist[u] > dist[v] + w:
+            dist[u] = dist[v] + w
+            heapq.heappush(que, [dist[u], u])
+
+# 最短の可能性があるのは次の3通り
+# 可能性1:sから時計回りに回ってtに行く→累積和を取っておけば定数時間
+# 可能性2:sから反時計回りに回ってtに行く→累積和を取っておけば定数時間
+# 可能性3:sからNを経由してtに行く→ダイクストラ法でNと各頂点の最短経路を探しておけば定数時間
+for _ in range(Q):
+    s, t = list(map(int,input().split()))
+    s -= 1
+    t -= 1
+
+    # もし行先の頂点が中心頂点だったら可能性1,2はあり得なくて、可能性3だけがありえる
+    if t != N:
+        prob_1 = cycle_dist[t] - cycle_dist[s]
+        prob_2 = cycle_dist[N] - prob_1
+    else:
+        prob_1 = INF
+        prob_2 = INF
+    prob_3 = dist[s] + dist[t]
+
+    # 候補のうち真の最短であるものを出力
+    print(min(prob_1, prob_2, prob_3))
+</code></pre>
+重み付きグラフの最短距離を求めるアルゴリズムは多数あるが、ダイクストラ法はとにかく頻出なイメージが僕でさえある。<br>
+グラフの形状が特殊であることを利用しさえすれば、それほどでもないような気がする問題。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
