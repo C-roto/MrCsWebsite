@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC477D Masking Tape</h1>
+問題文は<a href="https://atcoder.jp/contests/abc477/tasks/abc477_d">こちら</a>から。<br>
+マスキングされていない箇所を塗る操作を繰り返した最終的な色を求める問題。<br>
+<br>
+以下、クエリ1をマスキングのつけ外しクエリ、クエリ2を色塗りクエリと呼ぶ。<br>
+<br>
+各マスについて、塗られていない時間帯であって最後に塗られた色を求めればよい。<br>
+最後に塗られた色が欲しいので、クエリ先読みを考えたくなる。<br>
+色塗りクエリが来る部分が何番目かを見て、各マスについて二分探索するとかも思ったが、それをするとマスキングの時間帯に悪意があった場合に単純には上手く行かなくなる。<br>
+何とかして全体を一気に扱いつつ、既に確定したマスを見なくなる方法を探したい。すると、以下のような方法を思いついた。<br>
+・最初にクエリを順に読んでいき、マスキングのつけ外しクエリだけ処理する<br>
+→すると、クエリを最後まで処理した時にマスキングされていないマスがすべて分かるので、それを列挙して集合に突っ込んでおく（この集合を\(S\)とする）。<br>
+・すべてのマスの色を未確定状態とする。
+・クエリを逆順に見て、処理していく<br>
+→マスキングのつけ外しクエリが挟まったとき、集合\(S\)に対象のマスが入っていれば消し、入っていなければ入れる。ただし、色が確定済みのマスについてはこの処理を行わず、クエリ自体を無視する。<br>
+→色塗りクエリが挟まったとき、色が未確定かつ集合\(S\)の要素である(つまりマスキングされていない)マスについては今塗られる色で最終的な色が確定するので、条件に当てはまるマスすべてをその色で確定する。その後、集合\(S\)からすべての要素を除く。<br>
+・最後まで色が未確定だったマスは、最初に塗られている色で確定する。<br>
+<br>
+各部の時間計算量について見ていく。<br>
+・クエリを順にみてマスキングする処理については、各クエリについて定数時間で処理が可能である。よって全体としては時間計算量\(O(Q)\)程度で処理ができる。<br>
+・すべてのマスの色を未確定状態にし、最後にマスキングされていないマスを列挙する部分は、時間計算量\(O(N)\)で処理ができる。<br>
+・クエリを逆順処理する部分について、ネックになるのは「色が未確定かつマスキングされていないマス」を塗るところだが、これは色が確定済みのマスの集合を別に用意しておくなどして、set型などを使って実装すれば「そのマスが確定済みか」や「色が未確定かつマスキングされていないか」などはすべて定数時間で判断できる。<br>
+一度塗られたマスは2回以上色塗りクエリで塗られることもないので、結局このネックとなる部分においてすべてのマスは高々1回ずつしか塗られない。以上より、この部分の時間計算量は\(O(N+Q)\)程度で抑えが効く。<br>
+以上よりこの部分の時間計算量は全体で\(O(N+Q)\)程度で抑えが効き、この制約下なら充分高速だと判断できる。<br>
+クエリを回収して逆順になる処理を愚直に挟むとしても計算量のオーダーは変わらないので、とりあえず上記に書いた通りに実装して問題ないだろう。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N, Q = list(map(int,input().split()))
+Masked = [ 0 for _ in range(N)]
+Color = [ "a" for _ in range(N)]
+Queries = []
+for _ in range(Q):
+    t, x = list(input().split())
+    if t == "1":
+        nx = int(x) - 1
+        Masked[nx] = (Masked[nx] + 1) % 2
+    Queries.append([t, x])
+
+Queries.reverse()
+Uncovered = set()
+detected = set()
+for i in range(N):
+    if Masked[i] == 0:
+        Uncovered.add(i)
+
+for t, x in Queries:
+    if t == "1":
+        nx = int(x) - 1
+        if nx not in detected:
+            if nx not in Uncovered:
+                Uncovered.add(nx)
+            else:
+                Uncovered.discard(nx)
+    else:
+        for u in Uncovered:
+            detected.add(u)
+            Color[u] = x
+        Uncovered = set()
+
+print("".join(Color))
+</code></pre>
+クエリを順に読んで一部だけ処理し、全部読んで逆から本命を処理するという内容。<br>
+Novistepsでは1Qクラスと判断があったが、まさにそれくらいという感じがする。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
