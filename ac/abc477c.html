@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC477C Range Search Query</h1>
+問題文は<a href="https://atcoder.jp/contests/abc477/tasks/abc477_c">こちら</a>から。<br>
+範囲内に指定の文字列があるかをサーチする問題。<br>
+<br>
+Tのサイズがとても小さいことを利用し、各\(i=1,2,...,|S|\)について、Sの\(i\)文字目から始まる\(|T|\)文字の文字列がTと一致するかを逐一見て確認していく。<br>
+Tと一致した文字列の、始点のリストを\(A\)と終点のリストを\(B\)として、始点が前から\(j\)番目であるようなものの始点を\(A_j\)、終点を\(B_j\)としておく。<br>
+<br>
+次に、各クエリにおいて与えられた\(L\)の値を\(A\)の中で二分探索し、\(L <= A_j\)となるような最小の\(j\)を見つけてくる。<br>
+もしそのような\(j\)がない場合、あらゆるTと一致する部分文字列の始点より後ろを範囲の始点に指定しているので、当然ながら範囲の中にTと一致する部分文字列は存在しない（よってNoを出力して終わり）。<br>
+\(j\)が存在した場合、この時\(B_j\)と\(R\)の大小関係によって以下の通り分析できる。<br>
+・\(B_j \leqq R\)のとき、明らかに閉区間\([L, R]\)は閉区間\([A_j, B_j]\)を含んでいる。この時、指定の範囲は\(S_{A_j}\)を始点とし\(S_{B_j}\)を終点とする、Tと一致する部分文字列を含んでいる（のでYesを出力する）。<br>
+・\(R < B_j\)のとき、少なくとも\(A_j < R < B_j = A_j + |T| - 1\)が成り立っている。\(j < k\)なる任意の\(k\)に対し、少なくとも\(R < B_j < B_k = A_k + |T| - 1\)が成り立つ。これは\(A_j\)以降を始点とするTと一致する文字列の終点が範囲からはみ出ることを表す。<br>
+始点については二分探索で選んだ都合上、\(A_j\)より小さい始点を持つTと一致する部分文字列はすべて始点が範囲からはみ出る。以上より、この範囲は条件を満たす部分文字列を含んでいない（のでNoを出力する）。<br>
+<br>
+というわけで、\(A\)を二分探索する部分がネックとなり、全体の時間計算量は\(O(Q\log_{}{|S}) + |S| |T|\)程度で押さえられ、まあ高速だろう。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import bisect
+
+Q = int(input())
+S = input()
+T = input()
+
+Ls = []
+Rs = []
+for i in range(len(S)):
+    ok_flag = True
+    for j in range(len(T)):
+        if i + j >= len(S):
+            ok_flag = False
+            break
+        if S[i + j] != T[j]:
+            ok_flag = False
+            break
+    if ok_flag:
+        Ls.append(i)
+        Rs.append(i + j)
+
+for _ in range(Q):
+    L, R = list(map(int,input().split()))
+    L -= 1
+    R -= 1
+    a = bisect.bisect_left(Ls, L)
+    if a == len(Ls):
+        print('No')
+        continue
+    if Rs[a] <= R:
+        print('Yes')
+    else:
+        print('No')
+</code></pre>
+問題としては易しい(C問題と言うくくりで見るとそこそこっぽい？ でも2Qならそれほどでもない？)。<br>
+公式解説とはまた違う解き方を自然に見つけられたので、備忘もかねて書いておく。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
