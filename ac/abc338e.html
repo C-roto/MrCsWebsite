@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC338E Chords</h1>
+問題文は<a href="https://atcoder.jp/contests/abc338/tasks/abc338_e">こちら</a>から。<br>
+円の上の弦同士に交点が存在するかを考える問題。<br>
+<br>
+ペアとなっている頂点同士に同じ番号を振る。<br>
+弦\(A_1B_1\)と弦\(A_2B_2\)が交点を持つとき、点\(A_2\)と点\(B_2\)は弦\(A_1B_1\)を挟んで円周の反対側にある。<br>
+これは、頂点番号が小さい順から時計回りに点を見ていったとき、点\(A_1\)と点\(B_1\)の間に点\(A_2\)もしくは\(B_2\)のいずれか片方だけがある、ということに等しい。<br>
+ある2弦が交点を持つことと、そのようになる点同士がある子とは同値なので、そのような点の存在をチェックしていけばよい。<br>
+これはスタックを使うことで管理できる。<br>
+頂点1から順にその頂点のペア番号をスタックに積んでいく。<br>
+積んでいく途中で最後尾のペア番号と今積もうとしているペア番号が同じなら、積まずに最後尾の値を削除する。<br>
+これを繰り返して、すべてのペアが消えた場合は交点なし、残ったペアがあれば交点あり、とすればよい。<br>
+\(2N\)個の点にペア番号を振り、1度ずつ見れば事足りるから、時間計算量は\(O(N)\)で抑えられ、この制約下であれば十分に高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+S = [ -1 for _ in range(2 * N)]
+for i in range(N):
+    a, b = list(map(int,input().split()))
+    a -= 1
+    b -= 1
+    S[a] = i
+    S[b] = i
+
+D = set()
+stack = []
+for i in range(2 * N):
+    if stack and stack[-1] == S[i]:
+        stack.pop()
+    else:
+        stack.append(S[i])
+
+if len(stack) > 0:
+    print('Yes')
+else:
+    print('No')
+</code></pre>
+一見何したらいいのかピンときにくいけど、括弧列の管理と同じ方法で解けるよって言われたらすげえ分かる。<br>
+面白い。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
