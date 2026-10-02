@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC178E Dist Max</h1>
+問題文は<a href="https://atcoder.jp/contests/abc178/tasks/abc178_e">こちら</a>から。<br>
+点同士のマンハッタン距離が最大となる2点を探す問題。<br>
+<br>
+調べるまで知らなかったが、俗に"45度回転"と呼ばれる典型技法が使えるらしい。<br>
+（やってることは拡大縮小も含んでいるので厳密な45度回転ではないわけだが、まあ、そいつは一旦置いておく）。<br>
+デカルト座標系で言うなら点\((x,y)\)を点\((x+y,x-y)\)に移動することを考える。すると「移動前における2点間のマンハッタン距離」は「移動後における2点間のチェビシェフ距離」とどういうわけか一致するらしい。<br>
+「どういうわけかするらしい」ではおさまりが悪いので、とりあえずこの事実を証明してみる。<br>
+<details>
+<summary>証明の概略</summary>
+手始めに2点\((0,0)\)と\((x,y)\)間のマンハッタン距離\(M=|x|+|y|\)と、2点\((0,0)\)と\((x+y,x-y)\)間におけるチェビシェフ距離\(C=max(|x+y|,|x-y|)\)について考えてみる。以下の4通りに場合分けをしてみる。<br>
+・\(x \geqq 0, y \geqq 0\)のとき<br>
+\(M=x+y\)であり、\(C=|x+y|=x+y\)である。<br>
+・\(x \geqq 0, y \leqq 0\)のとき<br>
+\(M=x-y\)であり、\(C=|x-y|=x-y\)である。<br>
+・\(x \leqq 0, y \geqq 0\)のとき<br>
+\(M=-x+y\)であり、\(C=|x+y|=-x+y\)である。<br>
+・\(x \leqq 0, y \leqq 0\)のとき<br>
+\(M=-x-y\)であり、\(C=|x+y|=-x-y\)である。<br>
+というわけで、一方が原点のときは常に\(M=C\)であると分かった。<br>
+<br>
+次に、任意の2点\((x_1,y_1),(x_2,y_2)\)間のマンハッタン距離について考えてみる。<br>
+これは定義から直ちに2点\((0,0),(x_2-x_1,y_2-y_1)\)間のマンハッタン距離に等しいことが分かる。<br>
+また、2点\((x_1+y_1,x_1-y_1),(x_2+y_2,x_2-y_2)\)間のチェビシェフ距離は、これも定義から直ちに2点\((0,0),(x_2-x_1+y_2-y_1,x_2-x_1-y_2+y_1)\)間のチェビシェフ距離と一致する。<br>
+<br>
+ここで先ほどの議論から、「2点\((0,0),(x_2-x_1,y_2-y_1)\)間のマンハッタン距離」と「2点\((0,0),(x_2-x_1+y_2-y_1,x_2-x_1-y_2+y_1)\)間のチェビシェフ距離」は一致することが分かる。<br>
+よって、「2点\((x_1,y_1),(x_2,y_2)\)間のマンハッタン距離」と「2点\((x_1+y_1,x_1-y_1),(x_2+y_2,x_2-y_2)\)間のチェビシェフ距離」も一致することが分かり、これは示したかった事実である。<br>
+</details><br>
+この事実を用いることで、元の問題は、件の移動を施した後のチェビシェフ距離が最大となる2点を探す問題に帰着できる。これを探すのは簡単で、「移動後のx座標同士が最も離れた2点の、x座標同士の差の絶対値」か、「移動後のy座標同士が最も離れた2点同士の、y座標の差の絶対値」のうち大きい方を取ればよい。<br>
+これは入力を受け取り、都度変換し、最大値と最小値を管理するだけで良いから、時間計算量としては\(O(N)\)で解ける。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+
+Xs = []
+Ys = []
+for _ in range(N):
+    x, y = list(map(int,input().split()))
+    Xs.append(x + y)
+    Ys.append(x - y)
+
+print(max(max(Xs) - min(Xs), max(Ys) - min(Ys)))
+</code></pre>
+さっきの事実、証明こそしてみたものの謎は深まるばかりというか、直観的にどういうことなのかあまりよく分からない。<br>
+それこそよくある典型証明技法を援用して示してみただけなので、事実としてそうなることは納得できても、イメージが掴めたような感じはしない。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
