@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC353E Yet Another Sigma Problem</h1>
+問題文は<a href="https://atcoder.jp/contests/abc353/tasks/abc353_e">こちら</a>から。<br>
+任意の2語に対する最長共通接頭辞の長さの総和を求める問題。<br>
+<br>
+Trieを活用して解く練習問題その2。<br>
+今回は都合上、辞書型の入れ子でTrieを実装すると情報が乗せにくすぎるので、大人しくクラスを定義した。<br>
+今回求める値は、任意の2つの単語に対する共通接頭辞の長さの総和である。<br>
+これを求めるためにまず、Trie木のノードに「その文字がいくつの単語において通ったか」をメモしておく。<br>
+次に各単語ごとに、通る文字についてそれぞれメモしてある値から1を引いた値を足していく。この総和は、求めたい値の2倍の値になっているはずだ。<br>
+これは具体例を考えてみると分かりやすい。<br>
+ある単語について、その先頭の文字が(自身を除く)\(k\)個の単語と共有されていたとする。この時、この文字が最終的な総和に寄与する増分は、各単語を入力順が早い順に見ていくことで、\((k - 1) + (k - 2) + ... + 1 = \frac{k(k - 1)}{2}\)になっていると分かる。<br>
+これは各単語の2文字目以降についても同様であるため、結局求めたい総和は各ノードの文字について「共有されている単語数」×「共有されている単語数-1」の総和を2で割った値に等しくなる。<br>
+以上より、先に説明したアルゴリズムが正当である。<br>
+問題の制約から、文字数の合計はそんなに大きくないので、時間計算量もそれほど心配する必要はないだろう。<br>
+実装例は以下の通り。今回は単語の終わりを求める必要がなく、各ノードに通った単語数を記録しておく必要があるため、そのようにTrieの構造を設定した。<br>
+<pre><code class="language-python">
+class TNode:
+    def __init__(self):
+        self.children = dict()
+        self.passed_num = 0
+
+class Trie:
+    def __init__(self):
+        self.origin = TNode()
+
+    def insert(self, word : str):
+        now_node = self.origin
+        for c in word:
+            if c not in now_node.children:
+                now_node.children[c] = TNode()
+            now_node = now_node.children[c]
+            now_node.passed_num += 1
+
+    def count(self, word : str):
+        now_node = self.origin
+        res = 0
+        for c in word:
+            now_node = now_node.children[c]
+            res += now_node.passed_num - 1
+        return res
+
+trie = Trie()
+
+N = int(input())
+S = list(input().split())
+
+trie = Trie()
+for i in range(N):
+    trie.insert(S[i])
+
+answer = 0
+for i in range(N):
+    answer += trie.count(S[i])
+print(answer // 2)
+</code></pre>
+Trieをカスタマイズして使う問題。<br>
+各ノードにどんな情報を持たせたらいいか、そしてそれをどういう風にさらった良いか、を考えるにはとても面白い問題だったように思う。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
