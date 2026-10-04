@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC351E Jump Distance Sum</h1>
+問題文は<a href="https://atcoder.jp/contests/abc351/tasks/abc351_e">こちら</a>から。<br>
+ジャンプで移動できる距離を求める問題。<br>
+<br>
+「俗にいう45度回転を用いると解きやすくなるよ」という前提を与えられたうえでの球解を行った。<br>
+大きく分けて、方針を定めるパートと、実際の計算を考えるパートに分かれる。<br>
+<br>
+・方針を定めるパート<br>
+まず、今回の問題において「dist(A,B)」と定義されているのは、まぎれもなくAとBのチェビシェフ距離である。これは実際に実験をすることによって容易に確かめられる。<br>
+ということは、マンハッタン距離をチェビシェフ距離に一致させるのと逆に回転させることによって、チェビシェフ距離をマンハッタン距離に落とし込むことができる。<br>
+また、x座標とy座標の和の偶奇はジャンプ移動の前後において一定なので、x座標とy座標の和が偶数である点と、奇数である点は互いに移動できず、distの値は0になる。<br>
+よって、x座標とy座標の和が奇数になる点と偶数になる点は分けて考えて良い。<br>
+<br>
+また、x座標とy座標の和が奇数になる場合、変換後の座標は奇数になるが、チェビシェフ距離もマンハッタン距離も平行移動によって変化しないので、x座標とy座標の和が奇数になるような組のx座標を一律で1ずつ移動してみることにする。<br>
+このようにしても、x座標とy座標の和が奇数になる点同士のチェビシェフ距離や点変換後のマンハッタン距離は変化しないので、特に全体の答えにも影響を及ぼさない。<br>
+<br>
+以上より、与えられる\(N\)点を以下のように変換して管理する。<br>
+・\(x+y\)が偶数であるような点\((x,y)\)を点\((\frac{x+y}{2},\frac{x-y}{2})\)に移す。<br>
+・\(x+y\)が奇数であるような点\((x,y)\)を点\((\frac{x+1+y}{2},\frac{x+1-y}{2})\)に移す。<br>
+そして、元々\(x+y\)が偶数だったもの同士について、任意の2点間のマンハッタン距離の総和を求め、奇数だったもの同士も同じものを求めて足せばよい。<br>
+<br>
+・実際の計算<br>
+マンハッタン距離の総和については、x座標の差の絶対値とy座標の差の絶対値を独立して考えて良い。よって、例えばx座標とy座標の和が変換前に偶数だった点の、変換後のx座標を集めた多重集合を\(Odd_x\)とすると、以下のような問題を解けばよいことになる。<br>
+・\(Odd_x\)の任意の2要素の絶対値の差の総和を求めよ。<br>
+実際に少ない数で実験をすると、以下のような方針が見える。<br>
+①\(Odd_x\)の要素を昇順に並べる。以降、\(Odd_x[i]\)で\(Odd_x\)の要素を昇順に並べたときの前から\(i\)番目の要素を指すものとする。<br>
+②\(Odd_x[i+1] - Odd_x[i]\)は総和全体に対して\((|Odd_x| - i) \times i\)回寄与するので、総和を\(Odd_x[i+1] - Odd_x[i] \times ((|Odd_x| - i) \times i)\)だけ増加させる。<br>
+この方法であれば前計算も必要なく、1回の計算もほぼ定数時間で収まる。<br>
+これをあと3回やれば済むので、この部分の時間計算量は\(\O(N))程度で収まる。<br>
+<br>
+結局、\(Odd_x\)などの要素を昇順に並べ替えるところがネックになり、時間計算量はおよそ\(O(N\log_{}{N})\)程度で収まると考えられる。これは制約下で充分高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+
+Odd_group_x = []
+Odd_group_y = []
+Even_group_x = []
+Even_group_y = []
+evensize = 0
+oddsize = 0
+
+for _ in range(N):
+    x, y = list(map(int,input().split()))
+    if (x + y) % 2 == 0:
+        Even_group_x.append((x + y) // 2)
+        Even_group_y.append((x - y) // 2)
+        evensize += 1
+    else:
+        Odd_group_x.append((x + 1 + y) // 2)
+        Odd_group_y.append((x + 1 - y) // 2)
+        oddsize += 1
+
+Odd_group_x.sort()
+Odd_group_y.sort()
+Even_group_x.sort()
+Even_group_y.sort()
+
+answer = 0
+for i in range(evensize - 1):
+    answer += (Even_group_x[i + 1] - Even_group_x[i]) * (evensize - 1 - i) * (i + 1)
+    answer += (Even_group_y[i + 1] - Even_group_y[i]) * (evensize - 1 - i) * (i + 1)
+for i in range(oddsize - 1):
+    answer += (Odd_group_x[i + 1] - Odd_group_x[i]) * (oddsize - 1 - i) * (i + 1)
+    answer += (Odd_group_y[i + 1] - Odd_group_y[i]) * (oddsize - 1 - i) * (i + 1)
+
+print(answer)
+</code></pre>
+方針を貰ったとはいえ、ついに青diffの問題にも手が届いた。<br>
+「チェビシェフ距離を2点間について求めるのは大変だが、マンハッタン距離に直すと各点のx座標やy座標を独立に扱えるというのが面白い。<br>
+そっちに直した方が楽になるケースがあるんだ！<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
