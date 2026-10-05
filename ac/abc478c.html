@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC478C Sort Subarray</h1>
+問題文は<a href="https://atcoder.jp/contests/abc478/tasks/abc478_c">こちら</a>から。<br>
+数列の一部をソートして全体を昇順にできるかを調べる問題。<br>
+<br>
+イメージとしては、先頭の何項かであって昇順に並べられるのがどこまでかを調べ、後ろの何項かであって昇順に並べられるのがどこまでかを調べ、昇順に並べられない範囲をソートして上手く行くかを調べる。<br>
+実装上はこんな感じにする<br>
+・数列の1項目からK項目までをSortedListにぶち込む<br>
+・K+1項目からN項目までをキュー(back)にぶち込む<br>
+・空のスタック(front)を用意する。i=1とする。<br>
+<br>
+・次の4条件すべてを満たしていれば'Yes'を出力して終わり、なければSortedListから\(A_i\)を削除してfrontにぶち込み、backの先頭の項を削除してSortedListにぶち込む。
+①frontの末尾の項（空の場合は0とする) \(\leqq\) SortedListの最小値<br>
+②SortedListの最大値 \(\leqq\) backの先頭の項（空の場合は∞とする)<br>
+③frontが昇順<br>
+④backが昇順<br>
+<br>
+愚直にやっても時間計算量は\(O(K\log_{}{N})\)程度で押さえられ、充分に高速である。以下の実装例ではbackが昇順になるギリギリの範囲から上記操作を始め、かつfrontが昇順にならなくなったらすぐに捜査を打ち切ることでより短縮を試みた。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import sortedcontainers
+import sys
+
+N, K = list(map(int,input().split()))
+A = list(map(int,input().split()))
+
+INF = 10 ** 10
+front = [-1]
+back = [INF]
+start = 0
+ok_flag = False
+
+for i in range(N - 1, K - 1, - 1):
+    if back[-1] >= A[i]:
+        back.append(A[i])
+    else:
+        start = i - (K - 1)
+        break
+
+for i in range(start):
+    if front[-1] <= A[i]:
+        front.append(A[i])
+    else:
+        print('No')
+        sys.exit()
+
+middle = sortedcontainers.SortedList()
+for i in range(start, start + K):
+    middle.add(A[i])
+
+while True:
+    if front[-1] <= middle[0] and middle[-1] <= back[-1]:
+        print('Yes')
+        break
+    middle.discard(A[start])
+
+    if front[-1] <= A[start]:
+        front.append(A[start])
+    else:
+        print('No')
+        break
+
+    q = back.pop()
+    if q == INF:
+        print('No')
+        break
+    middle.add(q)
+    start += 1
+</code></pre>
+簡単な問題だけど実装が重くてめんどい。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
