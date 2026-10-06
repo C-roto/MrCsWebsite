@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC437F Manhattan Christmas Tree 2</h1>
+問題文は<a href="https://atcoder.jp/contests/abc437/tasks/abc437_f">こちら</a>から。<br>
+指定された幾つかの点のうち、ある点からのマンハッタン距離が最大であるものを発見して距離を報告する問題。<br>
+<br>
+いわゆる45度回転はしたものとして考える。<br>
+つまり扱う座標は与えられた値\(x,y\)に対して\(x+y,x-y\)を扱い、マンハッタン距離の代わりにチェビシェフ距離を扱う。<br>
+考え方自体は以前解いた典型90の問題と大して変わらない。つまり、「指定範囲内で最も上下左右にある4点を選び、指定された点からの距離が最大になる点を見つける」というのが基本方針である。<br>
+範囲内での最大最小を扱うので、セグ木を4つ生やして(変換後の)xの最大/最小、yの最大/最小を管理すればよい。<br>
+一方、自分で実装したセグ木がバグだらけだと大変な目に遭う（1敗）。毎度思うが、本番じゃなくて本当に良かった。<br>
+クエリ1も2もセグ木の更新、サーチがネックになるので、時間計算量は全体で\(O(Q\log_{}{N})\)程度で収まる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+class segmentTree:
+    def __init__(self, dataPieces, data, cal):
+        self.dataPieces = dataPieces
+        self.data = data
+        self.cal = cal
+        cellnumpow = 0
+        while not(2 ** (cellnumpow - 1) < dataPieces <= 2 ** cellnumpow):
+                cellnumpow += 1
+        self.cnp = cellnumpow
+        if cal == "MAX":
+            self.contena = [ -1 * 10 ** 10 for _ in range(2 ** (cellnumpow + 1))]
+        else:
+            self.contena = [ 10 ** 10 for _ in range(2 ** (cellnumpow + 1))]
+        for i in range(dataPieces):
+            self.contena[2 ** cellnumpow + i] = data[i]
+        cellnumpow -= 1
+        while cellnumpow >= 0:
+            c = 2 ** cellnumpow
+            for j in range(c):
+                if cal == "MAX":
+                    self.contena[c + j] = max(self.contena[2 * (c + j)],self.contena[2 * (c + j) + 1])
+                else:
+                    self.contena[c + j] = min(self.contena[2 * (c + j)],self.contena[2 * (c + j) + 1])
+            cellnumpow -= 1
+
+    def update(self, n: int, x: int):
+        cnp = self.cnp
+        self.contena[2 ** cnp + n - 1] = x
+        now = 2 ** cnp + n - 1
+        while now > 1:
+            if now % 2 == 0:
+                now //= 2
+            else:
+                now -= 1
+                now //= 2
+            if self.cal == "MAX":
+                self.contena[now] = max(self.contena[2 * now], self.contena[2 * now + 1])
+            else:
+                self.contena[now] = min(self.contena[2 * now], self.contena[2 * now + 1])
+
+
+    def search(self, l: int , r: int):
+        segment_maximums = []
+        cnp = self.cnp
+        now_l = 2 ** cnp + (l - 1)
+        now_r = 2 ** cnp + (r - 1)
+        while now_l <= now_r:
+            if now_l % 2 == 1:
+                segment_maximums.append(self.contena[now_l])
+                now_l += 1
+                now_l //= 2
+            else:
+                now_l //= 2
+
+            if now_r % 2 == 0:
+                segment_maximums.append(self.contena[now_r])
+                now_r //= 2
+                now_r -= 1
+            else:
+                now_r -= 1
+                now_r //= 2
+        if self.cal == "MAX":
+            return max(segment_maximums)
+        else:
+            return min(segment_maximums)
+
+N, Q = list(map(int,input().split()))
+Xs = []
+Ys = []
+for _ in range(N):
+    x, y = list(map(int,input().split()))
+    Xs.append(x + y)
+    Ys.append(x - y)
+
+xmax_tree = segmentTree(N, Xs, "MAX")
+ymax_tree = segmentTree(N, Ys, "MAX")
+xmin_tree = segmentTree(N, Xs, "MIN")
+ymin_tree = segmentTree(N, Ys, "MIN")
+
+for _ in range(Q):
+    query = list(map(int,input().split()))
+    if query[0] == 1:
+        xmax_tree.update(query[1], query[2] + query[3])
+        ymax_tree.update(query[1], query[2] - query[3])
+        xmin_tree.update(query[1], query[2] + query[3])
+        ymin_tree.update(query[1], query[2] - query[3])
+    else:
+        L = query[1]
+        R = query[2]
+        x = query[3] + query[4]
+        y = query[3] - query[4]
+        xmax = xmax_tree.search(L, R)
+        ymax = ymax_tree.search(L, R)
+        xmin = xmin_tree.search(L, R)
+        ymin = ymin_tree.search(L, R)
+        print(max(abs(xmax - x), abs(xmin - x), abs(ymax - y), abs(ymin - y)))
+</code></pre>
+とりあえず45度回転典型の初歩の初歩程度は分かったということだろうか？ もっとも、扱い方の初歩より理屈の初歩の方が気になるような気もするが。<br>
+そろそろ他の放置してる問題にも取り組みたい。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
