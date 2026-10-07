@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC326D ABC Puzzle</h1>
+問題文は<a href="https://atcoder.jp/contests/abc326/tasks/abc326_d">こちら</a>から。<br>
+条件を満たすように、マス目上にA,B,Cを配置する問題。<br>
+<br>
+\(N \leqq 5\)という条件！ 小さい条件を見ると全列挙を疑ってしまいたくなる。<br>
+マス目としてあり得る行を列挙していく。この時何も考えず列挙していくと、行の候補となる並びは\(\frac{N(N-1)(N-2)}\)通り……つまり\(N=5\)においては\(60\)通りあるわけで、単純計算で\(60^5\)通りある。これを全列挙するのは少々キツイ。<br>
+そこで文字列Rを参照し、各上からi行目に何が来るかをもう少し狭めることを考える。こうすると、\(N=5\)のときでも各行の候補は\(20\)通りまで減るので、\(20^5\)通りならある程度現実的に処理が効くはずだ。<br>
+後は、出来た候補盤面を見て「各列にA,B,Cが1つずつあるか？」と「Cのi文字目が\(C_i\)と一致するか？」を見ればよい。<br>
+特に工夫しなくても\(N^2\)の定数倍の回数で恐らく調べ終わると思うので、全体としても恐らく大した計算回数にならない。<br>
+実装例は以下の通り（上記2条件のチェックを簡略化できるように書いた）。<br>
+<pre><code class="language-python">
+import itertools
+
+N = int(input())
+R = input()
+C = input()
+
+X = itertools.permutations(["A", "B", "C"] + ["." for _ in range(N - 3)])
+rA = set()
+rB = set()
+rC = set()
+for x in X:
+    for i in range(len(x)):
+        if x[i] == "A":
+            rA.add(x)
+            break
+        elif x[i] == "B":
+            rB.add(x)
+            break
+        elif x[i] == "C":
+            rC.add(x)
+            break
+
+Y = []
+for i in range(N):
+    if R[i] == "A":
+        Y.append(rA)
+    elif R[i] == "B":
+        Y.append(rB)
+    else:
+        Y.append(rC)
+
+Y = itertools.product(*Y)
+ok_flag = False
+for y in Y:
+    for i in range(N):
+        Check = []
+        for j in range(N):
+            Check.append(y[j][i])
+        Check = tuple(Check)
+        if (C[i] == "A" and Check in rA) or (C[i] == "B" and Check in rB) or (C[i] == "C" and Check in rC):
+            if i == N - 1 and not(ok_flag):
+                ok_flag = True
+                print('Yes')
+                for i in range(N):
+                    print("".join(map(str, y[i])))
+                else:
+                    continue
+        else:
+            break
+
+if not(ok_flag):
+    print('No')
+</code></pre>
+「全列挙するだけ」と言ってしまえばそうなのだけれど、全列挙をするにもちゃんと工夫して(主に時間)計算量を削減しようという話だと捉えた。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
