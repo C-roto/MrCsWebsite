@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC179E Sequence Sum</h1>
+問題文は<a href="https://atcoder.jp/contests/abc179/tasks/abc179_e">こちら</a>から。<br>
+数列の和を求める問題。<br>
+<br>
+前提条件から、鳩の巣原理によって数列の\(1\)項目から\(M + 1\)項目までの間には同じ値の項が存在する。<br>
+同じ値になっている2つの項であって、数列の中で最初に現れるものを\(a_x,a_y(i < j)\)とする。<br>
+するとこの問題は\(\sum_{i=1}^{x - 1} A_i + ((N - x) \div (y - xの商)) \cdot \sum_{i=x}{y - 1} A_i + \sum_{i=x}{x + ((N - x) \div (y - x) のあまり) - 1} A_i\)を求める問題になる（空和は0とする）。<br>
+ってわけで、それを愚直に求めるコードを書けばとりあえず通る。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N, X, M = list(map(int,input().split()))
+
+R = dict()
+I = []
+
+a = X
+I.append(a)
+R[a] = 0
+x, y = -1, -1
+for i in range(1, M + 1):
+    a = (a ** 2) % M
+    if a not in R:
+        R[a] = i
+        I.append(a)
+    else:
+        I.append(a)
+        x, y = R[a], i
+        break
+
+if N - 1 < x:
+    print(sum(I[0 : N]))
+else:
+    D = sum(I[0 : x])
+    L = sum(I[x : y])
+    S = (N - x) // (y - x)
+    Re = (N - x) % (y - x)
+    print(D + L * S + sum(I[x : x + Re]))
+</code></pre>
+割り算が苦手なので、添え字を間違えまくってバグりまくった。<br>
+こーいうの良くない！ 頑張んなきゃ！<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
