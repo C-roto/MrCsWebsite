@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC137D Summer Vacation</h1>
+問題文は<a href="https://atcoder.jp/contests/abc137/tasks/abc137_d">こちら</a>から。<br>
+日雇いバイトをこなして何日か後に報酬をもらう問題。<br>
+<br>
+先頭から見ていくと「先にこっちを取った方が有利か？」みたいなのが大量に発生してキツい。<br>
+これは「先に進むにつれて選択肢が減っていく」から発生する現象であり、こういう場合は期限である\(M\)日後から順に遡るようにして見ていくと視点がすっきりする。<br>
+つまり、\(M-k\)日目の時点では、報酬の受け取りが\(k\)日後以内のバイトをすべて見て、その中で報酬が最大のものを選べばよい。<br>
+こうすると常に選択肢は増える一方なので、あとからより良い選択肢を選べたかも……と考える余地がなくなる。<br>
+すべての選択肢を一度ずつ見て、最大値を出すのはヒープに突っ込めばよい。時間計算量は\(O(N+M\log_{}{N})\)程度で済み、この制約下なら問題ないと思われる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import heapq
+
+N, M = list(map(int,input().split()))
+
+Works = []
+for _ in range(N):
+    Works.append(list(map(int,input().split())))
+Works.sort(reverse=True)
+
+HQ = []
+heapq.heapify(HQ)
+
+answer = 0
+for m in range(1, M + 1):
+    while Works:
+        if Works[-1][0] <= m:
+            a, b = Works.pop()
+            heapq.heappush(HQ, -1 * b)
+        else:
+            break
+
+    if HQ:
+        q = heapq.heappop(HQ)
+        answer += -1 * q
+print(answer)
+</code></pre>
+シンプルな問題。水diffとあったが、今なら茶diff程度でもおかしくない問題だろう。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
