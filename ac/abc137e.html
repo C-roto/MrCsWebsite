@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC137E Coins Respawn</h1>
+問題文は<a href="https://atcoder.jp/contests/abc137/tasks/abc137_e">こちら</a>から。<br>
+道に落ちてるコインを拾っていく問題。<br>
+<br>
+ペナルティという要素があるが、これはあまり重要ではない。<br>
+予め道に落ちているコインの枚数からペナルティの値を引いておけばいいのである。最終的に全体として負の枚数になったら0枚とすればいいだけだ。<br>
+重要なのは「無限にコインが増える経路が存在するか？」と「(あれば)その経路にスタートから行けるか？」と「(あれば)その経路からゴールに行けるか？」である。<br>
+この3つの問いのうち、最初の1つはベルマン・フォード法の応用で解決する。すなわち愚直に経路更新を行い、N回目の更新でもまだ緩和される頂点があるかを確かめればいい。緩和される頂点があった場合、その頂点は問題となる経路に含まれていると考えて良い。<br>
+これは時間計算量\(O(NM)\)程度で完了でき、問題ない。<br>
+よって、スタートからその頂点に行けるか？ とその頂点からゴールに行けるか？ を調べれば良く、これはBFSやらDFSであらかじめスタートから行ける頂点と、ゴールに向かえる頂点（辺を逆向きに貼ってゴールから探索を始めればいい）を調べれば可能だ。<br>
+前計算を時間計算量\(O(N+M)\)あたりで、実際に行けるかは定数時間で判断できるので、問題ない。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import collections
+
+N, M, P = list(map(int,input().split()))
+mINF = -1 * 10 ** 15
+G = [ set() for _ in range(N)]
+rG = [ set() for _ in range(N)]
+dist = [ mINF for _ in range(N)]
+dist[0] = 0
+Edges = []
+# ペナルティ分をあらかじめ引いて重さを調整する
+# ペナルティの方が大きい頂点も後で調整するので構わず引く
+for _ in range(M):
+    a, b, c = list(map(int,input().split()))
+    a -= 1
+    b -= 1
+    c -= P
+    G[a].add(b)
+    rG[b].add(a)
+    Edges.append([a, b, c])
+
+# 1から行ける頂点をピックアップする
+from_one = set([0])
+que = collections.deque([0])
+while que:
+    p = que.popleft()
+    for q in G[p]:
+        if q not in from_one:
+            que.append(q)
+            from_one.add(q)
+
+# Nまで行ける頂点をピックアップする
+to_n = set([N - 1])
+que = collections.deque([N - 1])
+while que:
+    p = que.popleft()
+    for q in rG[p]:
+        if q not in to_n:
+            que.append(q)
+            to_n.add(q)
+
+# ベルマンフォード法を実行
+for _ in range(N - 1):
+    for i in range(M):
+        v, u, c = Edges[i]
+        if dist[v] != mINF:
+            dist[u] = max(dist[u], dist[v] + c)
+
+# 無限にコインを増やせる経路に含まれる頂点をピックアップする
+new_dist = dist.copy()
+for i in range(M):
+    v, u, c = Edges[i]
+    if new_dist[v] != mINF:
+        new_dist[u] = max(new_dist[u], new_dist[v] + c)
+
+negative_cycles = set()
+for i in range(N):
+    if dist[i] < new_dist[i]:
+        negative_cycles.add(i)
+
+# 無限にコインを増やせる頂点は「スタートから行けて」「ゴールに向かえるか？」
+# 行ける場合は-1を出力して終了
+ok_flag = True
+for ng in negative_cycles:
+    if ng in from_one and ng in to_n:
+        print(-1)
+        ok_flag = False
+        break
+
+# 以上のチェックに引っかからなければゴール頂点でのコイン数がゴール
+# 負の枚数になってたら0に直す
+if ok_flag:
+    print(max(0, dist[-1]))
+</code></pre>
+ちなみに、この解方にたどり着くまでに2回くらい嘘解法に辿り着いている。<br>
+①ベルマン・フォード法でN回目の更新を行う際に、ゴールの頂点に対して更新が起きたかどうかだけを見る<br>
+→更新の影響がゴールに対して即座に波及するとは限らないので却下<br>
+②ベルマン・フォード法でN回目の更新を行った際にまだコストが増える頂点があった場合、さらにそこからN回更新を行ってゴールまで変化を波及させる。<br>
+→追加で何回やればゴールまで波及するか定かじゃないのでダメ。<br>
+なんていうか、罠の多い問題だ。ベルマン・フォード法も分かっていないといけないし、細かい実装のバグに気をつけないといけないし。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
