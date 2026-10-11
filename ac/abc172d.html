@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC172D Sum of Divisors</h1>
+問題文は<a href="https://atcoder.jp/contests/abc172/tasks/abc172_d">こちら</a>から。<br>
+ある値とその値の約数の個数の積の総和を求める問題。<br>
+<br>
+真正面から約数の個数を求める必要がある問題。<br>
+かといって1つずつ求めていると1つあたりおよそ時間計算量で\(O(\sqrt{N})\)程度かかってしまうので、全体で時間計算量\(O(N\sqrt{N})\)となってしまい、この制約だと多分間に合わない。<br>
+だが、「\(N\)以下であって\(i\)で割り切れるものをピックアップする」を各\(i=1,2,...,N\)に対して行う方針に切り替えると時間計算量はぐっと減る。<br>
+\(N\)以下であって\(i\)で割り切れるものの個数は大体\(\lfloor \frac{N}{i} \rfloor\)個だから、その\(i=1,2,...,N\)についての総和は（調和級数を途中で打ち切ったものがlogで押さえられることを使うと）大体\(O(N\log_{}{N})\)個程度になると考えられる。<br>
+時間計算量もこの式で押さえられるはずなので、これなら間に合う可能性が出る(現在のAtcoder環境下ならPyPyでも\(N=10^7\)で1000msかからない程度だった)。<br>
+あとは愚直に書けて足すのを繰り返すと答えが出る。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+P = [ 1 for _ in range(N + 1)]
+for i in range(2, N + 1):
+    for j in range(i, N + 1, i):
+        P[j] += 1
+
+answer = 0
+for i in range(1, N + 1):
+    answer += i * P[i]
+print(answer)
+</code></pre>
+今日はあまり問題を解き切ることができなかった。<br>
+疲れは良くないねえ……。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
