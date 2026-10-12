@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC479D Back and Forth Distance</h1>
+問題文は<a href="https://atcoder.jp/contests/abc479/tasks/abc479_d">こちら</a>から。<br>
+マス目を移動する問題。<br>
+<br>
+簡単のため、\(s < t\)の場合のみまずは考えてみよう。<br>
+sからtへ直接移動するコスト\(R_s\)よりもコストが安くなりうる方法があるかを考える。<br>
+このとき、sより右にあるマスでtでないものに移動するのは、明らかにコストが\(R_s\)以上かかり無駄になる。<br>
+よって、コストが安くなる可能性があるとすると、sより左にあるマスへ移動したときになる（以降、そういうマスがある前提で話をする。ない場合は明らかに\(R_s\)が最小コストだ）。<br>
+この時、\(1 \leqq i < s\)なる\(i\)であって、\(R_i\)が最小になるようなマスiに移動するのがコスト最安になるだろう（そうでないマスに移動した場合は明らかに\(L_s + R_i\)以上のコストがかかることになる）。<br>
+以上より、上記のような\(i\)を探して\(R_s\)と\(L_s + R_i\)の最小値を調べればいい。これは\(s > t\)の場合もほぼ同様にして求めることができる。<br>
+<br>
+この方向性の実装において重要なのは、上記における\(i\)を探すというくだりである。<br>
+ある値前後においてそれぞれの最小値を求れば良いから、それほど大規模なデータ構造を使わなくても実現自体はできる。<br>
+例えば以下のように、「その地点から見て左にあるRの最小値」と「その地点から見て右にあるLの最小値」を管理すればよく、それらは1つずつ値を見ていけば簡単に判断できるので時間計算量\(O(N)\)程度で判断が効く。<br>
+クエリは1つごとに定数時間で判断できるので、全体の時間計算量は\(O(N+Q)\)程度で抑えられる。実装例は以下の通り。<br>
+<pre><code class="language-python">
+def arrmins(arr):
+    armin = arr[0]
+    res = []
+    for i in range(N):
+        if armin > arr[i]:
+            armin = arr[i]
+        res.append(armin)
+    return res
+
+N, Q = list(map(int,input().split()))
+L = list(map(int,input().split()))
+R = list(map(int,input().split()))
+# 左端と右端を調整
+L.insert(0, 10 ** 10)
+R.append(10 ** 10)
+
+# 右端最小値と左端最小値を出す
+# Lは計算のためひっくり返して算出し、ひっくり返して出す
+Rmins = arrmins(R)
+Lmins = list(reversed(arrmins(list(reversed(L)))))
+
+for _ in range(Q):
+    s, t = list(map(int,input().split()))
+    if s < t:
+        print(min(R[s - 1], L[s - 1] + Rmins[s - 1]))
+    else:
+        print(min(L[s - 1], R[s - 1] + Lmins[s - 1]))
+</code></pre>
+区間内の最小値や最大値を求めるわけだから、そういうデータ構造を使うというのも手である。<br>
+セグメント木も良いが、今回は値の更新がないのでスパーステーブルでも充分に目的を果たせる。<br>
+というわけで、AtCoder Algorithm Lecturesを参考にスパーステーブルを自前で実装して解いてみた。<br>
+半開区間なので右端の値を間違えないようにしたい。これだと全体の時間計算量は\(O(N\log_{}{N} + Q)\)程度で抑えられる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+def logtable_make(n):
+    res = [ 0 for _ in range(n + 1)]
+    a = 0
+    while True:
+        for i in range(2 ** a, 2 ** (a + 1)):
+            if i > n:
+                return res
+            res[i] = a
+        a += 1
+
+LogTable = logtable_make(3 * 10 ** 5)
+
+class sparsetable:
+    def __init__(self, leng, arr):
+        self.arr = arr
+        self.leng = leng
+
+        self.pow = LogTable[self.leng]
+
+        self.table = [ [ 10 ** 10 for _ in range(self.leng - 2 ** k + 1)] for k in range(self.pow + 1)]
+        for i in range(self.leng):
+            self.table[0][i] = arr[i]
+        for k in range(self.pow):
+            for i in range(self.leng - 2 ** (k + 1) + 1):
+                self.table[k + 1][i] = min(self.table[k][i], self.table[k][i + 2 ** k])
+
+    def search(self, left, right):
+        if right == left:
+            return 10 ** 10
+        search_pow = LogTable[right - left]
+        return min(self.table[search_pow][left], self.table[search_pow][right - 2 ** search_pow], self.arr[right])
+
+N, Q = list(map(int,input().split()))
+L = list(map(int,input().split()))
+R = list(map(int,input().split()))
+L.insert(0, 10 ** 10)
+R.append(10 ** 10)
+
+Lspt = sparsetable(N, L)
+Rspt = sparsetable(N, R)
+
+for _ in range(Q):
+    s, t = list(map(int,input().split()))
+    if s < t:
+        tmp = Rspt.search(0, s - 1)
+        print(min(R[s - 1], L[s - 1] + tmp))
+    else:
+        tmp = Lspt.search(s - 1, N - 1)
+        print(min(L[s - 1], R[s - 1] + tmp))
+</code></pre>
+牛刀を持って鶏を割くって感じだが、練習にはなったと思う。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
