@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC125C GCD on Blackboard</h1>
+問題文は<a href="https://atcoder.jp/contests/abc125/tasks/abc125_c">こちら</a>から。<br>
+与えられた数のうち1つの値を変えて、全体の最大公約数を最大にする問題。<br>
+<br>
+数Aiを上手く書き換えたときに得られる全体の最大公約数の最大値を考える。<br>
+これは複数の数の最大公約数が結合性と可換性を持っていることから、明らかにgcd(A1,A2,...,Ai-1,Ai+1,...AN)とAiを書き換えた後の値との最大公約数に等しい。<br>
+これは、gcd(A1,A2,...,Ai-1,Ai+1,...AN)以上になることはなく、かつAiをgcd(A1,A2,...,Ai-1,Ai+1,...AN)に書き換えればその値になるので、結局求める値はgcd(A1,A2,...,Ai-1,Ai+1,...AN)に等しくなる。<br>
+これを各i=1,2,...,Nについて求めればよい。<br>
+再び複数の数に対する最大公約数が結合的であることから、これはgcd(A1,...,Ai-1)とgcd(Ai+1,...,AN)を先に求めておけば、それらの最大公約数として求められる。<br>
+以上より、添え字が小さい方から順と、添え字が大きい方から順に、累積和の要領で最大公約数を計算していけばよい。時間計算量はこの前計算自体がネックとなってO(Nmax(Ai))程度で抑えられるはずだ。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+def gcd(a, b):
+    if a < b:
+        a, b = b, a
+    while b != 0:
+        a, b = b, a % b
+    return a
+
+N = int(input())
+A = list(map(int,input().split()))
+L = [A[0]]
+for i in range(1, N):
+    L.append(gcd(L[-1], A[i]))
+R = [A[N - 1]]
+for i in range(N - 2, -1, -1):
+    R.append(gcd(R[-1], A[i]))
+R.sort()
+
+answer = max(R[1], L[-2])
+for i in range(N - 2):
+    answer = max(answer, gcd(L[i], R[i + 2]))
+print(answer)
+</code></pre>
+まったく思いついていなかったが、別の問題を解いたり、スパーステーブルの勉強をしたら急に思いついた。<br>
+公式にあるユーザー解説を見ると、やはりというかスパーステーブルやセグメント木を使った解法も紹介されていて、累積和回りの話って強いデータ構造で殴りやすいんだなあなんて思うなど。<br>
+色んな事を勉強しよう。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
