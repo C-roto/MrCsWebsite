@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC479E Cut and Add</h1>
+問題文は<a href="https://atcoder.jp/contests/abc479/tasks/abc479_e">こちら</a>から。<br>
+辺を切って多数派に値を加える問題。<br>
+<br>
+例を見たり、実際に手を動かしてみると分かるとおり、「どの辺を切っても必ず多数派に含まれる頂点」というのがただ1つだけ存在するような気がする。<br>
+色々調べてみると、これは「木の重心」という話と関係があるらしいことが分かった。<br>
+木の重心とは、\(N\)頂点の木であって、その点とその点に隣接する辺をすべて除くと、残った各部分木の頂点数がすべて\(\frac{N}{2}\)以下になるような頂点のことである。<br>
+任意の木に対して2つ以下の重心が存在し、特に\(N\)が奇数の場合、重心はただ1つに定まることも分かった（証明は追えていない）。<br>
+以下、\(N\)は奇数とする。<br>
+このとき、重心はいつでも頂点数が多い方の連結成分に含まれている。<br>
+<details>
+<summary>何となくの説明（証明ではない）</summary>
+gと隣接する辺を切った場合は、重心の定義より明らかである。<br>
+そうでない辺については、その辺を切ってできる連結成分のうちgを含まない方をUとすると、gに隣接する辺を切ってできる連結成分のうちいずれかにUは真に含まれるはずである。<br>
+よって、UはUを含んでいる連結成分よりも頂点数が真に小さく、特に\(\frac{N}{2}\)個以下の頂点しか含まない。<br>
+==============================
+</details>
+つまり、重心を頂点\(g\)とすると、\(x_g = \frac{N(N-1)}{2}\)であることが分かる（辺番号の総和）。<br>
+<br>
+重心ではない頂点についてはどうなるだろうか？<br>
+\(i \neq g\)であるような頂点\(i\)に対して、\(x_i\)に値が加算されるのは頂点\(g\)と同じ連結成分に含まれている時である。<br>
+木上において任意の2頂点間の単純パスが一意に定まることに注意すると、頂点\(i\)と頂点\(g\)を繋ぐ単純パス上の辺を切った場合は違う連結成分になり、そうでない場合は必ず同じ連結成分に属する。このことから\(x_i\)の値は、辺番号の総和から、「頂点\(i\)と頂点\(g\)を繋ぐ単純パス上の辺」の辺番号の総和を引けば求められる。<br>
+これは重心から各頂点に向かってbfsの要領で計算すれば、時間計算量\(O(N)\)で求めることができる（実装例では\(x_g\)を先に与え、辺を通るたびに辺番号を引き算する形で実装した）。<br>
+重心探索も時間計算量\(O(N)\)でできることを考えると、全体としても時間計算量は\(O(N)\)程度で押さえることができる。PyPyで再帰を回すとやや重いが、それでも実行時間制限には問題なく間に合う。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import collections
+import sys
+
+sys.setrecursionlimit(10 ** 6)
+# vを根とする木の大きさを求める
+def subtree_dfs(v, par):
+    res = 1
+    for u in G[v]:
+        if u != par:
+            res += subtree_dfs(u, v)
+    tree_size[v] = res
+    return res
+
+# 木の重心を求める
+def find_grav(v, par):
+    maximum_size = 0
+    maximum_vertex = -1
+    for u in G[v]:
+        if maximum_size < tree_size[u] and u != par:
+            maximum_size = tree_size[u]
+            maximum_vertex = u
+    if maximum_size <= N // 2:
+        return v
+    else:
+        return find_grav(maximum_vertex, v)
+
+N = int(input())
+
+G = [ set() for _ in range(N)]
+Edges = dict()
+indeg = [ 0 for _ in range(N)]
+for i in range(N - 1):
+    a, b = list(map(int,input().split()))
+    a -= 1
+    b -= 1
+    G[a].add(b)
+    G[b].add(a)
+    indeg[a] += 1
+    indeg[b] += 1
+    Edges[(a, b)] = i + 1
+
+# 0を親とする部分木のサイズを求める
+tree_size = [ 0 for _ in range(N)]
+subtree_dfs(0, -1)
+
+# 木の重心を求める
+Visited = [ False for _ in range(N)]
+answer = [ 0 for _ in range(N)]
+grav = find_grav(0, -1)
+que = collections.deque([grav])
+answer[grav] = N * (N - 1) // 2
+Visited[grav] = True
+
+# 重心を始点としてbfsの要領で伝播
+while que:
+    p = que.popleft()
+    for q in G[p]:
+        if not(Visited[q]):
+            Visited[q] = True
+            que.append(q)
+            c = Edges[(min(p, q), max(p, q))]
+            answer[q] = answer[p] - c
+
+print(*answer)
+</code></pre>
+今回の問題において「重心」は「クラスの人気者」みたいなもので、「こいつと同じグループだったら多数派、そうでなければ少数派」みたいなグループ分けができる感じに見える。<br>
+<br>
+木の重心という概念を知らなかったので時間がかかってしまった。<br>
+知らない状態からこれに行きつくまでには「葉から順にグラフを有向辺に変えていくと、なんか1か所に辺が集中する頂点があるなあ」とか思ったのが最初だった。<br>
+結果から言えば必ずしも上手く行く方法ではなかったものの、また1つ知らなかったことを知ることができた。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
