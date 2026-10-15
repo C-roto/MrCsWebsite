@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC478E lt and le</h1>
+問題文は<a href="https://atcoder.jp/contests/abc398/tasks/abc398_e">こちら</a>から。<br>
+大小関係の制約を満たすように数列を構成する問題。<br>
+<br>
+数列の各項を頂点、制約条件を有向辺（大きい方から小さい方に伸びる辺）と見なすと、これは条件付きでトポロジカルソートをする問題だと読み替えられる（トポロジカル順で前の方に来るものほど小さい数字を割り振れば良い。N項で1~Nまで使えるから数字が足りないということはない）。<br>
+与えられる制約条件を辺と見なし、\(t=0\)であるような条件を0-辺、そうでない方を1-辺と呼ぶ。<br>
+サイクルがあるとトポロジカルソートができないことになるが、0-辺によるサイクルはできても構わない。そのサイクルはすべて同じ数字と見なせば矛盾しないからだ。<br>
+よって0-辺のみを先に張り、同一のサイクルに所属している頂点同士を1つに縮約してしまえばよい（数字の大小だけに注目しているので問題ない）。そのうえで、1-辺を新たに張ってトポロジカルソートを試みればよい。<br>
+0-辺のみを張った段階で同一のサイクル同士……つまり、お互いに行き来できる頂点同士の組(強連結成分)に分解するには、強連結成分分解と呼ばれるアルゴリズムを使えばよい。<br>
+その後、同一の強連結成分に所属する頂点を1つの頂点と見なして、これをトポロジカル順にソートすればよい。<br>
+この時、同一の強連結成分内で1-辺が張られたらその時点で矛盾することと、同一の強連結成分内で0-辺が張られても無視することに注意する。<br>
+最終的にトポロジカル順に並べ替えられなかったならそれで終了。並べ替えられたら、トポロジカル順で前の方にある強連結成分に小さい数字から順に割り振っていく。<br>
+強連結成分分解とトポロジカルソートが計算のネックになるはずなので、時間計算量は\(O(N+Q)\)程度で抑えられ、この制約下なら十分に高速だろう。(といってもPyPy3だと1500ms程度はかかったわけだが……)。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import sys
+sys.setrecursionlimit(10 ** 6)
+
+def stronglyconnectedcomponent(G : list[set], N : int) -> list[int]:
+    revG = [ set() for _ in range(N)]
+    for i in range(N):
+        for u in G[i]:
+            revG[u].add(i)
+
+    vertex_conditon = [ 0 for _ in range(N)]
+    res = [ -1 for _ in range(N)]
+    def first_dfs(v):
+        vertex_conditon[v] = 1
+        for u in G[v]:
+            if vertex_conditon[u] == 0:
+                first_dfs(u)
+        vertex_conditon[v] = 2
+        history.append(v)
+
+    def second_dfs(v, idx):
+        res[v] = idx
+        for u in revG[v]:
+            if res[u] == -1:
+                second_dfs(u, idx)
+
+    history : list[int] = []
+    for i in range(N):
+        if vertex_conditon[i] == 0:
+            first_dfs(i)
+
+    I = 0
+    while history:
+        p = history.pop()
+        if res[p] == -1:
+            second_dfs(p, I)
+            I += 1
+
+    return res
+
+N, Q = list(map(int,input().split()))
+
+G = [ set() for _ in range(N)]
+Edges = []
+for _ in range(Q):
+    t, u, v = list(map(int,input().split()))
+    u -= 1
+    v -= 1
+    if t == 0:
+        G[v].add(u)
+    Edges.append((t, u, v))
+
+connect_id = stronglyconnectedcomponent(G, N)
+
+newG = [ set() for _ in range(max(connect_id) + 1)]
+ng_flag = False
+for t, u, v in Edges:
+    nu, nv = connect_id[u], connect_id[v]
+    if nu == nv:
+        if t == 1:
+            ng_flag = True
+            break
+        else:
+            continue
+    newG[nv].add(nu)
+
+indeg : list[int] = [ 0 for _ in range(N)]
+for u in range(len(newG)):
+    for v in newG[u]:
+        indeg[v] += 1
+
+Stack : list[int] = []
+for i in range(len(newG)):
+    if indeg[i] == 0:
+        Stack.append(i)
+
+Result : list[int] = []
+while Stack:
+    p = Stack.pop()
+    Result.append(p)
+    # 辺の削除 = 入次数の減少
+    # 入次数が新たに0になった辺があればStackに積む
+    for q in newG[p]:
+        indeg[q] -= 1
+        if indeg[q] == 0:
+            Stack.append(q)
+
+if len(Result) < len(newG) or ng_flag:
+    print('No')
+else:
+    print('Yes')
+    answer = [ -1 for _ in range(N)]
+    D = dict()
+    for i in range(N):
+        if connect_id[i] not in D:
+            D[connect_id[i]] = set([i])
+        else:
+            D[connect_id[i]].add(i)
+    num = 1
+    while Result:
+        r = Result.pop()
+        for v in D[r]:
+            answer[v] = num
+        num += 1
+
+    for i in range(N):
+        print(answer[i], end=" ")
+    print()
+</code></pre>
+強連結成分分解の名前は聞いたことがあったが、こういう問題に使えるっていう知見がなかったので、とても勉強になった。<br>
+まだライブラリも整備していなかったので、この際に整備した（ライブラリチェッカも通せたのでたぶん大丈夫だろう）。<br>
+問題を解くこともそうだが、それ以上に1つ大きな収穫があった。<br>
+<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
