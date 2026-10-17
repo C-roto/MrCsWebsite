@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC190F Shift and Inversions</h1>
+問題文は<a href="https://atcoder.jp/contests/abc190/tasks/abc190_f">こちら</a>から。<br>
+数列をぐるぐる回して転倒数を都度求める問題。<br>
+<br>
+最初の数列の転倒数は色々なやり方で簡単に求めることができる。<br>
+調べて出てきたのはBITを使った方法だったが、同様のことはセグメント木でもできるので、一旦手元にあったセグメント木を使って求めておく。<br>
+この後についてだが、要するに数列全体を両端キューとして見て、先頭をpopし末尾にpushするのを繰り返すことを考えればよい。<br>
+ここで、数列が\(0～N-1\)の順列であることを思い出すと、今回popとpushの対象になる数\(a\)よりも小さいは\(a\)個あって、それらすべてはpop前の数列において\(a\)の後ろにある。<br>
+よってaをpopすると、数列全体の転倒数は\(a\)だけ減少する。<br>
+次に\(a\)を末尾へとpushすると、push後の数列においてaよりも大きいものは\(N - 1 - a\)個あるはずなので、このことによって転倒数は\(N - 1 - a\)だけ増加する。<br>
+つまり、pop＆pushの前後において数列全体の転倒数は\(a\)だけ減って\(N - 1 - a\)だけ増えるので、毎回先頭の数を確認してこの計算を行い、結果を出力すればよい。<br>
+毎回操作後の数列全体の転倒数を記録する変数を持っておけば、これは定数時間でできる。<br>
+よって最初の数列の転倒数をカウントする部分がネックになり、時間計算量はおよそ\(O(N\log_{}{N})\)程度で済む。これは制約の下で充分に高速である。<br>
+実装例はは以下の通り。<br>
+<pre><code class="language-python">
+# 1点更新、区間最大値を求めるセグメント木のコード
+class segmentTree:
+    # segmentTree(データ数, 実データの順)って感じ
+    def __init__(self, dataPieces, data):
+        self.dataPieces = dataPieces
+        self.data = data
+        cellnumpow = 0
+        while not(2 ** (cellnumpow - 1) < dataPieces <= 2 ** cellnumpow):
+                cellnumpow += 1
+        self.cnp = cellnumpow
+        self.contena = [ 0 for _ in range(2 ** (cellnumpow + 1))]
+        for i in range(dataPieces):
+            self.contena[2 ** cellnumpow + i] = data[i]
+        cellnumpow -= 1
+        while cellnumpow >= 0:
+            c = 2 ** cellnumpow
+            for j in range(c):
+                self.contena[c + j] = self.contena[2 * (c + j)] + self.contena[2 * (c + j) + 1]
+            cellnumpow -= 1
+
+    # 1点更新
+    def update(self, n: int, x: int):
+        cnp = self.cnp
+        self.contena[2 ** cnp + n] = x
+        now = 2 ** cnp + n
+        while now > 1:
+            if now % 2 == 0:
+                now //= 2
+            else:
+                now -= 1
+                now //= 2
+            self.contena[now] = self.contena[2 * now] + self.contena[2 * now + 1]
+
+    # 閉区間[l,r]の最大値を求める(開区間にしたい場合は都度調整)
+    def range_find(self, range_l: int , range_r: int):
+        segment_represent = []
+        cnp = self.cnp
+        now_l = 2 ** cnp + range_l
+        now_r = 2 ** cnp + range_r
+        while now_l <= now_r:
+            if now_l % 2 == 1:
+                segment_represent.append(self.contena[now_l])
+                now_l += 1
+                now_l //= 2
+            else:
+                now_l //= 2
+
+            if now_r % 2 == 0:
+                segment_represent.append(self.contena[now_r])
+                now_r //= 2
+                now_r -= 1
+            else:
+                now_r -= 1
+                now_r //= 2
+        return sum(segment_represent)
+
+N = int(input())
+A = list(map(int,input().split()))
+segtree = segmentTree(N, [ 0 for _ in range(N)])
+
+answer = 0
+for i in range(N):
+    segtree.update(A[i], 1)
+    answer += segtree.range_find(A[i], N - 1) - 1
+print(answer)
+
+for i in range(N - 1):
+    answer -= A[i]
+    answer += (N - 1) - A[i]
+    print(answer)
+</code></pre>
+これにてABC190で出題された問題についてはすべて解答できた。<br>
+暖色diffの問題がなかったので理論上行けるとはいえ、6問制のABCを自力で全完できたのはちょっと自信になる。知っていたけど使ってこなかった知識の整理にも役立った。<br>
+<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
