@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC218E Destruction</h1>
+問題文は<a href="https://atcoder.jp/contests/abc218/tasks/abc218_e">こちら</a>から。<br>
+グラフの辺を連結性を保ったまま消していき、消す辺の重みの合計を最大化する問題。<br>
+<br>
+「なるべく大きな重さの辺を消したい＝なるべく小さな重さの辺を残したい」と考えると、ざっくり最小全域木を作って使わなかった辺を消せばよさそう。<br>
+ただし、使っていない辺であって重さが負であるものは消してもしかたないので、重さが非負である辺だけをピックアップすることだけを考える。<br>
+最小全域木の構成には今回クラスカル法を用いる。<br>
+多重辺や自己ループの存在があるが、実装例でのクラスカル法はこの条件下で使っても想定通りの動作をするので問題ない。<br>
+使わなかった辺を別で管理するのが面倒なので、両端キューに全部の辺を重さの降順に突っ込んで、末尾を取り出して調べ、使わない辺だったら先頭に入れなおすようにした。<br>
+グラフが連結なのは与えられているので、最悪でも両端キューが一周するまでにはクラスカル法は終了している。<br>
+後は両端キューに残ってる辺を一周し、非負の重さの合計を求めればよい。<br>
+グラフの読み取り、もしくはクラスカル法の方がネックになって、全体の時間計算量は\(O(N + M)\)程度で抑えられる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import collections
+
+class DisjointSetUnion:
+    def __init__(self, N: int):
+        self.number = N
+        self.parent = [ -1 for _ in range(N)]
+        self.size = [ 1 for _ in range(N)]
+ 
+    def find(self, v : int):
+        compress = []
+        while self.parent[v] != -1:
+            compress.append(v)
+            v = self.parent[v]
+        for c in compress:
+            self.parent[c] = v
+        return v
+ 
+    def union(self, u: int, v: int):
+        ru = self.find(u)
+        rv = self.find(v)
+        if ru != rv:
+            if self.size[ru] < self.size[rv]:
+                ru, rv = rv, ru
+            self.parent[rv] = ru
+            self.size[ru] += self.size[rv]
+ 
+    def same(self, u: int, v: int):
+        return self.find(u) == self.find(v)
+
+N, M = list(map(int,input().split()))
+Edges = []
+uf = DisjointSetUnion(N)
+for _ in range(M):
+    a, b, c = list(map(int,input().split()))
+    a -= 1
+    b -= 1
+    Edges.append([a, b, c])
+Edges.sort(key=lambda x: -x[2])
+Edges = collections.deque(Edges)
+
+Edges_num = 0
+for _ in range(M):
+    p, q, c = Edges.pop()
+
+    if not(uf.same(p, q)):
+        uf.union(p, q)
+        Edges_num += 1
+    else:
+        Edges.appendleft([p, q, c])
+
+    if Edges_num == N - 1:
+        break
+
+answer = 0
+while Edges:
+    p, q, c = Edges.pop()
+    if c < 0:
+        continue
+    answer += c
+
+print(answer)
+</code></pre>
+最小全域木を作ったら解けるな～っていう問題を解いた経験がなかったので勉強になった。<br>
+コンテスト外ではよく使ったのでアルゴリズム自体は知っているけれど、ある種の貪欲法が上手くいくのに気持ちよさ、不思議さあたりを感じる。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
