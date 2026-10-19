@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC126E 1 or 2</h1>
+問題文は<a href="https://atcoder.jp/contests/abc126/tasks/abc126_e">こちら</a>から。<br>
+カードに書いてある数字を、幾つかのヒントから絞り込んで、最低限をチェックして全体を当てる問題。<br>
+<br>
+NoviStepsではUnion-Findの練習問題として取り上げられていた問題。<br>
+与えられたヒントは<br>
+・「Zの値が偶数なら\(A_X, A_Y\)は同じ数字（ともに1か2）」<br>
+・「Zの値が奇数なら\(A_X, A_Y\)は違う数字」<br>
+と読み替えることができる。もう一段抽象化すると、<br>
+・ヒントが与えられた際、もう片方のカードの数字が分かっていればもう片方のカードの数字も確定する。<br>
+と言える。<br>
+もう少し広く考えると、「この数字が確定すると連鎖的に他の数字も確定する」という関係でグループを作ると、そのグループの個数が求める答えになる。<br>
+そして先ほどの抽象化から、ヒントで言及された添え字は、Zの値にかかわらず同グループと見なせばいい。<br>
+したがって、すべてのクエリについて普通にUnion-Findでグループ分けし、異なるグループの数を挙げれば答えになる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+class DisjointSetUnion:
+    def __init__(self, N: int):
+        self.number = N
+        self.parent = [ -1 for _ in range(N)]
+        self.size = [ 1 for _ in range(N)]
+ 
+    def find(self, v : int):
+        compress = []
+        while self.parent[v] != -1:
+            compress.append(v)
+            v = self.parent[v]
+        for c in compress:
+            self.parent[c] = v
+        return v
+ 
+    def union(self, u: int, v: int):
+        ru = self.find(u)
+        rv = self.find(v)
+        if ru != rv:
+            if self.size[ru] < self.size[rv]:
+                ru, rv = rv, ru
+            self.parent[rv] = ru
+            self.size[ru] += self.size[rv]
+ 
+    def same(self, u: int, v: int):
+        return self.find(u) == self.find(v)
+
+N, M = list(map(int,input().split()))
+uf_asosiate = DisjointSetUnion(N)
+for _ in range(M):
+    X, Y, Z = list(map(int,input().split()))
+    X -= 1
+    Y -= 1
+    uf_asosiate.union(X, Y)
+
+S = set([uf_asosiate.find(i) for i in range(N)])
+print(len(S))
+</code></pre>
+「同じ数字になる組」で分けようとすると大変だが、それが本質でないことに気がつけるかどうかという問題。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
