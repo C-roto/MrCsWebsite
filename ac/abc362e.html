@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC362E Count Arithmetic Subsequences</h1>
+問題文は<a href="https://atcoder.jp/contests/abc362/tasks/abc362_e">こちら</a>から。<br>
+数列の中の幾つかの数字を抜き出して等差数列になるものの個数を求める問題。<br>
+<br>
+部分列は全部で\(2^{80}-1\)通りあるわけなので、もちろんすべてを調べることは難しい。<br>
+一方で\(N\)の値の小ささというかなり重要な制約があるので、こいつを活用したいと考えるのもまた自然だ。<br>
+<br>
+こういうのは分かるところから埋めていくのがポイントになりそうだ。<br>
+まず、長さ1の等差数列の個数だが、これは長さ1の部分列の個数と等しいから、求める値はいついかなる時でも\(N\)個になる。<br>
+また、長さ2の等差数列の個数だが、これは長さ2の部分列の個数と等しい。よって、求める値は\(\frac{N(N - 1)}{2}\)通りだ。<br>
+長さ3の等差数列については、長さ2の等差数列の後ろに1つ（末項より後ろにある）数をくっつけたものであって、等差数列になっているものを考えればよい。<br>
+これは、先に\(\frac{N(N - 1)}{2}\)個の長さ2の等差数列に対して、「末項が何で公差が何の数列か？」を記録しておけば、動的計画法で上手く行く。<br>
+要するに、\(dp_{p,i,d}\)を「項数p(\(\geqq 2\))、末項i、公差dの等差数列の個数」としたとき、こういう遷移を考えればよい。<br>
+\(dp_{p + 1,i,d} = \sum_{d = A_i - A_j \land j < i} dp{p,j,d}\)<br>
+この遷移は各\(i\)に対し\(j < i\)なる\(j\)をすべて確かめれば良く、pythonならdict型でデータを持つなりすれば各1回の\(j\)のチェックに対して定数時間でこれは確認できる。<br>
+よって、時間計算量\(O(N^2)\)で列挙は可能である。<br>
+公差4以上に対しても同様の方法で列挙は可能である。<br>
+各項数について、あり得る\(i, j\)のペアは高々\(O(N^2)\)個しかないので、各項数における動的計画法の結果の総和を求めるときにも、dict型のkey, valueのペアは高々\(O(N^2)\)個しか存在しない。各key, valueに対する和を取ってmodを取る作業を定数時間とみなすなら、総和を取る操作も時間計算量\(O(N^2)\)程度で完了する。<br>
+よって、各公差に対して上記の操作を行っても、時間計算量\(O(N^3)\)程度で完了するだろう。制約に対して明らかに高速なはずだ。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+A = list(map(int,input().split()))
+mod = 998244353
+
+# 項数1のものはN個
+answer = [N]
+# dp[p][i][d] = 項数pの等差数列であって、A_iを末項とし公差dのものの個数
+dp = [ [ dict() for _ in range(N)] for _ in range(N + 1)]
+for i in range(N):
+    for j in range(i + 1, N):
+        if A[j] - A[i] not in dp[2][j]:
+            dp[2][j][A[j] - A[i]] = 1
+        else:
+            dp[2][j][A[j] - A[i]] += 1
+
+for k in range(3, N + 1):
+    for i in range(N):
+        for j in range(i + 1, N):
+            if A[j] - A[i] in dp[k - 1][i]:
+                if A[j] - A[i] not in dp[k][j]:
+                    dp[k][j][A[j] - A[i]] = dp[k - 1][i][A[j] - A[i]]
+                else:
+                    dp[k][j][A[j] - A[i]] += dp[k - 1][i][A[j] - A[i]]
+                dp[k][j][A[j] - A[i]] %= mod
+
+for i in range(2, N + 1):
+    tmp = 0
+    for j in range(N):
+        for v in dp[i][j].values():
+            tmp += v
+            tmp %= mod
+    answer.append(tmp)
+
+print(*answer)
+</code></pre>
+dp的発想に辿り着くのはそんな難しくない問題な気もするが、データの持ち方や時間計算量の判断に注意が必要そうに見える。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
