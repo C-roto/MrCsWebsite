@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC480D Concatenation of Prefixes</h1>
+問題文は<a href="https://atcoder.jp/contests/abc480/tasks/abc480_d">こちら</a>から。<br>
+与えられた数列を1項ずつ、2項ずつ、……繰り返した数列の区間和を求める問題。<br>
+<br>
+結構9割がた高校数学チックな問題で、競プロやったことなくても解ける人は解けそう。<br>
+高校数学ではよく「群数列」と呼ばれる概念（代数構造としての群ではなく、塊的な意味での群だろう）のど真ん中だろう。<br>
+数列\(B\)について、その「切れ目」となるような場所で区切って、切れ目の間を1つのグループとして考えることにする。今回で言う「切れ目」というのは、数列\(A\)の繰り返しが終わって始まるタイミングと同一とみなせるので、前から0項目、1項目、1+2項目、1+2+3項目、…、\(1+2+...+N\)項目を区切りとすればよい。<br>
+より形式的には、\(1 \leqq m \leqq \frac{N(N+1)}{2}\)を満たす整数\(m\)について、\(0+1+...+(g-1) < m \leqq 0+1+...+g\)を満たすような\(g\)がただ1つ存在し、\(B_m\)は第\(g\)群に属すると言う。また、\(m\)が第\(g\)群に属するとき、\(0+1+...+(g - 1) = G\)と書くとすると、「\(B_m\)は第\(g\)群の第\(m-G\)項目である」と言うことにする。<br>
+ややこしいが、例えば\(B_4\)は第3群の第1項目だし、\(B_10\)は第4群の第4項目になる。<br>
+上記の定義を以て、\(B_R\)が第何群の第何項目かを特定する。以下、\(B_R\)は第\(g_r\)群の第\(x_r\)項目であるとしよう。<br>
+すると、\(B_1 + B_2 + ... + B_R\)は累積和の要領で簡単に求められる。<br>
+まず、数列\(B\)における第\(g_{r-1}\)群までの総和は、数列\(A\)についての累積和を取った後、更にその累積和を取れば求められる。群の数は\(N\)個なので、時間計算量としてもそこまでかからない(g_r = 1のときだけ総和を0とする工夫は要る)。<br>
+後はそこに、数列\(A\)についての累積和の第\(x_r\)項目までを加えれば求めたい値が求まる。<br>
+同じ要領で\(B_1 + B_2 + ... + B_{L - 1}\)を求めてやれば、先に求めた値からこの値を引くことで最終的に出したい値が出る（L=1のときだけこの和を0とするよう例外処理を行う）。<br>
+時間計算量は累積和の計算がネックになって\(O(N)\)程度に抑えられるはずである。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import bisect
+
+N, Q = list(map(int,input().split()))
+A = list(map(int,input().split()))
+
+# 第m群の末尾の項数がnum_or_seq[m]
+num_of_seq = [ i for i in range(N + 1)]
+for i in range(N):
+    num_of_seq[i + 1] += num_of_seq[i]
+
+# 普通の累積和(Aのi項目までの和がS[i])
+S = [ A[i] for i in range(N)]
+S.insert(0, 0)
+for i in range(N):
+    S[i + 1] += S[i]
+# 累積和の累積和(m群目までの数の和がSS[m])
+SS = [ S[i] for i in range(N + 1)]
+for i in range(N):
+    SS[i + 1] += SS[i]
+
+for _ in range(Q):
+    L, R = list(map(int,input().split()))
+    L -= 1
+    left = bisect.bisect_left(num_of_seq, L)
+    right = bisect.bisect_left(num_of_seq, R)
+    L_sum = 0
+    if left != 0:
+        L_sum = SS[left - 1] + S[L - num_of_seq[left - 1]]
+    R_sum = SS[right - 1] + S[R - num_of_seq[right - 1]]
+    print(R_sum - L_sum)
+</code></pre>
+解き方が分かるのは一瞬だけど、組むときに例外処理をミスらないのが大事な問題。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
