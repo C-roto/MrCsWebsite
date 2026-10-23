@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC317E Avoid Eye Contact</h1>
+問題文は<a href="https://atcoder.jp/contests/abc317/tasks/abc317_e">こちら</a>から。<br>
+他人の目線を避けながら移動する最短経路を探す問題。<br>
+<br>
+以下で言う「進入可能なマス」は「障害物および人がないマスであって、1人以上の視線を受けていないマス」とする。<br>
+今回は「先にすべてのマスについて進入可能なマスであるか検証し、進入可能なマスのみを辿ってBFSする」という方針でいく。<br>
+視線は障害物や人によって遮られることから、あるマスが進入可能なマスであるか否かを判断するには以下の2つをチェックすればよい<br>
+①壁および障害物のマスではない<br>
+②そのマスの各方向(上下左右)において最も近い人間から視線を受けていない<br>
+このうち①のチェックは、最初に与えられるマップを参照すれば定数時間で完了する。<br>
+②については、予め全マスを走査して「各行の左から何番目に人や障害物があるか」、「各列の上から何番目に人や障害物があるか」をリストアップして昇順で保持しておき、調べる各行と列について二分探索などで、最も近い人もしくは障害物の位置をピックアップすれば、時間計算量は\(O(\log_{}{H})\)や\(O(\log_{}{W})\)程度で済む。<br>
+したがって、②は前計算よりも二分探索の方がネックになり、時間計算量は\(O(HW(\log_{}{H} + \log_{}{W}))\)程度で済む。ギリギリだが、回らないこともなさそうだ。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import bisect
+import collections
+
+def is_in(h, w):
+    return 0 <= h <= H - 1 and 0 <= w <= W - 1
+
+H, W = list(map(int,input().split()))
+A = []
+for _ in range(H):
+    A.append(list(input()))
+
+rows = [ [] for _ in range(H)]
+colomns = [ [] for _ in range(W)]
+
+for i in range(H):
+    for j in range(W):
+        if A[i][j] != "." and A[i][j] != "S" and A[i][j] != "G":
+            rows[i].append(j)
+            colomns[j].append(i)
+
+true_map = [ [ "X" for _ in range(W)] for _ in range(H)]
+
+start = [-1, -1]
+goal = [-1, -1]
+for i in range(H):
+    for j in range(W):
+        if A[i][j] == ".":
+            left, right, up, down = -1, -1, -1, -1
+            if len(rows[i]) != 0:
+                x = bisect.bisect(rows[i], j)
+                if x == 0:
+                    right = rows[i][0]
+                elif x == len(rows[i]):
+                    left = rows[i][-1]
+                else:
+                    left = rows[i][x - 1]
+                    right = rows[i][x]
+            if len(colomns[j]) != 0:
+                x = bisect.bisect(colomns[j], i)
+                if x == 0:
+                    down = colomns[j][0]
+                elif x == len(colomns[j]):
+                    up = colomns[j][-1]
+                else:
+                    up = colomns[j][x - 1]
+                    down = colomns[j][x]
+
+            ok_flag = True
+            if left != -1 and A[i][left] == ">":
+                ok_flag = False
+            if right != -1 and A[i][right] == "<":
+                ok_flag = False
+            if up != -1 and A[up][j] == "v":
+                ok_flag = False
+            if down != -1 and A[down][j] == "^":
+                ok_flag = False
+
+            if ok_flag:
+                true_map[i][j] = "."
+            else:
+                true_map[i][j] = "#"
+        elif A[i][j] == "S":
+            true_map[i][j] = "."
+            start = [i, j]
+        elif A[i][j] == "G":
+            true_map[i][j] = "."
+            goal = [i, j]
+        else:
+            true_map[i][j] = "#"
+
+dist = [ [-1 for _ in range(W)] for _ in range(H)]
+dist[start[0]][start[1]] = 0
+que = collections.deque([[start[0], start[1]]])
+
+m_1 = [ 1, -1, 0, 0]
+m_2 = [0, 0, 1, -1]
+while que:
+    x, y = que.popleft()
+    for i in range(4):
+        nx = x + m_1[i]
+        ny = y + m_2[i]
+        if is_in(nx, ny) and true_map[nx][ny] == "." and dist[nx][ny] == -1:
+            que.append([nx, ny])
+            dist[nx][ny] = dist[x][y] + 1
+
+print(dist[goal[0]][goal[1]])
+</code></pre>
+……なーんて考えてみたが、別にこんな面倒な方法を取る必要はない。<br>
+単純に全マスを走査して、人がいるマスだったら、視線が遮られるか範囲外に行くまで視線を伸ばしていき、視線が通っているマスも障害物とみなしてBFSすればよい。<br>
+一見結構な時間計算量がかかりそうに見えるが、各マスについて、視線にさらされる数は高々4回である。よって全体の時間計算量も白マスの定数倍で押さえられ、特に\(O(HW)\)として差し支えないはずだ。<br>
+視線をただちに障害物と同等に扱うとバグる（本来視線が遮られないはずの場所で遮られてしまう）ので、視線だけを表す別の表記を導入して考えていけばよい。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import collections
+
+def is_in(h, w):
+    return 0 <= h <= H - 1 and 0 <= w <= W - 1
+
+def eye_contact_beam(h, w, dir):
+    m_h, m_w = m_d[dir]
+    nh = h + m_h
+    nw = w + m_w
+    while is_in(nh, nw) and (A[nh][nw] == "." or A[nh][nw] == "-"):
+        A[nh][nw] = "-"
+        nh += m_h
+        nw += m_w
+
+H, W = list(map(int,input().split()))
+A = []
+for _ in range(H):
+    A.append(list(input()))
+
+m_1 = [1, -1, 0, 0]
+m_2 = [0, 0, 1, -1]
+m_d = dict()
+m_d[">"] = (0, 1)
+m_d["<"] = (0, -1)
+m_d["v"] = (1, 0)
+m_d["^"] = (-1, 0)
+
+que = collections.deque([])
+dist = [ [-1 for _ in range(W)] for __ in range(H)]
+g_h, g_w = -1, -1
+for i in range(H):
+    for j in range(W):
+        match A[i][j]:
+            case ">" | "<" | "^" | "v":
+                eye_contact_beam(i, j, A[i][j])
+            case "S":
+                que.append([i, j])
+                dist[i][j] = 0
+            case "G":
+                A[i][j] = "."
+                g_h, g_w = i, j
+
+while que:
+    x, y = que.popleft()
+    for i in range(4):
+        nx = x + m_1[i]
+        ny = y + m_2[i]
+        if is_in(nx, ny) and A[nx][ny] == "." and dist[nx][ny] == -1:
+            dist[nx][ny] = dist[x][y] + 1
+            que.append([nx, ny])
+
+print(dist[g_h][g_w])
+</code></pre>
+今回は入力パターンがだいぶ決まっているので、if文よりmatch-case文の方が分かりやすそうだと思ってそのようにした。実際スッキリしているような気がする。<br>
+最初に考えたときはなんか混乱してて、\(O((HW)^2)\)くらいかかりそうだな～とかよく分からんことを思っていたが、冷静になると別にそんなことなかった。<br>
+冷静になろう。冷静に。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
