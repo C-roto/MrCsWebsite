@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC245F Endless Walk</h1>
+問題文は<a href="https://atcoder.jp/contests/abc245/tasks/abc245_f">こちら</a>から。<br>
+永久に歩けるような頂点を探す問題。<br>
+<br>
+有限頂点のグラフで「永久に歩ける」ためには、どこかでサイクルに突入しないといけない。<br>
+つまり、有向グラフにおいてサイクルに属している頂点か、もしくは有限歩歩くとサイクルに突入できる頂点が、問題文の言う「永久に歩ける」の条件を満たしている。<br>
+そう分かれば、強連結成分分解を行って同じサイクルに属している頂点を洗い出せばよい。<br>
+この時点で要素が2つ以上の強連結成分に属している頂点は、有限手数で相互に行き来可能なので条件を満たすとしてよい。<br>
+また、要素が2つ以上の強連結成分に対し、有限回の移動で到達できる頂点を探すためには、元のグラフと逆向きに辺を張ってみて、要素が2つ以上の強連結成分のいずれかから到達できる頂点を探し尽くせばよい。BFSなどでこれは簡単に調べられる。<br>
+というわけで、以上を実装すればこの問題に解答できる。<br>
+強連結成分分解やBFSに掛かる時間がネックになり、時間計算量は全体で\(O(N+M)\)程度になる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import sys
+import collections
+sys.setrecursionlimit(10 ** 6)
+
+def stronglyconnectedcomponent(G : list[set], N : int) -> list[int]:
+    revG = [ set() for _ in range(N)]
+    for i in range(N):
+        for u in G[i]:
+            revG[u].add(i)
+
+    vertex_conditon = [ 0 for _ in range(N)]
+    res = [ -1 for _ in range(N)]
+    def first_dfs(v):
+        vertex_conditon[v] = 1
+        for u in G[v]:
+            if vertex_conditon[u] == 0:
+                first_dfs(u)
+        vertex_conditon[v] = 2
+        history.append(v)
+
+    def second_dfs(v, idx):
+        res[v] = idx
+        for u in revG[v]:
+            if res[u] == -1:
+                second_dfs(u, idx)
+
+    history : list[int] = []
+    for i in range(N):
+        if vertex_conditon[i] == 0:
+            first_dfs(i)
+
+    I = 0
+    while history:
+        p = history.pop()
+        if res[p] == -1:
+            second_dfs(p, I)
+            I += 1
+
+    return res
+
+N, M = list(map(int,input().split()))
+
+G = [ set() for _ in range(N)]
+Edges = []
+for _ in range(M):
+    u, v = list(map(int,input().split()))
+    u -= 1
+    v -= 1
+    G[u].add(v)
+    Edges.append((u, v))
+
+connect_id = stronglyconnectedcomponent(G, N)
+id_amount = dict()
+for i in range(N):
+    if connect_id[i] not in id_amount:
+        id_amount[connect_id[i]] = 1
+    else:
+        id_amount[connect_id[i]] += 1
+
+sccsize = max(connect_id) + 1
+
+newG = [ set() for _ in range(sccsize)]
+
+for u, v in Edges:
+    nu, nv = connect_id[u], connect_id[v]
+    if nv == nu:
+        continue
+    newG[nv].add(nu)
+
+Can_walk = [ False for _ in range(N)]
+que = collections.deque([])
+for k, v in id_amount.items():
+    if v >= 2:
+        que.append(k)
+        Can_walk[k] = True
+
+while que:
+    p = que.pop()
+    for q in newG[p]:
+        if not(Can_walk[q]):
+            Can_walk[q] = True
+            que.append(q)
+
+answer = N
+for i in range(sccsize):
+    if not(Can_walk[i]):
+        answer -= 1
+print(answer)
+</code></pre>
+最近ライブラリ整備した部分が直接問われたのでアツい。<br>
+書いた後公式解説を読んだけれど、公式想定解はこれじゃないんだなと思って勉強になった。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
