@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC481E Most Brilliant Starry Sky</h1>
+問題文は<a href="https://atcoder.jp/contests/abc481/tasks/abc481_e">こちら</a>から。<br>
+空間を直線で2分割し、より多く星を含む領域を作る問題。<br>
+<br>
+「2つ以上の星が属する直線がない」という点から、各\(N\)個の点に対して相異なる\(N\)本の直線を引くことができる。<br>
+\(N\)本の直線を引き、傾きの値が大きい順に直線\(1,2,...,N\)とする。また、直線\(i\)を引く際に使った原点でない方の点を、改めて点\(i\)と呼ぶことにする。<br>
+<br>
+以下において、「直線\(i\)と\(i + 1\)の間の傾き」と言った場合、\(i=1,2,...,N-1\)については、「直線\(i\)の傾きより小さく、直線\(i + 1\)の傾きより大きい実数全体の集合」を示すこととし、\(i=N\)については「直線\(N\)の傾きより小さい実数と、直線\(1\)の傾きより大きい実数全体の集合」を示すこととする。<br>
+また。ある直線の傾き\(r\)が直線\(i\)と\(i + 1\)の間の傾きに属している場合、単に「その直線は直線\(i\)と\(i + 1\)の間の傾きを持つ」とか、「\(r\)は直線\(i\)と\(i + 1\)の間の傾きである」とか言うものとする。<br>
+<br>
+さて、直線\(i\)と\(i + 1\)の間の傾きを持つ任意の直線において、その直線で平面を2つに分けた際に、それぞれの領域に含まれる星の数は変わらない。<br>
+よって、直線をまたぐときにのみ、各領域に含まれる星の数が変化しうる。<br>
+直線1から出発し、直線1と直線2の間の傾きを持つ直線で分けた双方の領域にいくつ星が含まれるかを考えてみる。<br>
+直線1で平面を2つに分けて考え、直線1の"上側"(直線1の方程式をqx-py=0としたとき、p=0なら\(x<0\)の領域、そうでないなら\(px-qx>0\)を満たす領域)に含まれる点の個数を\(u\)とする。"上側"でない方の領域を"下側"とする。<br>
+点1のx座標が正のとき、直線1と直線2の間の傾きを持つ直線で分けたうち"上側"には、先ほどの\(u\)個の点と、点1の合計\(u+1\)個の点が含まれる。点1のx座標が負のときは点1は"下側"に属することになるから、"上側"には合計\(u - 1\)個の点が含まれる。<br>
+直線の傾きごとにこれが同様に更新されるので、更新のたびに大きい方の値を記録しておき、最終的な最大値を出せばよい。<br>
+\(N\)個の点についてその直線の傾きを出して、1点ごとの正負で領域内の星の数を更新することを考えると、\(N\)個の配列を2回さらえば答えを出せるため、ソートがネックになり時間計算量は\(O(Nlog_{}{N})\)で済む。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import fractions
+
+T = int(input())
+INF = 10 ** 10
+
+for _ in range(T):
+    N = int(input())
+    Point = [ "" for _ in range(N)]
+    Slope = []
+    upper = 0
+    lower = 0
+    # y軸から時計回りに直線を回す
+    # その直線の"上側"にある点をピックアップする
+    # 傾きが正の向きに急な順に整理する
+    for i in range(N):
+        x, y = list(map(int,input().split()))
+        if x >= 0:
+            Point[i] = "+"
+            lower += 1
+        else:
+            Point[i] = "-"
+            upper += 1
+
+        if x != 0:
+            Slope.append((fractions.Fraction(y, x), i))
+        else:
+            if y > 0:
+                Slope.append((INF, i))
+            else:
+                Slope.append((-1 * INF, i))
+    Slope.sort(reverse = True)
+
+    # 「上側と下側の点のうち多い方」の最大値が答え
+    # 右の方にある点は境目で上側に入り、左の方にある点は下側に入る
+    answer = max(upper, lower)
+    for i in range(N):
+        r = Slope[i][1]
+        if Point[r] == "+":
+            upper += 1
+            lower -= 1
+        else:
+            upper -= 1
+            lower += 1
+        answer = max(upper, lower, answer)
+    print(answer)
+</code></pre>
+PyPy3だと定数倍が重いのか1990ms台という恐ろしくギリギリな提出になった。<br>
+fractionsを自分で構造体として定義してしまえばCodonで回せなくもないので、どうしても無理だったらCodonに任せるというのも手だったりして。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
