@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC188D Snuke Prime</h1>
+問題文は<a href="https://atcoder.jp/contests/abc188/tasks/abc188_d">こちら</a>から。<br>
+謎のプライムサービスに入るか入らないかを考える問題。<br>
+<br>
+入っているサービス全体に掛かる料金が変動しうるのは、あるサービスに加入する日か、もしくはあるサービスを抜ける日（これはそのサービスを使う最終日の翌日）である。<br>
+よって、そのような日ごとに区間を区切って、各区間で掛かる料金（プライム未使用の料金）を算出し、プライムを使った方が得ならその区間ではプライムを使うように調整すればよい。<br>
+これはいわゆるイベントソートってやつの要領でこなせる。<br>
+端的に言うと、数列\(\{0, a_1, a_2, ..., a_N, b_1, b_2, ..., b_N \}\)数列を、重複を除いて昇順に並べたもの\(\{ d_1,d_2,..., d_k \}\)について、各半開区間\([d_i, d_{i +1})\)毎の料金を求めて、区間の長さ\(|d_{i+1} - d_{i}|\)を掛ければよい。<br>
+各サービスをinクエリとoutクエリの2つに分けて考察するが、これは結局サービス数の定数倍で終わるので、全体の時間計算量はソートの部分がネックとなり\(O(N\log_{}{N})\)程度で計算できる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N, C = list(map(int,input().split()))
+Event = []
+Event_cost = []
+Event_on = [ 0 for _ in range(N)]
+for i in range(N):
+    a, b, c = list(map(int,input().split()))
+    Event.append([a, i, 1])
+    Event.append([b + 1, i, -1])
+    Event_cost.append(c)
+
+Event.sort(key=lambda x:(-x[0], x[2]))
+
+now = 1
+total_cost = 0
+answer = 0
+while Event:
+    day, num, sign = Event.pop()
+    answer += min(total_cost, C) * (day - now)
+    total_cost += Event_cost[num] * sign
+    while Event and Event[-1][0] == day:
+        d, n, s = Event.pop()
+        total_cost += Event_cost[n] * s
+    now = day
+print(answer)
+</code></pre>
+「イベントソート」って競プロ用語らしい（少なくとも僕が調べた限りでは）。<br>
+何がしかのソートアルゴリズムがあるというわけではなく、よくある典型手法の1つにそのような名前がついているだけっぽい。<br>
+最近の出題でもこれを使うと楽な問題があったし、そうでなくとも実際の応用例は多数ありそうで、覚えておくに越したことはあるまい。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
