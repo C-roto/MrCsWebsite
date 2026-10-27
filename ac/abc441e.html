@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC441E A > B substring</h1>
+問題文は<a href="https://atcoder.jp/contests/abc441/tasks/abc441_e">こちら</a>から。<br>
+文字列の中で、特定の文字が特定の文字より多いかどうかを調べる問題。<br>
+<br>
+dp的なことをするのかなーと思ったが、保持しておくべき情報量がとにかく多くなることに気が付いて困った。<br>
+「AがBより大きくなる」タイミングを特定するには、AがBより何文字多いかという情報を常に保持しておく必要があり、単純にdpテーブルを作ると\(O(N^2)\)サイズになってしまう。<br>
+そういうわけでどうしたらいいかを考えていたが、遷移手順を紙に書いてじっと見てみると案外簡単に思いついた。<br>
+例えばABACCという文字列があったとしよう。<br>
+この時、「\(i\)文字目を末尾としたときの\(Aの文字数-Bの文字数\)」を考える。<br>
+この例だと1文字目はAなので、これを末尾とする文字数の\(Aの文字数-Bの文字数\)（長いので以下A-B差と呼ぶ）は1のものが1つだけある。<br>
+その状態は[1:1]と書ける。今回は他のものがないことを明示するために[..., -1:0, 0:0, 1:1, 2:0, ...]と書いてみる。<br>
+例えば2文字目についてみると、2文字目を末尾とする文字列のA-B差は0のものが1つ、-1のものが1つある。<br>
+つまり、状態としては[..., -1:1, 0:1, 1:0, 2:0, ...]となる。<br>
+同様に3文字目について考えると、[..., -1:0, 0:1, 1:2, 2:0, ...]となる。<br>
+インデックスを省略して並べて書いてみる。<br>
+1文字目：[...,0, 0, 1, 0, ...]<br>
+2文字目：[...,1, 1, 0, 0, ...]<br>
+3文字目：[...,0, 1, 2, 0, ...]<br>
+4文字目：[...,0, 2, 2, 0, ...]<br>
+5文字目：[...,0, 3, 2, 0, ...]<br>
+こうしてみてみると、0でインデックスされた地点に数字を足して、数列全体を左右にスライドしているような感じになっているのが分かるだろうか？<br>
+そして、\(i\)文字目を末尾とするものの中で問題文の条件を満たすのは、0でインデックスされた場所より右にある数の合計（つまりA-B差が正のものの合計）である。<br>
+各回で数列はそれほど大きくスライドしないので、別で管理する変数を持って置き、正か0以上かが切り替わったタイミングをチェックして変数に手を加えればよい。<br>
+イメージ的にはチューリングマシンを考える時のテープとヘッドみたいなものを想像してもらえると良い。<br>
+充分に長いテープを用意し、ヘッドを真ん中らへんのどこかにセットする。ここを「0」の位置とする。<br>
+文字列の最初の1文字を見て、Aならヘッドの右に1を書き込み、Bならヘッドの左に1を書き込み、Cならヘッドの位置に1を書き込んでおく。<br>
+変数\(now_a,anser\)を用意し、両方ともヘッドより右にある1の個数で初期化する（つまり1か0になる）。<br>
+ここから次の操作を行う。<br>
+・今ヘッドがある位置に1を書き込んだのち、\(i=2,3,...,N\)文字目を見る。<br>
+→その文字がAなら、今ヘッドがある位置に書かれた数字を\(now_a\)に加算し、ヘッドを1つ左に動かす。<br>
+→その文字がBなら、ヘッドを1つ右に動かした後、ヘッドが移動した後の位置に書かれた数字を減算する。<br>
+→その文字がCならヘッドを動かさず、何もしない。<br>
+・上記ヘッド移動後の\(now_a\)の値を\(answer\)に加える。<br>
+テープはNの定数倍オーダーで事足りるし、各回の計算も定数時間で行える（数列ではなくヘッド（の位置を示す変数）を動かせばよいから）ので、時間計算量は\(O(N)\)程度で抑えられる。<br>
+実装例は以下の通り（上記説明の\(now_a\)が\(a_value\)、ヘッド位置がpivot、テープがchechtableである）<br>
+<pre><code class="language-python">
+N = int(input())
+S = input()
+checktable = [ 0 for _ in range(2 * N + 1)]
+pivot = N
+a_value = 0
+if S[0] == "A":
+    a_value += 1
+    checktable[N + 1] += 1
+elif S[0] == "B":
+    checktable[N - 1] += 1
+else:
+    checktable[N] += 1
+
+answer = 0
+answer += a_value
+
+for i in range(1, N):
+    checktable[pivot] += 1
+    if S[i] == "A":
+        a_value += checktable[pivot]
+        pivot -= 1
+    elif S[i] == "B":
+        pivot += 1
+        a_value -= checktable[pivot]
+    answer += a_value
+
+print(answer)
+</code></pre>
+解いてみると、何で解けなかったのかと思うほどシンプルな問題。<br>
+でもNovistepsで1D扱いされているということは、まあそんなやわな問題でもないのかもしれない。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
