@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC184F Programming Contest</h1>
+問題文は<a href="https://atcoder.jp/contests/abc184/tasks/abc184_f">こちら</a>から。<br>
+プログラミングコンテストに参加する超能力者の問題。<br>
+<br>
+DP？ とかいろいろ思ったが、\(N \leqq 40\)と言う制約が結構大きくて、これを上手く使う。<br>
+問題が40個あるとして、どれを解きどれを解かないかの制約\(2^{40}\)個をすべてリストアップするのは難しいが、半分ずつに分けて\(2^{20} \approx 10^6\)個ずつなら列挙可能である。<br>
+列挙したうち片方を昇順に整列し、もう半分の各要素について足して\(T\)を超えない最大の要素を探せばよい。これは2分探索で実現可能である。<br>
+つまり、いわゆる「半分全列挙」と俗に言われている方法で対応ができるというわけである。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import bisect
+
+#ビット全探索で全列挙
+def bit_brute_force_search(L):
+    res = set()
+    M = len(L)
+    for i in range(2 ** M):
+        tmp = 0
+        for j in range(M):
+            if (i >> j) & 1 == 1:
+                tmp += L[j]
+        res.add(tmp)
+    return res
+
+#Tより大きい値は0に、そうでなければそのまま
+def checked_max(r, t):
+    if r > t:
+        return 0
+    else:
+        return r
+
+N, T = list(map(int,input().split()))
+A = list(map(int,input().split()))
+
+#半分ずつに分ける（今回は添え字の偶奇）
+X = []
+Y = []
+for i in range(N):
+    if i % 2 == 0:
+        X.append(A[i])
+    else:
+        Y.append(A[i])
+
+#半分ずつ全列挙する(片方はリスト化してソートしておく)
+P = bit_brute_force_search(X)
+Q = list(bit_brute_force_search(Y))
+Q.sort()
+
+#2分探索する
+answer = 0
+for p in P:
+    x = bisect.bisect(Q, T - p)
+    if x == 0:
+        answer = max(answer, checked_max(p + Q[0], T))
+    elif x == len(Q):
+        answer = max(answer, checked_max(p + Q[-1], T))
+    else:
+        answer = max(answer, checked_max(p + Q[x - 1], T))
+print(answer)
+</code></pre>
+半分全列挙という手法、あまり多く使うわけではないが使えるときは無類の強さを持つので、なるべく早めに引き出せるようにしておきたい。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
