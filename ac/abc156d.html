@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC156D Bouquet</h1>
+問題文は<a href="https://atcoder.jp/contests/abc156/tasks/abc156_d">こちら</a>から。<br>
+特定の個数を避け、たくさんの花から選んで花束を作る問題。<br>
+<br>
+縛りがない場合は\(n\)本すべての花について「花束に使う/使わない」の2通りずつがあり、かつすべてを選ばない場合を除けばいいので、花束は\(2^n-1\)種類できる。<br>
+そのうち\(a\)本からなる花束は、\(n\)本から\(a\)本を選ぶ方法の数である\(\binom{n}{a}\)種類が存在する。\(b\)本からなる花束も同様に\(\binom{n}{b}\)種類ある。<br>
+よって求める種類数は\(2^n-1 - \binom{n}{a} - \binom{n}{b}\)となる。<br>
+<br>
+なのでまあこれを求めればおしまいだから、考察パートに大変なところはない。<br>
+ただし、実装面で\(n\)が結構大きくなりうるところに気を付ける必要がある。<br>
+単純に\(n!\)を求めて、\((n-a)!\)と\(a!\)の逆数をそれぞれ求めて、とやっているとTLEしてしまう。<br>
+一方で、\(\binom{n}{a}\)の分子は\(n\)から\(n-a+1\)までのA個の数の積であるし、分母は\(1\)から\(a\)までの\(a\)個の数の積であるから、分子を掛けて分母を掛けて……と愚直にやっていけば時間計算量は\(O(a)\)程度にまで落とせる。<br>
+今回\(mod 10^9+7\)で求めたい二項係数は2つしかないから、前計算も実際の値を求める計算も\(O(a)\)程度で終わる。ネックになるのはここか、\(2^n\)の\(mod 10^9+7\)を求めるためのダブリングのいずれかで、すると全体の時間計算量は\(O(a+b+log_{}{n})\)程度で見積もることができる。これは制約下では充分に高速と言えるだろう。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+mod = 1000000007
+
+def doubling(x, p, m):
+    res = 1
+    d = x
+    while p > 0:
+        if p & 1 == 1:
+            res *= d
+            res %= m
+        d = d ** 2
+        d %= m
+        p = p >> 1
+    return res
+
+def frac_mod(N, A):
+    res = 1
+    t = 1
+    for i in range(N, N - A, -1):
+        res *= i
+        res %= mod
+        res *= invs[t]
+        res %= mod
+        t += 1
+    return res
+
+N, A, B = list(map(int,input().split()))
+frac = [0, 1]
+invs = [0, 1]
+for i in range(2, max(A, B) + 1):
+    frac.append((frac[-1] * i) % mod)
+    invs.append(doubling(i, mod - 2, mod))
+
+H = doubling(2, mod, N) - 1
+A = frac_mod(N, A)
+B = frac_mod(N, B)
+
+H -= A
+if H < 0:
+    H += mod
+H -= B
+if H < 0:
+    H += mod
+print(H)
+</code></pre>
+まあ別に大したことがある問題かと言われると、そんなことはない。<br>
+一方で階乗とmodをちゃんと考えないといけないなという戒めになった。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
