@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC384E Takahashi is Slime 2</h1>
+問題文は<a href="https://atcoder.jp/contests/abc384/tasks/abc384_e">こちら</a>から。<br>
+スライムの高橋くんが周囲を吸収してどれくらい強くなれるかを考える問題。<br>
+<br>
+高橋君は吸収を行う際に、今吸収できるスライムのうち、強さが最小のものを選ぶとしても問題ない。<br>
+これは、最小のものを吸収したからといって後から不利になることがないことから分かる（最小ではないが吸収できるスライムは後からでも吸収できるし、隣接してはいるが強さの関係で吸収できないスライムは、他のスライムを吸収した後なら吸収できる可能性が生まれる。隣接していないスライムも、高橋くんの範囲拡大によって吸収できる可能性が生まれる。これらは吸収の順に寄らない）。<br>
+よって、毎回隣接しているうち強さ最小のものが吸収可能ならば吸収し、その周囲のスライムを次回の吸収候補に加える、という操作を繰り返していけばよい。<br>
+これは優先度付きキューを使えば実現でき、pythonならheapqを使えばよい。<br>
+1つのマスにつき、最大でも周囲4マスしか隣接しないことから、各マスが吸収候補に入る回数は最大でも4回に抑えられる。つまり、既に高橋くんの一部になっているかどうかのチェックをしっかりすれば、同じマスを何度も候補に入れることを過度に気にする必要はない。<br>
+全体の時間計算量は優先度付きキューへの出し入れになる可能性が高く、\(O(HW\log_{}{HW})\)程度で押さえられ、これは制約下ならある程度高速といってよい。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import heapq
+
+m_1 = [-1, 1, 0, 0]
+m_2 = [0, 0, 1, -1]
+
+def is_in(y, x):
+    return 0 <= y <= H - 1 and 0 <= x <= W - 1
+
+def search(y, x, hq):
+    for i in range(4):
+        ny = y + m_1[i]
+        nx = x + m_2[i]
+        if is_in(ny, nx) and (ny, nx) not in checked:
+            heapq.heappush(hq, (S[ny][nx], ny, nx))
+
+H, W, X = list(map(int,input().split()))
+P, Q = list(map(int,input().split()))
+P -= 1
+Q -= 1
+S = []
+for i in range(H):
+    S.append(list(map(int,input().split())))
+
+answer = S[P][Q]
+checked = set([(P, Q)])
+HQ = []
+heapq.heapify(HQ)
+search(P, Q, HQ)
+
+while HQ:
+    p, y, x = heapq.heappop(HQ)
+    if answer > X * p and (y, x) not in checked:
+        answer += p
+        checked.add((y, x))
+        search(y, x, HQ)
+
+print(answer)
+</code></pre>
+貪欲法が使えると分かれば別にそれほどな問題でもない。<br>
+\(\frac{1}{X}\)倍の判定にfloat型を使うとか、今更そんなことをしなければ大丈夫。<br>
+（真面目な話、始めたての頃は誤差が云々みたい話を全く知らなくて結構この手の問題でWAを出したことがあった。緑diffの問題を解く人にはもう分かりきったことだろうが……）<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
