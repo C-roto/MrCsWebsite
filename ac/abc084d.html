@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC084D 2017-like Number</h1>
+問題文は<a href="https://atcoder.jp/contests/abc084/tasks/abc084_d">こちら</a>から。<br>
+2017に似た数字を、一定範囲から探す問題。<br>
+<br>
+\(l_i, r_i\)の上限は\(10^5\)とかなり低いので、これ以下の素数をすべて列挙することは容易い。<br>
+そして、\(N > 1\)においては\(N\)よりも\(\frac{N+1}{2}\)の方が小さいので、各\(N = 3, 5,..., 10^5 - 1\)において、\(N\)と\(\frac{N+1}{2}\)が両方とも素数であるかをチェックすればよい。<br>
+これはエラトステネスのふるいなどを用いて先に素数を列挙しておけば事足りる。<br>
+後は区間和なので、区間和を求めるためのデータ構造を好きに使うと良い。スタティックなので累積和でもスパーステーブルでも良いし、セグメント木でも良いだろう。実装例では思考停止でセグ木を貼った。<br>
+各クエリの処理か、もしくは素数の列挙がネックになって時間計算量は\(O(N\log_{}{\log_{}{N}} + Q)\)で処理ができるだろう。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+class segmentTree:
+    def __init__(self, dataPieces, data):
+        self.dataPieces = dataPieces
+        self.data = data
+        cellnumpow = 0
+        while not(2 ** (cellnumpow - 1) < dataPieces <= 2 ** cellnumpow):
+                cellnumpow += 1
+        self.cnp = cellnumpow
+        self.contena = [ 0 for _ in range(2 ** (cellnumpow + 1))]
+        for i in range(dataPieces):
+            self.contena[2 ** cellnumpow + i] = data[i]
+        cellnumpow -= 1
+        while cellnumpow >= 0:
+            c = 2 ** cellnumpow
+            for j in range(c):
+                self.contena[c + j] = self.contena[2 * (c + j)] + self.contena[2 * (c + j) + 1]
+            cellnumpow -= 1
+    
+    def update(self, n: int, x: int):
+        cnp = self.cnp
+        self.contena[2 ** cnp + (n - 1)] = x
+        now = 2 ** cnp + (n - 1)
+        while now > 1:
+            if now % 2 == 0:
+                now //= 2
+            else:
+                now -= 1
+                now //= 2
+            self.contena[now] = self.contena[2 * now] + self.contena[2 * now + 1]
+    
+    def answerToQuestion(self, l: int , r: int):
+        segments = []
+        cnp = self.cnp
+        now_l = 2 ** cnp + (l - 1)
+        now_r = 2 ** cnp + (r - 1)
+        while now_l <= now_r:
+            if now_l % 2 == 1:
+                segments.append(self.contena[now_l])
+                now_l += 1
+                now_l //= 2
+            else:
+                now_l //= 2
+            
+            if now_r % 2 == 0:
+                segments.append(self.contena[now_r])
+                now_r //= 2
+                now_r -= 1
+            else:
+                now_r -= 1
+                now_r //= 2
+        return sum(segments)
+
+def prime(X):
+    primes = [ True for _ in range(X + 1)]
+    primes[0] = False
+    primes[1] = False
+    for i in range(2, X + 1):
+        if primes[i]:
+            for j in range(2 * i, X + 1, i):
+                primes[j] = False
+    return primes
+
+Q = int(input())
+P = prime(10 ** 5)
+seg = segmentTree(10 ** 5 + 1, [ 0 for _ in range(10 ** 5 + 1)])
+for i in range(3, 10 ** 5 + 1):
+    t = (i + 1) // 2
+    if P[i] and P[t]:
+        seg.update(i, 1)
+
+for _ in range(Q):
+    L, R = list(map(int,input().split()))
+    print(seg.answerToQuestion(L, R))
+</code></pre>
+冬になって風邪気味だ。体調も微妙だしやる気も微妙。<br>
+まあ、コツコツと続けてはいきたい。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
