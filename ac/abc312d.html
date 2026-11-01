@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC312D Count Bracket Sequences</h1>
+問題文は<a href="https://atcoder.jp/contests/abc312/tasks/abc312_d">こちら</a>から。<br>
+?を(か)に変えて、括弧列をいくつ作れるか考える問題。<br>
+<br>
+この問題における括弧列の定義は他の問題でもよく見かける。<br>
+全体が括弧列になっていることと、以下の2条件をともに満たすことは同値である。<br>
+・文字列全体で登場する"("の個数と")"の個数が等しい<br>
+・途中で"("の個数よりも")"の個数の方が多くなっていない<br>
+なので、途中経過を見て、それぞれ先頭の文字から順に「"("の個数-")"の個数」としてあり得る値を動的計画法などで管理すればよい。<br>
+具体的にはdpテーブルを以下のようにして持つ<br>
+\(dp[i][d] = Sのi文字目までを見たときに、含まれる"("の個数-")"の個数がちょうどd個である文字列の個数\)<br>
+このようにすれば、Sのi文字目が"("だった時は、i-1文字目までの結果がそのまま上にスライドし、")"だったときは下にスライドし、"?"だった時は両方が同時に起きる（どっちを先に処理しても結果には影響しない）。<br>
+後はdpテーブルにおいてSの末尾まで見た時に、"("と")"の差がちょうど0になっている文字列がいくつあるかを見ればよい。<br>
+勿論modを途中で取るのを忘れないようにする。<br>
+DPの時間計算量はSの長さをNとして、\(O(N^2)\)程度で収まるはずだ。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+S = input()
+
+dp = [ [0 for _ in range(len(S) + 1)] for __ in range(len(S))]
+mod = 998244353
+
+if S[0] != ")":
+    dp[0][1] = 1
+
+for i in range(1, len(S)):
+    for j in range(len(S) + 1):
+        if S[i] == "(":
+            if 0 <= j + 1 <= len(S):
+                dp[i][j + 1] += dp[i - 1][j]
+                dp[i][j + 1] %= mod
+        elif S[i] == ")":
+            if 0 <= j - 1 <= len(S):
+                dp[i][j - 1] += dp[i - 1][j]
+                dp[i][j - 1] %= mod
+        else:
+            if 0 <= j + 1 <= len(S):
+                dp[i][j + 1] += dp[i - 1][j]
+                dp[i][j + 1] %= mod
+            if 0 <= j - 1 <= len(S):
+                dp[i][j - 1] += dp[i - 1][j]
+                dp[i][j - 1] %= mod
+
+print(dp[-1][0])
+</code></pre>
+簡単目だが、それは制約がdpなど何か不思議なやり方を示唆しているからにすぎない気もする。<br>
+あと前に括弧列の対応について見たことがあるかないかとかも大事か。<br>
+bfと略される某難解プログラミング言語の処理系とか調べたことがあると、括弧列の対応の大事さが分かるような気もする。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
