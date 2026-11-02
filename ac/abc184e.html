@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC184E Third Avenue</h1>
+問題文は<a href="https://atcoder.jp/contests/abc184/tasks/abc184_e">こちら</a>。
+テレポータが存在する迷路をなるべく早く攻略する問題。<br>
+<br>
+テレポータはマス同士が1:1対応しているとは限らないことに注意（極論、\(1900^1900\)マスぐらいに"a"が書いてある可能性もあるということ）。<br>
+なので、"a"のマスに踏み込むたびに他の"a"のマスを調べる……みたいなことをやってると毎回大量の辺に関して調べることになり、TLEのリスクがある。<br>
+だが、一回"a"のマスに踏み込んだなら、その後二度と"a"のテレポータを利用する必要はないはずだ。もし2回使って短くなるなら、最初のワープで最後のワープ先を選べばよい。<br>
+というわけで、1回調べたテレポータは2度と使わなくて良いわけだから、1度調べたテレポータの識別文字を記録しておいて毎回チェックすれば膨大な数を調べる必要はなくなる。<br>
+この点にさえ注意すれば後は普通のグリッド迷路を解くだけ。<br>
+全てのマスはテレポータと上下左右からで最大5回参照される可能性があるが、高々定数回なので大した計算量にはならない。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import collections
+
+H, W = list(map(int,input().split()))
+A = []
+for _ in range(H):
+    A.append(list(input()))
+
+def is_in(y, x):
+    return 0 <= y <= H - 1 and 0 <= x <= W - 1
+m_1 = [-1, 1, 0, 0]
+m_2 = [0, 0, -1, 1]
+
+s_y = 0
+s_x = 0
+g_y = 0
+g_x = 0
+P = [ set() for _ in range(26)]
+
+for i in range(H):
+    for j in range(W):
+        if A[i][j] == "S":
+            s_y, s_x = i, j
+        elif A[i][j] == "G":
+            g_y, g_x = i, j
+        elif A[i][j] != '.' and A[i][j] != "#":
+            P[ord(A[i][j]) - ord("a")].add((i, j))
+
+dist = [ [-1 for _ in range(W)] for __ in range(H)]
+warped = set()
+
+que = collections.deque([(s_y, s_x)])
+dist[s_y][s_x] = 0
+while que:
+    y, x = que.popleft()
+    if ord("a") <= ord(A[y][x]) <= ord("z") and A[y][x] not in warped:
+        warped.add(A[y][x])
+        for h, w in P[ord(A[y][x]) - ord("a")]:
+            if dist[h][w] == -1:
+                dist[h][w] = dist[y][x] + 1
+                que.append((h, w))
+    for i in range(4):
+        ny = y + m_1[i]
+        nx = x + m_2[i]
+        if is_in(ny, nx) and A[ny][nx] != "#" and dist[ny][nx] == -1:
+            dist[ny][nx] = dist[y][x] + 1
+            que.append((ny, nx))
+
+print(dist[g_y][g_x])
+</code></pre>
+昔類題を解いたときにTLEした原因を思い出して実装した。<br>
+なかなか大変。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
