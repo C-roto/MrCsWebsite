@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC315E Prerequisites</h1>
+問題文は<a href="https://atcoder.jp/contests/abc315/tasks/abc315_e">こちら</a>から。<br>
+他の本を前提知識として要求する本を最短で読む問題。<br>
+<br>
+「どの本も適切な順序で読めばすべて読める」という条件から、本を頂点とし、依存関係を辺とする（先に読まないといけない本から後に読まないといけない本に向かって有向辺を繋げる）ようなグラフが連結なDAG(有向非巡回グラフ)になっていることが分かる。<br>
+DAGならば必ずトポロジカルソートが成功するので、とりあえずトポロジカルソートしておく。<br>
+このようにして依存関係を可視化したのち、本1を読むための前提となっている本をトポロジカル順で後ろにある方から順に読んでいけばよい。<br>
+本1を読むための前提となっている本とは、つまり辺の向きをすべて逆に張ったグラフ(ここでは逆グラフとする)に本1から到達可能なすべての本のことである（辺を逆に張りなおすと、そこから本1に向けた依存関係の鎖ができるため）。この判定はBFSでもDFSでもお好きな手順で可能である。<br>
+よって、トポロジカル順で後ろにある方から順に頂点を見ていき、逆グラフにおいて本1から到達できる頂点ならばその番号を出力、そうでなければスルーというアルゴリズムが正当になる。<br>
+グラフの読み取り、トポロジカルソート、逆グラフにおけるBFSあたりがネックになり、全体の時間計算量は\(O(N+M)\)程度で押さえられる(ただしMとは各\(C_i\)の総和であるとする)。<br>
+これは制約下においては充分高速に動作するだろう。実装例は以下の通り。<br>
+(実装例ではトポロジカル順でたどり着けない頂点をそもそもトポロジカルソートの始点に選ばないように工夫しており、AtCoder上のPyPyだと300msくらい早くなる。まあなくても1000msと掛からないので、今回の問題ではそれほど重要でもないのだが)。<br>
+<pre><code class="language-python">
+import collections
+
+N = int(input())
+G = [ list() for _ in range(N + 1)]
+revG = [ list() for _ in range(N + 1)]
+
+#頂点番号を出力するので、1-indexedで実装する
+for i in range(1, N + 1):
+    P = list(map(int,input().split()))
+    C = P[0]
+    for j in range(C):
+        p = P[j + 1]
+        G[p].append(i)
+        revG[i].append(p)
+
+#本1の前提となる本=本1から逆に辿って着くことのできる本
+#逆に辺を張ったグラフでBFSして到達可能性を調べる
+use_vertex = set([1])
+que = collections.deque([1])
+while que:
+    p = que.popleft()
+    for q in revG[p]:
+        if q not in use_vertex:
+            use_vertex.add(q)
+            que.append(q)
+
+#入次数のカウント
+indeg : list[int] = [ 0 for _ in range(N + 1)]
+for u in range(1, N + 1):
+    for v in G[u]:
+        indeg[v] += 1
+
+#トポロジカルソート用の初期スタックを用意する
+Stack = []
+for i in range(1, N + 1):
+    if indeg[i] == 0 and i in use_vertex:
+        Stack.append(i)
+
+#トポロジカルソート
+Result = []
+while Stack:
+    p = Stack.pop()
+    if p == 0:
+        break
+    Result.append(p)
+    #辺の削除 = 入次数の減少
+    #入次数が新たに0になった辺があればStackに積む
+    for q in G[p]:
+        indeg[q] -= 1
+        if indeg[q] == 0:
+            Stack.append(q)
+
+#逆グラフに含まれている1以外の頂点ならば出力
+for i in range(len(Result)):
+    if Result[i] in use_vertex and Result[i] != 1:
+        print(Result[i], end = " ")
+print()
+</code></pre>
+トポロジカルソート+頂点出力だけで上手く行くかなーと思ったが、うっかりしていた。<br>
+冷静に順番を追って考えればすぐにミスに気が付けたはずなのだが……まあ、そういう日もあるよね。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
