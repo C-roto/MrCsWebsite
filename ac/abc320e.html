@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC320E Somen Nagashi</h1>
+問題文は<a href="https://atcoder.jp/contests/abc320/tasks/abc320_e">こちら</a>。
+そうめん流しのイベントで、各人が得るそうめんの量を考える問題。<br>
+<br>
+時間とともに経過を考える問題はイベントソートとか様々なやり方がある。<br>
+今回は優先度付きキューに入れて取り出すという方法を取ることにする。<br>
+こうすれば、そうめんを受け取るイベントと人が戻ってくるイベントを同列に扱うことができ、処理が楽になる。<br>
+戻ってきたタイミングで列には戻っている扱いなので、同時刻に2種類のイベントが発生した時は列に戻ってくる方を優先するようにする（実装例の中で、戻ってくる側のイベントのqを-1に設定してるのはそういう意図）。<br>
+<br>
+あとは今先頭に並んでいる人の番号だが、これはPythonならSortedSetなどを使えば高速に処理可能である。<br>
+SortedSetが空(=列に誰もいない)でない限り、そのとき先頭にいる人はSortedSetの0番目にいる人なので、それを取得すればよい。<br>
+で、その人に対するそうめんの取得処理が終わったらその人をSortedSetから一時的に削除して、s秒後に追加イベントを発生させるようにすればよい。<br>
+<br>
+各そうめん追加イベントに対し、人が戻ってくるイベントも同数発生しうるが、せいぜいMの定数倍で抑えられる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import heapq
+import sortedcontainers
+
+N, M = list(map(int,input().split()))
+Somen = [ 0 for _ in range(N)]
+lined = sortedcontainers.SortedSet([i for i in range(N)])
+
+HQ = []
+heapq.heapify(HQ)
+
+for i in range(M):
+    T, W, S = list(map(int,input().split()))
+    heapq.heappush(HQ, (T, 0, W, S))
+
+while HQ:
+    t, q, w, s = heapq.heappop(HQ)
+    if q == 0:
+        if len(lined) == 0:
+            continue
+        top = lined[0]
+        Somen[top] += w
+        lined.discard(top)
+        heapq.heappush(HQ, (t + s, -1, top, -1))
+    else:
+        lined.add(w)
+
+for i in range(N):
+    print(Somen[i])
+</code></pre>
+初め実装した時はtopを別に保持しておいていたが、よく考えるとgetが\(O(\log_{}{N})\)で出来るなら別に問題ないということに、指摘を受けて気が付いた。<br>
+そういうわけで毎回列の先頭を取得しに行くようにしたらバグらなくなった。<br>
+要らない変数は増やさないようにしよう。その変数、本当に必要ですか？ の精神を持ちたい。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
