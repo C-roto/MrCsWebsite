@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC235E MST + 1</h1>
+問題文は<a href="https://atcoder.jp/contests/abc235/tasks/abc235_e">こちら</a>から。<br>
+グラフに1つ辺を加えたとき、その辺が最小全域木に加わるかを調べる問題。<br>
+<br>
+すべての辺の重さが異なるため、最終的に元のグラフの最小全域木に含まれる辺の集合は必ず一意に定まる。<br>
+また、問題でも保証されている通り、これにどの辺の重さとも異なる1辺を加えたグラフの最小全域木も必ず一意に定まる。<br>
+この追加後のグラフの最小全域木をクラスカル法で作る過程を見ると、追加辺の重さ未満の辺に関しては、元のグラフの最小全域木で使う辺だけが選ばれるはずである。<br>
+よって、各追加辺ごとに、その辺が追加されるまでの元のグラフの辺を見てクラスカル法を遂行していき、その追加辺が採用されうるかをチェックすればよい。<br>
+これはいわゆるUnion-Findを使えば簡単にチェックできる。元のグラフの辺については、辺のコストの小さい順に併合処理をして、追加辺についてはグラフの端点同士が既に同じ連結成分に属しているかどうかを見ればよい。<br>
+最終的にM+Q個の辺について併合等の操作を行うことを考えると、時間計算量は\(O((M+Q)\log_{}{(M+Q)})\)程度で押さえられ、これは制約下では充分に高速である。<br>
+実行例は以下の通り。<br>
+<pre><code class="language-python">
+class DisjointSetUnion:
+    def __init__(self, N: int):
+        self.number = N
+        self.parent = [ -1 for _ in range(N)]
+        self.size = [ 1 for _ in range(N)]
+
+    def find(self, v : int):
+        compress = []
+        while self.parent[v] != -1:
+            compress.append(v)
+            v = self.parent[v]
+        for c in compress:
+            self.parent[c] = v
+        return v
+
+    def union(self, u: int, v: int):
+        ru = self.find(u)
+        rv = self.find(v)
+        if ru != rv:
+            if self.size[ru] < self.size[rv]:
+                ru, rv = rv, ru
+            self.parent[rv] = ru
+            self.size[ru] += self.size[rv]
+
+    def same(self, u: int, v: int):
+        return self.find(u) == self.find(v)
+
+N, M, Q = list(map(int,input().split()))
+Query = []
+for _ in range(M):
+    a, b, c = list(map(int,input().split()))
+    a -= 1
+    b -= 1
+    Query.append((1, a, b, c, -1))
+for i in range(Q):
+    a, b, c = list(map(int,input().split()))
+    a -= 1
+    b -= 1
+    Query.append((2, a, b, c, i))
+
+Query.sort(reverse = True, key = lambda x:x[3])
+uf = DisjointSetUnion(N)
+answer = [ "" for _ in range(Q)]
+
+while Query:
+    t, a, b, c, p = Query.pop()
+    if t == 1:
+        uf.union(a, b)
+    else:
+        if uf.same(a, b):
+            answer[p] = "No"
+        else:
+            answer[p] = "Yes"
+
+for i in range(Q):
+    print(answer[i])
+</code></pre>
+実装上は元のグラフの辺について併合するのをタイプ1クエリ、追加辺をチェックするのをタイプ2クエリとして分け、すべてを一緒くたに混ぜてからコストの小さい順にソートすることにした。<br>
+追加辺は元のグラフの辺のどれとも重さが違うし、元のグラフの辺同士も重さが違うので、タイプ1クエリとタイプ2クエリが同じ重さについて混合することはない。よって、どっちを先に処理するか、などは深く考えなくても良いのが楽。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
