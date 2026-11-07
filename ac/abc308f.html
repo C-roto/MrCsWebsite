@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC308F Vouchers</h1>
+問題文は<a href="https://atcoder.jp/contests/abc308/tasks/abc308_f">こちら</a>から。<br>
+ディスカウントチケットをどれに使うか考える問題。<br>
+ <br>
+クーポンの使い方は色々あるが、結局のところ、使えたはずのクーポンが使えなくなるのが勿体ない。<br>
+つまり、各クーポンチケットが対象とする定価順→値引額順に昇順ソートして、商品も定価順に昇順ソートして、今先頭にあるクーポンが今先頭にある商品に使えるか見ればよい。<br>
+そして、使えるクーポンの中で最も値引き額が大きいものを選んで商品に使えばよい。使ったクーポンと買った商品をリストから除外して、同じことを繰り返していく。<br>
+こうすると、いつでも使える中で最大の割引額を選んでいることになる。使える時に最大割引額を使わない理由もない（いわゆる「交換しても悪化しない」論法）から、この方向で問題なさそうだ。<br>
+商品を値段昇順に並べることで、使えるクーポンの集合はクーポンの使用以外で減らなくなる。よって、今使えるクーポンの集合を優先度付きキューなどで管理すれば、時間計算量的にも優しい。<br>
+ソートと各回における優先度付きキューに対する処理がネックになって、時間計算量はおよそ\(O\((N + M)(\log_{}{N}+\log_{}{M}))\)程度で抑えられ、これは制約下では充分高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import heapq
+
+N, M = list(map(int,input().split()))
+P = list(map(int,input().split()))
+L = list(map(int,input().split()))
+D = list(map(int,input().split()))
+
+Tickets = []
+for i in range(M):
+    Tickets.append([L[i], D[i]])
+
+Tickets.sort(reverse=True)
+P.sort(reverse=True)
+HQ = []
+heapq.heapify(HQ)
+
+answer = 0
+while P:
+    p = P.pop()
+    while Tickets:
+        if Tickets[-1][0] <= p:
+            lo, d = Tickets.pop()
+            heapq.heappush(HQ, -1 * d)
+        else:
+            break
+
+    if HQ:
+        d = heapq.heappop(HQ)
+        answer += p + d
+    else:
+        answer += p
+
+print(answer)
+</code></pre>
+単純な解法こそ最も気が付きにくいことがあるが、これはそんなことない問題かもしれない。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
