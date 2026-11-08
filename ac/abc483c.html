@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC483C Second Choice Election</h1>
+問題文は<a href="https://atcoder.jp/contests/abc483/tasks/abc483_c">こちら</a>から。<br>
+候補者選挙で1人が辞退した時の当選者を求める問題。<br>
+<br>
+なんかややこしそうではあるが、順を追ってみていく。<br>
+まず辞退者を1人選ぶ。辞退者に入っていた票をすべて除き、辞退者を第1希望としていた投票者全員について、第2希望の候補者の票を投票者1人につき1ずつ増やす。この結果最多得票者となったもののうち、番号が最小の者が当選者である。<br>
+この過程を愚直にシミュレーションすることを考える。<br>
+まず、「辞退者に入っていた票をすべて除く」ことと「辞退者を第1希望としていた投票者全員の、第2希望の候補者の票を増やす」ことについては、一見大変そうで実は大丈夫である。<br>
+何故なら、各候補者について「その人を第1希望としていた投票者全員の集合」の和はちょうどMになるので、集合の中身を愚直に見て加えていっても\(O(M)\)程度で抑えが効くからである。<br>
+あとは「このうち最多得票で番号最小の者」を求められればいいが、ここも工夫ができる。
+まず、誰も辞退していない時の当選者（つまり、最多得票者であって識別番号が最小の者）の識別番号をXとする。<br>
+Xが辞退していない場合は、Xを暫定の当選者とし、それぞれ票を加えていって……<br>
+→暫定の当選者の票数と同じになった者が現れた場合、番号が少なければそのものを暫定の当選者とする。<br>
+→暫定の当選者の票数を超えるものが現れたら、そのものを暫定の当選者とする。<br>
+とすればよい。もしXが辞退する場合は、X以外で最大の得票数を獲得している番号最小の者をYとし、Yを暫定の当選者として上記手順を繰り返せばよい。<br>
+これを候補者全員に行う場合、さっきの各投票者についての部分か、もしくはループ回数自体がネックとなって、全体の時間計算量は\(O(N+M)\)程度で押さえられるだろう。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N, M = list(map(int,input().split()))
+Points = [ 0 for _ in range(N)]
+first_priority = dict()
+for i in range(N):
+    first_priority[i] = set()
+second_priority = [ -1 for _ in range(M)]
+
+for i in range(M):
+    a, b = list(map(int,input().split()))
+    a -= 1
+    b -= 1
+    Points[a] += 1
+    first_priority[a].add(i)
+    second_priority[i] = b
+
+c = list(sorted(Points, reverse=True))
+largest = c[0]
+lid = -1
+second_largest = c[1]
+slid = -1
+for i in range(N):
+    if Points[i] == largest and lid == -1:
+        lid = i
+        break
+for i in range(N):
+    if Points[i] == second_largest and slid == -1 and i != lid:
+        slid = i
+        break
+
+for i in range(N):
+    large = largest
+    tid = lid
+    wasted_votes = len(first_priority[i])
+    if i == lid:
+        large = second_largest
+        tid = slid
+    for p in first_priority[i]:
+        Points[second_priority[p]] += 1
+        if Points[second_priority[p]] == large:
+            tid = min(tid, second_priority[p])
+        elif Points[second_priority[p]] > large:
+            large = Points[second_priority[p]]
+            tid = second_priority[p]
+
+    print(tid + 1)
+
+    for p in first_priority[i]:
+        Points[second_priority[p]] -= 1
+</code></pre>
+実装がちょっと複雑なタイプの問題と言えるかもしれない。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
