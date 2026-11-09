@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC119C Synthetic Kadomatsu</h1>
+問題文は<a href="https://atcoder.jp/contests/abc119/tasks/abc119_c">こちら</a>から。<br>
+門松を作るための竹を低いコストで作ることを考える問題。<br>
+<br>
+Nが充分に小さいので、各竹をグループ分けするのを愚直にやってもそんなにかからないはず。<br>
+マージ後の竹は3つ(仮に竹X,Y,Zとする)+使わない分となっているはずなので、竹が最終的にX,Y,Z,使わないのどれに分類されるかを試しても、単純に考えて\(4^N\)通りで済む。<br>
+あとは各\(4^N\)通りに対して<br>
+・X,Y,Zのどの竹も存在しているか<br>
+・各竹を作るのにかかる合成魔法のコストの合計はどれくらいか<br>
+・X,Y,Zの長さをA,B,Cのどれに合わせるか決め、そのときに必要な延長魔法と短縮魔法の合計を出す<br>
+・すべての魔法に必要な合計コストを出す<br>
+という操作をすればよい。時間計算量は\(O(N \cdot 4^N)\)程度で抑えられる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import itertools
+
+N, A, B, C = list(map(int,input().split()))
+Banboo = []
+for i in range(N):
+    Banboo.append(int(input()))
+
+# 0,1,2は竹のグループ番号、3は使わない竹
+it = itertools.product([0, 1, 2, 3], repeat=N)
+pattern = list(itertools.permutations([0, 1, 2]))
+
+answer = 10 ** 30
+# 竹のグループ分けと、各グループをどの長さに合わせるかを全パターン試す
+for c in it:
+    if not(0 in c and 1 in c and 2 in c):
+        continue
+
+    # 先に合成魔法のコストを算出する
+    marge_mp = 0
+    marge_count = [0, 0, 0, 0]
+    marge_banboos = [0, 0, 0, 0]
+    for i in range(N):
+        marge_count[c[i]] += 1
+        marge_banboos[c[i]] += Banboo[i]
+    for i in range(3):
+        marge_mp += 10 * (marge_count[i] - 1)
+
+    # 延長魔法もしくは短縮魔法を使う合計コストを算出する
+    for p, q, r in pattern:
+        answer = min(answer, marge_mp + abs(A - marge_banboos[p]) + abs(B - marge_banboos[q]) + abs(C - marge_banboos[r]))
+
+print(answer)
+</code></pre>
+力任せに全部探索するっていうのは楽でよい。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
