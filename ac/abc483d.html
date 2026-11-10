@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC483D Glitchy Robot</h1>
+問題文は<a href="https://atcoder.jp/contests/abc483/tasks/abc483_d">こちら</a>から。<br>
+ロボットアームをいっぱいいろんな場所に移動させる問題。<br>
+<br>
+変更箇所は(変更しないというのも含めて)N+1通りの可能性があるが、これらをすべて愚直に検証している余裕はない。<br>
+ある箇所を変更した時、変わらないのはどういう場所かというのに着目する。<br>
+すると、例えば\(A_i\)の符号を反転させたとすると……<br>
+・\(A_{i-1}\)までは変更していない時と同じ処理をする<br>
+・\(-A_i\)だけ進む<br>
+・\(A_{i+1}\)以降の処理を行う（この結果は、「座標0を起点として\(A_{i+1}\)から\(A_{N}\)までの移動処理を行った結果」を\(-A_i\)だけズラした値になる）。<br>
+という感じになる。ただし、\(A_0,A_{N+1}\)はともに0であるとする。<br>
+つまり、\(-A_i\)に関する部分さえどうにかしてしまえば、その前後の部分の処理はほとんど使いまわせるのである。<br>
+よって、各\(A_i\)に対して、「座標0を起点として\(A_i\)から\(A_{N}\)までの移動処理を行った結果」を求めていけばよく、これは後ろから順に処理していけば比較的簡単に、かつ無駄なく計算できる（直前の処理結果を\(A_i\)だけずらしてみればよい）。<br>
+後ろから順にみた後、前から順に上記処理を順に行っていけば、各回について定数時間で計算できると見なせる。全体の時間計算量は\(O(N)\)程度で押さえられるだろう。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+A = list(map(int,input().split()))
+
+# 各Aの要素について、「その要素から移動を行った場合の、最終的な最大値と最小値」を求める
+# (最小値、最大値、最終位置)
+back = [(0, 0, 0)]
+for i in range(N - 1, -1, -1):
+    low, high, fin = back[-1]
+    back.append((min(0, low + A[i]), max(high + A[i], 0), fin + A[i]))
+
+# どれも符号を変更しなかった場合の最小値、最大値を引っ張ってきて、通った座標の数を算出。
+back.reverse()
+low, high, fin = back[0]
+answer = high - low + 1
+
+# 各要素について、A[i]の符号を反転させるとする
+# その結果はA[i-1]までを順序通りにやった結果と、A[i+1]から移動を始めた場合の結果を-A[i]+(現在の座標)だけずらしたものを合わせたものになる
+# 最小値も、その2つの結果のうち小さい方を取ればよい。最大値は大きい方を取ればよい。
+now = 0
+low = 0
+high = 0
+for i in range(1, N):
+    L = min(low, back[i][0] - A[i - 1] + now)
+    H = max(high, back[i][1] - A[i - 1] + now)
+    answer = max(H - L + 1, answer)
+    now += A[i - 1]
+    low = min(low, now)
+    high = max(high, now)
+# 最後の要素を変更した時だけループ外で処理
+L = min(low, -A[-1] + now)
+H = max(high, -A[-1] + now)
+answer = max(H - L + 1, answer)
+
+print(answer)
+</code></pre>
+バグらせずに処理を書こう。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
