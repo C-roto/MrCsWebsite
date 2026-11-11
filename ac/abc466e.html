@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC466E Multiple-Free Sequences</h1>
+問題文は<a href="https://atcoder.jp/contests/abc446/tasks/abc446_e">こちら</a>から。<br>
+特定の数の倍数が登場しないように、数列の初項を定める問題。<br>
+<br>
+各項がMの倍数かどうかだけに関心があり、各項を得る操作は整数の積と和だけで構成されているので、以降各項をMで割った余りだけに注目してみて良い。<br>
+Mの値が小さく、初項としてあり得る組\(M^2\)個をすべてピックアップして検討することができそうに思える。<br>
+ある組\((x,y)\)からスタートし、漸化式によって得られる次の項を\(z = x \times B + y \times A\)として、組\((x,y)\)を組\((y,z(mod M))\)に変更する、という操作を繰り返す。これを繰り返して、組のどちらの数も0にならず、かつどこかでループに突入した段階で、それ以降得られる組のどちらの数も0にはならないことが分かる。<br>
+よって、ループに突入するようなスタートの組はどれくらいあるかを考えれば良い。<br>
+<br>
+上記を愚直にやると大変だが、以下のような工夫をすると案外簡単に終わる。<br>
+まず、\(M^2\)頂点(0辺)のグラフを用意し、各頂点と初項としてあり得る組\((x, y)\)(0 \leqq x, y \leqq M - 1)を1対1で対応させる。<br>
+そして各\(x,y\)について、組\((x,y)\)に対応する頂点から、先に定義した\(z\)を用いて組\((y,z(mod M))\)と表せる頂点へ有向辺を引いていく。<br>
+こうしてできたグラフにおいて、先のループする/しないとか、片方が0であるような頂点に辿りつく/つかないといったことをチェックすればよい。<br>
+このグラフは\(M^2\)頂点\(M^2\)辺を持つ有向グラフであるから、dfsを使えばループの検出も、片方が0の頂点につくかどうかも時間計算量\(O(M^2)\)程度でチェックが可能である。<br>
+詳しいことは実装例を見て欲しいが、サイクルの発見は「未探索/探索途中/確定済み」などで管理すると分かりやすい。また、結果が既に分かっている頂点には対応する結果を格納しておくと分かりやすい。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import sys
+sys.setrecursionlimit(10 ** 7)
+
+# サイクル発見ができるように工夫
+def dfs(v):
+    # もしi=0の頂点に辿り着くなら、Mの倍数になることがある
+    if v < M:
+        loop_check[v] = 2
+        m_multiple[v] = 0
+        return 0
+    # もし既に結果が分かっている場所に辿り着くなら、同じ結果になる
+    if m_multiple[v] >= 0:
+        return m_multiple[v]
+    # 上記のいずれでもなく、かつループした場合、Mの倍数にならないことが確定する
+    if loop_check[v] == 1:
+        m_multiple[v] = 1
+        return 1
+    # ループしない場合はloop_checkを1=探索中に変える
+    loop_check[v] = 1
+    m_multiple[v] = dfs(G[v])
+    # 探索を抜けたらloop_checkを2=確定済みに変える
+    loop_check[v] = 2
+    return dfs(G[v])
+
+M, A, B = list(map(int,input().split()))
+
+# 組(i, j)を頂点M * i + jに、1回の漸化式の操作で移り変わる関係を有向辺にしたグラフG
+G = [ -1 for _ in range(M ** 2)]
+for i in range(M):
+    for j in range(M):
+        p, q = j, (A * j + B * i) % M
+        G[M * i + j] = M * p + q
+
+# -1=未探索、0=Mの倍数になる、1=Mの倍数にならない
+m_multiple = [ -1 for _ in range(M ** 2)]
+# 0=未探索、1=探索中、2=探索済み
+loop_check = [ 0 for _ in range(M ** 2)]
+# 今回のdfsではすべての辺が1回ずつ調べられるので、O(M**2)で終わり
+for i in range(M ** 2):
+    if m_multiple[i] == -1:
+        dfs(i)
+print(sum(m_multiple))
+</code></pre>
+単純なdfsは簡単に再帰が使えて便利だなあ。<br>
+バックトラックとかする時、脳内が崩壊するケースが多いので気をつけたい。<br>
+<br>
+整数の問題かと思ったら急にグラフの問題になって面白かった。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
