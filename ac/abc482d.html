@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC482D Wannabe Zombie</h1>
+問題文は<a href="https://atcoder.jp/contests/abc482/tasks/abc482_d">こちら</a>から。<br>
+最速で全員ゾンビになる問題。<br>
+<br>
+以降、人\(i-1,i+1\)についてはいない場合もあるが適宜上手く読み替えて欲しい。<br>
+<br>
+人\(i\)がゾンビになった場合、最速でゾンビになろうと思ったら全員で人\(i\)の方向に向かって走るのが最速になるはずである（直観的には、もしあえて立ち止まったり、ゾンビと逆方向に進む方が早くなるとしたら、その行動をゾンビの方に進むものに置き換えた方がより早くゾンビ化する）。<br>
+よってゾンビ以外の全員は、全員がゾンビのいる方に向かって歩いていけばよい。<br>
+後からゾンビになった者は、ゾンビになった時点で転進し、そのまま端の人まで歩けばよい。<br>
+<br>
+人\(i-1,i+1\)がゾンビ化するまでは、全員が最初のゾンビの元に向かって歩くので、人\(i-1\)と人\(1\)の距離や、人\(i+1\)と人\(N\)の距離は変わらない。人\(i-1,i+1\)がゾンビ化して転進した後、1秒ごとに2ずつ縮まっていく。<br>
+よって、人\(i-1\)がゾンビ化してから人\(1\)がゾンビ化するまでの時間は、この2者の距離を\(n_1\)としたとき、最適に行動した場合には\(\frac{n_1}{2}\)となる。<br>
+人\(i+1\)がゾンビ化してから人\(N\)がゾンビ化するまでの時間は、2者間の距離を\(n_2\)とした場合に\(\frac{n_2}{2}\)となる。<br>
+状況から見て最後にゾンビ化するのは人\(1\)もしくは人\(N\)だから、最終的にかかる時間としては……<br>
+・人\(i-1\)がゾンビ化するまでの時間+\(\frac{n_1}{2}\)<br>
+・人\(i+1\)がゾンビ化するまでの時間+\(\frac{n_2}{2}\)<br>
+のうち、長い方となる。b<br>
+<br>
+最初にゾンビだったものはどうするか迷うところだ。<br>
+人\(i\)と人\(i-1\)との距離を\(m_1\)とし、人\(i\)と人\(i+1\)との距離を\(m_2\)とする。<br>
+もし左右のどちらかに常に動き続ける場合は、人\(i-1,i+1\)のいずれかとの距離が縮まっていき、もう片方との距離は変わらないわけなので、一旦どちらかとの距離を完全に詰めて、そのあともう片方との距離を詰めに行くのが最適となる。<br>
+よって、人\(i-1\)から先に詰めたら、人\(i-1\)は\(\frac{m_1}{2}\)時間でゾンビ化し、人\(i+1\)は\(\frac{m_1}{2} + \frac{m_2}{2}\)時間でゾンビ化する。逆も同様になる。<br>
+いずれの場合も、遅い方がゾンビ化するのには\(\frac{m_1}{2} + \frac{m_2}{2}\)時間かかり、長い方の時間をこれ以上早くすることはできない（立ち止まるなどして両者からとも近づく状態にしても、結局余計に時間がかかってしまう）。<br>
+<br>
+以上より、先に人\(i-1\)側から詰めたときは<br>
+・\(\frac{m_1}{2}\)+\(\frac{n_1}{2}\)<br>
+・\(\frac{m_1}{2} + \frac{m_2}{2}\)+\(\frac{n_2}{2}\)<br>
+のうちより長い方の時間がかかる(これを\(t_1\)とする)し、逆から詰めたときは<br>
+・\(\frac{m_2}{2}\)+\(\frac{n_2}{2}\)<br>
+・\(\frac{m_1}{2} + \frac{m_2}{2}\)+\(\frac{n_1}{2}\)<br>
+のうちより長い方の時間がかかる(これを\(t_2\)とする)。<br>
+最終的に最短の時間は、\(t_1,t_2\)のうち短い方である。<br>
+これらの距離は座標の引き算で出せるので、各人につき定数時間で計算できると見なせる。<br>
+全体の時間計算量は\(O(N)\)程度で押さえられ、充分に高速である。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+X = list(map(int,input().split()))
+
+for i in range(N):
+    m_1 = 0
+    m_2 = 0
+    n_1 = 0
+    n_2 = 0
+    if i != 0:
+        m_1 = abs(X[i] - X[i - 1]) // 2
+        n_1 = abs(X[0] - X[i - 1]) // 2
+    if i != N - 1:
+        m_2 = abs(X[i] - X[i + 1]) // 2
+        n_2 = abs(X[-1] - X[i + 1]) // 2
+    print(min(m_2 + max(m_1 + n_1, n_2), m_1 + max(m_2 + n_2, n_1)))
+</code></pre>
+コードが単純な分考察がちょっと重い問題。<br>
+証明があまり厳密に詰められていないが、いわゆる「交換しても悪化しない」論法が適用できるはずである。<br>
+すべての座標が偶数から始まることが明記されているので、偶奇が合わなくてどちらかが立ち止まる、とか、行き過ぎちゃってゾンビ化できなかった、みたいなことが起きない（すべての点が動き続ければ常にすべての点の偶奇は一致するため）。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
