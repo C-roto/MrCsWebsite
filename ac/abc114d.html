@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC114D 756</h1>
+問題文は<a href="https://atcoder.jp/contests/abc114/tasks/abc114_d">こちら</a>から。<br>
+ある数の階乗の約数であって、約数がちょうど75個あるような数がいくつあるかを求める問題。<br>
+<br>
+約数が\(75=5 \times 5 \times 3\)個ある数は、素因数分解の指数と約数の個数に関するルールから、以下のような数に絞られる。<br>
+・ある素数\(p\)を用いて\(p^74\)と表せる数<br>
+・相異なる素数\(p,q\)を用いて\(p^{24} q^2\)もしくは\(p^{14} q^4\)と表せる数<br>
+・互いに相異なる素数\(p,q,r\)を用いて\(p^4 q^4 r^2\)と表せる数<br>
+よって、\(N!\)の約数であって、このような数がいくつあるかを求めればよい。<br>
+まず、\(N!\)を素因数分解した結果を求める。これは1以上N以下の素因数分解の結果をそのまま合わせればよい。<br>
+次に、先のような形の素数の積で表せるような数を列挙し、すべて試していく。\(N!\)は\(N\)以下の素数しか素因数に持たないから、\(N\)以下の素数をすべて列挙してそれらについて試せばよい。<br>
+勿論実際に掛け合わせて約数になるのかチェックしていると大変なので、列挙した各素数の組に対して、その素数が\(N!\)にいくつ含まれているかを参照する形で算出する。<br>
+重複を数えないように注意して実装すれば答えが出る。実装例は以下の通り。<br>
+<pre><code class="language-python">
+def proddiv_frac(n):
+    res = dict()
+    for i in range(1, n + 1):
+        m = i
+        for j in range(2, i + 1):
+            if j ** 2 > i:
+                break
+            while m % j == 0:
+                if j not in res:
+                    res[j] = 1
+                else:
+                    res[j] += 1
+                m //= j
+        if m != 1:
+            if m not in res:
+                res[m] = 1
+            else:
+                res[m] += 1
+    return res
+
+def elatos(n):
+    is_prime = [ True for _ in range(n + 1)]
+    is_prime[0] = False
+    is_prime[1] = False
+    for i in range(2, n + 1):
+        if is_prime[i]:
+            for j in range(2 * i, n + 1, i):
+                is_prime[j] = False
+    res = list()
+    for i in range(n + 1):
+        if is_prime[i]:
+            res.append(i)
+    return res
+
+N = int(input())
+D = proddiv_frac(N)
+P = elatos(N)
+
+one_answer = 0
+for p in P:
+    if D[p] >= 74:
+        one_answer += 1
+
+two_answer = 0
+for p in P:
+    for q in P:
+        if p == q:
+            continue
+        if D[p] >= 24 and D[q] >= 2:
+            two_answer += 1
+        if D[p] >= 4 and D[q] >= 14:
+            two_answer += 1
+
+three_answer = 0
+for p in P:
+    for q in P:
+        for r in P:
+            if p == q or q == r or r == p:
+                continue
+            if D[p] >= 4 and D[q] >= 4 and D[r] >= 2:
+                three_answer += 1
+three_answer //= 2
+
+print(one_answer + two_answer + three_answer)
+</code></pre>
+エラトステネスのふるいと約数の性質。高校数学って感じの問題かも。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
