@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC392E Cables and Servers</h1>
+問題文は<a href="https://atcoder.jp/contests/abc392/tasks/abc392_e">こちら</a>から。<br>
+サーバー同士がすべて繋がるようにケーブルを繋ぎかえる問題。<br>
+<br>
+頂点同士がただ1つの連結成分を為すように辺を繋ぎなおしていく。<br>
+まず、橋(つまり、ここを切ると連結成分が増えてしまうような辺)を切る必要はない。連結成分の数が操作の前後で変化しないからである。<br>
+よって、自己辺もしくは多重辺となっている辺か、或いはサイクルの一部を為すような辺についてのみ切る候補(余剰辺とする)に入れればよい。<br>
+一見すると複雑だが、要するにUnion-Find操作を繰り返していき、ある辺が既に同じ連結成分に属している2頂点間を結んでいた場合は、それを余剰辺とすればよい。<br>
+ケーブルを見る順序に依らず、最終的に連結する成分同士は変わらず、各連結成分が持つ余剰辺の数は変化しない(要証明)ので、番号順にチェックしていくことにする。<br>
+後は、余剰辺を繋ぎかえていけばよい。基本的に、余剰辺が一番多い連結成分から初めて、その連結成分の余剰辺を1つ選び、片方の端を次に余剰辺が多い連結成分のどこかの頂点に繋ぐことを繰り返す。<br>
+すると、1回ごとに1ずつ連結成分の数が減っていき、かつ途中で余剰辺が不足することもない。<br>
+最終的な操作回数は最初の連結成分の個数から1を減じたものになる。<br>
+すべての辺を見て余剰辺をピックアップし、余剰辺の個数順に連結成分をソートし、連結成分の個数-1個の余剰辺について繋ぎ変えを行えばよいから、時間計算量は\(O(M\log_{}{M}+N)\)程度で押さえられるはずである。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import collections
+
+class DisjointSetUnion:
+    def __init__(self, N: int):
+        self.number = N
+        self.parent = [ -1 for _ in range(N)]
+        self.size = [ 1 for _ in range(N)]
+
+    def find(self, v : int):
+        compress = []
+        while self.parent[v] != -1:
+            compress.append(v)
+            v = self.parent[v]
+        for c in compress:
+            self.parent[c] = v
+        return v
+
+    def union(self, u: int, v: int):
+        ru = self.find(u)
+        rv = self.find(v)
+        if ru != rv:
+            if self.size[ru] < self.size[rv]:
+                ru, rv = rv, ru
+            self.parent[rv] = ru
+            self.size[ru] += self.size[rv]
+            return True
+        return False
+
+    def same(self, u: int, v: int):
+        return self.find(u) == self.find(v)
+
+N, M = list(map(int,input().split()))
+# 余ったケーブルをメモっていく
+Over_Cables = dict()
+uf = DisjointSetUnion(N)
+for i in range(M):
+    a, b = list(map(int,input().split()))
+    a -= 1
+    b -= 1
+    t = uf.union(a, b)
+    # tがFalseの場合は、union操作時に既に同一連結成分にある
+    # よってケーブルは余る(余るケーブルはそれほど順が重要でない)
+    if not t:
+        Over_Cables[i] = (a, b)
+
+Group = dict()
+answer = 0
+# 連結成分のリーダーをすべてピックアップする
+for i in range(N):
+    if uf.find(i) == i:
+        Group[i] = set()
+        answer += 1
+# 余ったケーブルがどの連結成分に属しているかピックアップ
+for i in Over_Cables.keys():
+    a, b = Over_Cables[i]
+    r = uf.find(a)
+    Group[r].add(i)
+
+que = collections.deque()
+print(answer - 1)
+first_flag = True
+# 連結成分のうち、多く余ったケーブルを持つ順に、次に多くケーブルが余っているところに繋いでいく
+for k, v in sorted(Group.items(), key = lambda x: len(x[1]), reverse=True):
+    for s in v:
+        que.append(s)
+    if first_flag:
+        first_flag = False
+        continue
+    c = que.popleft()
+    a, b = Over_Cables[c]
+    print(c + 1, b + 1, k + 1)
+</code></pre>
+考えてみれば簡単な問題なんだけど、疲れてると困る問題かも。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
