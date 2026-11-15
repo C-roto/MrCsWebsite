@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC484D Move One Card Left</h1>
+問題文は<a href="https://atcoder.jp/contests/abc484/tasks/abc484_d">こちら</a>から。<br>
+数列のある項を1つ選んで前方に移動させ、新たな数列がいくつできるかを調べる問題。<br>
+<br>
+\(S\)を空集合とする。\(i=1,2,...N\)について、次の操作を繰り返すことを考える。<br>
+・\(j=1,2,...,i\)について順に、\(A_i\)を問題中の\(X_j\)とした数列\(X\)が、\(S\)の要素でなければ\(S\)に加える。<br>
+この操作をすべて終えたのちの\(S\)の要素数が答えである。<br>
+尤も、これを愚直に行うことは、\(N\)の値が増えれば増えるほど難しくなる。<br>
+ここで、上記の操作について、操作順があまり問題に関与しない（どうせ全パターン調べているから）ことと、\(j=i\)の場合の結果は結局全部一緒であることに注目すると、以下のように手順を変えても良い。<br>
+\(i=N,N-1,...2\)について、この順に次の操作を繰り返すことを考える。<br>
+・\(j=1,2,...,i - 1\)について順に、\(A_i\)を問題中の\(X_j\)とした数列\(X\)が、\(S\)の要素でなければ\(S\)に加える。<br>
+この\(S\)の要素数に(どの要素も動かさない場合の)1を加えた値が、求める値である。<br>
+この言い換えによって、問題の見通しが実は飛躍的に良くなる。<br>
+<br>
+まず、\(i\)を1つ選んだ時に、\(S\)にどれだけの数の要素が増えるかを考える。<br>
+自分の1つ前の要素に着目して、以下のような場合分けを行う。<br>
+・\(A_i = A_{i - 1}\)の場合、\(A_{i - 1}\)を選んで行う操作によってできる数列の集合と、\(A_i\)を選んで行う操作によってできる数列の集合は一致する。よって、\(i\)についての操作が最終的に\(S\)に寄与する分は0とみなせる。<br>
+・\(A_i \neq A_{i - 1}\)の場合、\(A_i\)よりも左にある(つまり添え字が小さい)項のすぐ左に\(A_i\)を移動させると新しい数列ができる。これは、すでに\(S\)に含まれている数列と被ることはない(\(A_i \neq A_{i-1}\)より、新しくできる数列は、これまでできた数列と\(X_i\)が少なくとも異なるため)。<br>
+あとは、この\(i\)を選んだ時の操作でできる数列同士の中の被りを除けばよく、これは\(A_i\)より左にあって、かつ\(A_i\)と等しい値の項の個数だけある。<br>
+よって、\(A_i\)を自身より左に入れる方法の数(つまり\(i-1\))から\(A_i\)と値が等しい項の数を除けば、最終的な\(S\)への寄与分が算出できる。値が等しい項の数はバケットソートの要領で保持しておくことが可能なので、この計算は定数時間でできると見なせる。<br>
+以上より、\(i\)について定数回で寄与分が計算でき、時間計算量は\(O(N)\)程度で押さえられる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+A = list(map(int,input().split()))
+
+bucket = [ 0 for _ in range(N + 1)]
+bucket[A[0]] += 1
+for i in range(1, N):
+    bucket[A[i]] += 1
+
+answer = 0
+bucket[A[-1]] -= 1
+for i in range(N - 1, 0, -1):
+    if A[i - 1] != A[i]:
+        answer += i - bucket[A[i]]
+    bucket[A[i - 1]] -= 1
+print(answer + 1)
+</code></pre>
+制約を見て答えを絞るのはそんなに好みではないが、今回は目に入って、考えちゃって、それが突破口になっちゃったんだから仕方がない。<br>
+つまり、\(1 \leqq A_i \leqq N\)という条件から、バケットソートの要領で、値ごとに分類してどうこうという手段が取れそうだなと思ってしまったわけだ。<br>
+実際考察していくと、「あるタイミングである数がいくつ出てきたか」が重要になると分かったので、とっかかりというのは大事だなと思う次第。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
