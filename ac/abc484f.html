@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC484F Make them monochrome</h1>
+問題文は<a href="https://atcoder.jp/contests/abc484/tasks/abc484_f">こちら</a>から。<br>
+数列の一部をいじって、ある区間の間の未定義の値を自由に変えて区間内のすべての値を等しくできるか考える問題。<br>
+<br>
+区間同士の併合操作に工夫をすると、セグ木に乗せることができて、それで終わり。<br>
+<br>
+もう少し丁寧に書く。<br>
+2つの正の整数\(l, r(1 \leqq l \leqq r \leqq N)\)について、「\(A_l, A_{l + 1}, ..., A_r\) に含まれる相異なる正の整数の種類数」を\(C_{(l, r)}\)個としよう。さらに、\(C_{(l, r)} = 1\)のときは、\(A_l, A_{l + 1}, ..., A_r\)に含まれる正の整数はただ1種類だけであるから、その正の整数を\(c\)と書くことにしよう。<br>
+ここで、順序対\(S_{(l,r)}\)を以下のように定義する。<br>
+\(S_{(l,r)} = (0, -1) (C_{(l, r)} = 0のとき)\)<br>
+\(S_{(l,r)} = (1, c) (C_{(l, r)} = 1のとき)\)<br>
+\(S_{(l,r)} = (2, -1) (C_{(l, r)} \geqq 2のとき)\)<br>
+すると、問題でクエリ2が与えられたときは、愚直に集合を計算する必要はなく、単に\(S_{(l,r)}\)の第1要素が1以下であれば"Yes"を、2以上なら"No"を返せばよい（もし\(S_{(l,r)} \geqq 2\)のときは既に区間内に相異なる正の整数が2種類以上あることになり、問題文の操作だけでは1種類になりようがない。\(S_{(l,r)} = 1\)ならすべての\(-1\)を\(c\)に統一すればよいし、\(S_{(l,r)} = 0\)なら適当な正の整数を選んでその数に統一すればよい）。<br>
+<br>
+そして、集合\(T\)を\(T = \{ (0, -1), (2, -1), (1, 1), (1, 2), ..., (1, max(A))}\)として定義し、集合\(T\)上に以下のような演算\(*\)を定めると、\(T,*\)は可換モノイドになっている。<br>
+\(任意のt \in Tに対し、(0,-1) * t = t * (0, -1) = t\)<br>
+\(任意のt \in Tに対し、(2,-1) * t = t * (2, -1) = t\)<br>
+\(任意の\(1 \leqq x \leqq max(A)\)に対し、 (1, x) * (1, x) = (1, x)\)<br>
+\(任意の\(1 \leqq x < y \leqq max(A)\)に対し、 (1, x) * (1, y) = (1, y) * (1, x) = (2, -1)\)<br>
+演算のWell-deifined性や結合性、交換性、単位元の存在について詳細な証明は省略する（\(*\)の単位元は(0, -1)である）。<br>
+ともあれ、モノイドなのでこれはセグメント木に乗せることができる。<br>
+よって、数列の各区間に対応する順序対同士をセグメント木に乗せ、1点更新と区間和(今回は"*"だが)を取る操作を普通にやればいい。<br>
+順序対同士の演算は数値比較を最大で定数回やればできるから、基本的に全体の時間計算量は\(O((N + Q)\log_{}{N}\)で押さえることができる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+def calcurate_pair(t_1, t_2):
+    if t_1 == (0, -1):
+        return t_2
+    elif t_2 == (0, -1):
+        return t_1
+    elif t_1 == (2, -1) or t_2 == (2, -1):
+        return (2, -1)
+    else:
+        if t_1[1] == t_2[1]:
+            return t_1
+        else:
+            return (2, -1)
+
+#1点更新、区間最大値を求めるセグメント木のコード
+class segmentTree:
+    #segmentTree(データ数, 実データの順)って感じ
+    def __init__(self, dataPieces, data):
+        self.dataPieces = dataPieces
+        self.data = data
+        cellnumpow = 0
+        while not(2 ** (cellnumpow - 1) < dataPieces <= 2 ** cellnumpow):
+                cellnumpow += 1
+        self.cnp = cellnumpow
+        self.contena = [ (0, -1) for _ in range(2 ** (cellnumpow + 1))]
+        for i in range(dataPieces):
+            if data[i] == -1:
+                self.contena[2 ** cellnumpow + i] = (0, -1)
+            else:
+                self.contena[2 ** cellnumpow + i] = (1, data[i])
+        cellnumpow -= 1
+        while cellnumpow >= 0:
+            c = 2 ** cellnumpow
+            for j in range(c):
+                self.contena[c + j] = calcurate_pair(self.contena[2 * (c + j)], self.contena[2 * (c + j) + 1])
+            cellnumpow -= 1
+
+    #1点更新
+    def update(self, n: int, x: int):
+        cnp = self.cnp
+        if x == -1:
+            self.contena[2 ** cnp + n - 1] = (0, -1)
+        else:
+            self.contena[2 ** cnp + n - 1] = (1, x)
+        now = 2 ** cnp + n - 1
+        while now > 1:
+            if now % 2 == 0:
+                now //= 2
+            else:
+                now -= 1
+                now //= 2
+            self.contena[now] = calcurate_pair(self.contena[2 * now], self.contena[2 * now + 1])
+
+    #閉区間[l,r]の最大値を求める(開区間にしたい場合は都度調整)
+    def range_find(self, range_l: int , range_r: int):
+        segment_represent = (0, -1)
+        cnp = self.cnp
+        now_l = 2 ** cnp + (range_l - 1)
+        now_r = 2 ** cnp + (range_r - 1)
+        while now_l <= now_r:
+            if now_l % 2 == 1:
+                segment_represent = calcurate_pair(segment_represent, self.contena[now_l])
+                now_l += 1
+                now_l //= 2
+            else:
+                now_l //= 2
+
+            if now_r % 2 == 0:
+                segment_represent = calcurate_pair(segment_represent, self.contena[now_r])
+                now_r //= 2
+                now_r -= 1
+            else:
+                now_r -= 1
+                now_r //= 2
+        return segment_represent
+
+N, Q = list(map(int,input().split()))
+A = list(map(int,input().split()))
+seg = segmentTree(N, A)
+for _ in range(Q):
+    t, i, x = list(map(int,input().split()))
+    if t == 1:
+        seg.update(i, x)
+    else:
+        if seg.range_find(i, x) == (2, -1):
+            print("No")
+        else:
+            print("Yes")
+</code></pre>
+どう見てもE問題より簡単。<br>
+ひらめきとちょっとした検証だけで方向性が固まる問題と言えるだろう。<br>
+何がセグ木に乗るかちゃんと考えろ、というのはACLでも説明があった通りで、今回はまさにちゃんと考えれば解ける問題だった。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
