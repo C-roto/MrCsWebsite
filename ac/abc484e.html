@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC484E Subsegment Sum Finder</h1>
+問題文は<a href="https://atcoder.jp/contests/abc484/tasks/abc484_e">こちら</a>から。<br>
+区間和がある値以上ある値以下になるような区間の個数を数える問題。<br>
+<br>
+真正面から数えていくのは難しい。<br>
+こういうのは「どうやって手を抜くか」を考えるのが肝要だ。つまり、如何に1回の計算の結果を使いまわせるか、という方針で考える。<br>
+例えば1番目の要素を区間の左端に持つような区間の個数は、最初の項から累積和を取っていき、累積和がL以上R以下であるものがいくつあるかを数えれば計算できる。<br>
+2番目の要素についても同様に考えればよいが、ここでさっき1番目の要素から取った累積和を使いまわせる。ズバリ、「2番目の要素を左端に持ち、区間和がL以上R以下である区間」は、「1番目の要素を左端に持ち、区間和が\(L+A_1\)以上\(R+A_1\)以下である区間」と1対1に対応するのだ。<br>
+例えば以下のような入力例を考える。<br>
+<pre><code>
+4 1 3<br>
+1 1 2 3<br>
+</code></pre>
+この入力例において、「2番目の要素を左端に持ち、かつ総和が1以上3以下の区間」を考える。<br>
+すると、これは「1番目の要素を左端に持ち、かつ総和が2以上4以下である区間」を調べてやることによって、最後に1番目の要素(1)を除いてやると欲しい区間が求められるわけである。<br>
+こういうようなことを各要素に対して行っていけばよい。<br>
+実装上は1番目の要素からの累積和を取り(\(i\)番目までの累積和を\(S_i\)とする)、要素を逆順に見ていき、そのときのL,Rをさっきみたいに補正したうえで、「\(S_i,S_{i+1},...,S_N\)の中で、L以上R以下の要素がいくつあるか」というクエリに答えればよい。<br>
+これはsortedContainersなどを使えば1回あたり時間計算量\(O(\log_{}{N})\)程度でできる。<br>
+全体としても\(O(N\log_{}{N})\)程度で問題を解くことができる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import sortedcontainers
+
+N, L, R = list(map(int,input().split()))
+A = list(map(int,input().split()))
+
+T = sortedcontainers.SortedList()
+S = [A[0]]
+for i in range(1, N):
+    S.append(S[-1] + A[i])
+Query = [(S[0], L, R)]
+for i in range(1, N):
+    L += A[i - 1]
+    R += A[i - 1]
+    Query.append((S[i], L, R))
+
+answer = 0
+while Query:
+    e, l, r = Query.pop()
+    T.add(e)
+    x = T.bisect_left(l)
+    y = T.bisect_right(r)
+    answer += y - x
+print(answer)
+</code></pre>
+真正面からぶつかってくるような問題文だが、或いはだからこそなのか、基礎的な計算量減少のためのテクニックや考察が非常に有効な問題。<br>
+同回のD問題と比べると楽な実装を考えるのが大変で、F問題と比べると最初のひらめきがすぐ見つけにくい問題か。個人的にはD,Fより思いつくのに時間はかかった。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
