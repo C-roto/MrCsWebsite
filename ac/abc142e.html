@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC142E Get Everything</h1>
+問題文は<a href="https://atcoder.jp/contests/abc142/tasks/abc142_e">こちら</a>から。<br>
+全ての箱を開けるために買う必要がある鍵の、合計の最小費用を求める問題。<br>
+<br>
+鍵側をすべて試すことは難しい。<br>
+箱の候補が少ないので、こっちをどうこうすることを考えてみる。<br>
+<br>
+箱すべての開閉状況を表すビット列を用意する。すなわち、箱\(i\)が開錠可能な時に、かつその時に限り下\(i - 1\)ビット目が立っているビット列を用意する。<br>
+これを使うと、いわゆるbitDPの要領で問題を解くことが可能である。<br>
+今用意した各箱の開閉状態に対応するビット列を頂点とするグラフを用意する。<br>
+各鍵について、その鍵を買うことで、ある頂点に対応する状態から別の頂点に対応する状態に変化する場合、その2頂点間にその鍵の値段と等しい重さの有向辺を張る。<br>
+こうすると、辺の数は高々\(M \times 2^N\)個で済むので、今回の制約下なら充分にグラフ構築にかかる時間は短い。<br>
+あとはこうして作ったグラフ上で「どの箱も開閉不可能な状態に対応する頂点」から「どの箱も開閉可能な状態に対応する頂点」へと遷移する最短経路を求めればよく、Dijkstra法などが使えることだろう。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import heapq
+
+N, M = list(map(int,input().split()))
+
+G = [ set() for _ in range(2 ** N)]
+for _ in range(M):
+    a, b = list(map(int,input().split()))
+    C = list(map(int,input().split()))
+    go_to = 0
+    for c in C:
+        go_to |= 2 ** (c - 1)
+    for i in range(2 ** N):
+        if i == (i | go_to):
+            continue
+        G[i].add((i | go_to, a))
+
+dist = [ 10 ** 30 for _ in range(2 ** N)]
+
+que = []
+heapq.heapify(que)
+dist[0] = 0
+heapq.heappush(que, [dist[0], 0])
+
+while que:
+    d, v = heapq.heappop(que)
+
+    if d > dist[v]:
+        continue
+
+    for u, w in G[v]:
+        if dist[u] > dist[v] + w:
+            dist[u] = dist[v] + w
+            heapq.heappush(que, [dist[u], u])
+
+if dist[-1] == 10 ** 30:
+    print(-1)
+else:
+    print(dist[-1])
+</code></pre>
+基礎的なbitDPの問題だけど、僕が最初に見て感動した問題もこんな感じの雰囲気がある問題だった。<br>
+実はグラフで考えると解きやすくなる、っていうのはやっぱり面白い。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
