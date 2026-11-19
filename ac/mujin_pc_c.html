@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>MUJINプログラミングチャレンジ C オレンジグラフ</h1>
+問題文は<a href="https://atcoder.jp/contests/mujin-pc-2016/tasks/mujin_pc_2016_c">こちら</a>から。<br>
+辺をオレンジ色に着色していき、オレンジ色のみでできた奇閉路が完成しないようにする方法の数を答える問題。<br>
+<br>
+奇閉路といえば二部グラフ。<br>
+というわけで、限界まで操作を行ったグラフは、オレンジの辺について2部グラフに少なくともなっているはずである。<br>
+なので、すべての頂点を白もしくは黒のいずれかに塗り分け、両端点の色が違う辺だけを貪欲に取っていくことを考える。辺を取る順番によって取れなくなる辺はないので、頂点の塗り分け方1つにつき必ずただ1つだけ「両端点の色が違う辺をすべて、かつそれに限りオレンジ色に塗ったグラフ」ができる。このようなグラフを、その塗り分け方に対する「極大にオレンジなグラフ」と呼ぶことにしよう。<br>
+もう少し形式的には、\(N\)ビットのビット列\(X\)があって、\(X\)の下\(i(i=1,2,...N)\)桁目が0のとき頂点\(i\)を白色に、1のとき黒色に塗り分けるとしたとき、各\(N\)ビットのビット列たちは、それぞれに固有の頂点の塗り分け方と対応していると見ることができる。<br>
+その各ビット列に対して、ただ1つ極大にオレンジなグラフが定まる。極大にオレンジなグラフ全体の集合を\(M\)とする。<br>
+<br>
+さて、問題の条件を満たすように限界まで操作を行ったグラフは、\(M\)の元である。<br>
+限界まで操作を行ったグラフは、オレンジの辺に関して二部グラフとなっていることは最初に確認した通りである。ここで、もしこのグラフが\(M\)の元でないとすると、(同色両端点の辺を結んでいない以上)両端点の色が違うのにオレンジ色に塗られていない辺があり、「両端点が違うのにオレンジではない辺」が存在するので矛盾。よって、限界まで操作を行ったグラフである、という仮定に矛盾する。<br>
+<br>
+また、\(M\)の元であってオレンジの辺について連結であるものは、限界まで操作を行ったグラフである。<br>
+まず、\(M\)の元はその辺の塗り方から、オレンジの辺についての二部グラフなので、問題文の条件を満たすように塗り分けているものである。ここで、このグラフはオレンジの辺について連結なグラフであることから、各頂点の彩色はすべて反転させるものを除き一意に定まっていることに注意する。<br>
+もしこのグラフについてこれ以上操作ができると仮定すると、操作後も二部グラフであるから、新しく結んだ2頂点は互いに異なる色である。すると、これは\(M\)の元を選ぶ時点で両端点が違う辺をすべてオレンジ色で塗ったという仮定に反する。<br>
+<br>
+加えて、極大にオレンジなグラフであって連結でないものは、問題文の条件を満たさない（つまり、まだ奇閉路を加えないように着色操作が可能である）。<br>
+これは元のグラフが連結であることから直ちに従う。つまり、非連結な極大にオレンジなグラフの、2つの互いに素な連結成分の間には元のグラフの間に辺があり、これ1本だけをくっつけても奇閉路はおろか閉路もできない。よって、まだオレンジに塗ることができる辺があることになる。<br>
+<br>
+以上の考察より、\(M\)の元であって連結なものの集合と、問題文の操作を限界まで行ったグラフの集合は一致する。<br>
+よって、\(M\)の元であって連結なものの集合を求めればよい。<br>
+これは各頂点の塗り分け方に対して、極大にオレンジなグラフを構成し、それが連結であるかどうかを見て、連結であれば選んだ辺の集合をメモしておく。<br>
+最終的にメモされた、相異なる選んだ辺の集合の個数が求める答えである。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+class DisjointSetUnion:
+    def __init__(self, N: int):
+        self.number = N
+        self.parent = [ -1 for _ in range(N)]
+        self.size = [ 1 for _ in range(N)]
+
+    def find(self, v : int):
+        compress = []
+        while self.parent[v] != -1:
+            compress.append(v)
+            v = self.parent[v]
+        for c in compress:
+            self.parent[c] = v
+        return v
+
+    def union(self, u: int, v: int):
+        ru = self.find(u)
+        rv = self.find(v)
+        if ru != rv:
+            if self.size[ru] < self.size[rv]:
+                ru, rv = rv, ru
+            self.parent[rv] = ru
+            self.size[ru] += self.size[rv]
+
+    def same(self, u: int, v: int):
+        return self.find(u) == self.find(v)
+
+def max_biparete(state, edges):
+    res = []
+    for p, q, n in edges:
+        if ((state >> p) & 1) ^ ((state >> q) & 1) == 1:
+            res.append(n)
+    return tuple(res)
+
+N, M = list(map(int,input().split()))
+Edges = []
+for i in range(M):
+    a, b = list(map(int,input().split()))
+    a -= 1
+    b -= 1
+    Edges.append((a, b, i))
+
+answer = set()
+for i in range(2 ** N):
+    t = max_biparete(i, Edges)
+    uf = DisjointSetUnion(N)
+    renketsu = 0
+    for i in t:
+        p, q, x = Edges[i]
+        if not(uf.same(p, q)):
+            uf.union(p, q)
+            renketsu += 1
+    # 連結な二部グラフになることと、操作がこれ以上できないことは同値
+    if renketsu == N - 1:
+        answer.add(t)
+print(len(answer))
+</code></pre>
+初手第一歩の「bit全探索でいけるよ」というヒントがなければ多分永久に詰んでいたタイプの問題。それが分かっていなかったら1Dでは済まない難易度じゃないだろうか。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
