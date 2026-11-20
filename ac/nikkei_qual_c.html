@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>全国統一プログラミング王決定戦予選 C Different Strokes</h1>
+問題文は<a href="https://atcoder.jp/contests/nikkei2019-qual/tasks/nikkei2019_qual_c">こちら</a>から。<br>
+料理を食べることによって得られる幸福度について、自分と相手の差が最大になるように食べる問題。<br>
+<br>
+一見全通り試すしかないように見えるが、お互いに「自分の幸福度-相手の幸福度」が最大になるように動くと考えたとき、上手く使える評価関数がある。<br>
+実は、「その料理を高橋君が食べたときの幸福度+その料理を青木さんが食べたときの幸福度」が大きい順にとっていくのが、お互いの最善手になる。<br>
+厳密な証明はおいておくが、高橋君と青木さんがある料理の選び方をしたときに、実際に数式に書いて交換してみると分かりやすい。<br>
+例えば料理が3つあって、高橋君が各料理を食べたときの幸福度が\(p_1,p_2,p_3\)だったとし、青木さんが各料理を食べたときの幸福度は\(q_1,q_2,q_3\)であるとしよう。<br>
+もし\(p_1 + q_1 < p_2 + q_2 < p_3 + q_3\)だったと仮定すると、高橋君が料理3を選ばなかったあらゆる場合において、最初に選ぶ料理を料理3に変えた方がより最終の幸福度差は大きくなることが分かる。<br>
+（例えば高橋君が料理3を選ばず、料理1と料理2を選んだ場合は2人の幸福度の差は\(p_1 + p_2 - q_3\)となるが、高橋君が最初に料理3を選んだ場合は、最終の幸福度差は\(p_1 + p_3 - q_2\) もしくは \(p_2 + p_3 - q_1\)になる。仮定より、この2つはいずれも\(p_1 + p_2 - q_3\)よりは大きいので、最初に料理3を選んでおくべきである）<br>
+これを繰り返していくと、結局幸福度の和が大きい順にとっていくのがお互いに最善なのである。<br>
+これが分かれば最初に和の大きい順に整理しておけばよいわけなので、全体の時間計算量は\(O(N\log_{}{N})\)程度で抑えられる。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N = int(input())
+dishes = []
+for _ in range(N):
+    a, b = list(map(int,input().split()))
+    dishes.append((a + b, a , b))
+dishes.sort(key=lambda x: x[0])
+
+turn = 0
+alice = 0
+bob = 0
+while dishes:
+    p, a, b = dishes.pop()
+    if turn % 2 == 0:
+        alice += a
+    else:
+        bob += b
+    turn += 1
+    turn %= 2
+print(alice - bob)
+</code></pre>
+NoviStepsで貪欲法の例題として挙げられていた。<br>
+ずーっとどういう評価関数があれば貪欲ができるのかまったくピンときてなかったが、数式を書き下したらすぐに分かったので、めんどくさくても数式を書いて考察するのは絶対にやった方が良いと思った。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
