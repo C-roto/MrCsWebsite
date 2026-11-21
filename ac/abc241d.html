@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC241D Sequence Query</h1>
+問題文は<a href="https://atcoder.jp/contests/abc241/tasks/abc241_d">こちら</a>から。<br>
+数列の特定の値から見て何番目かの値を答える問題。<br>
+<br>
+Sortedcontainer.SortedListを使えば解ける。<br>
+挿入と、大きさを見てのサーチが両方ともそこそこの早さで行えるというところにありがたさがある。<br>
+公式のsortedcontainersライブラリを使っても定数倍があまり気にならない程度の速度で終わるだろう。<br>
+大きい順/小さい順にk番目の値がない場合は、条件を満たす中で最も大きい/小さい値のインデックスをkずらして範囲外参照にならないかどうかを見ればよい。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import sortedcontainers
+
+Q = int(input())
+
+A = sortedcontainers.SortedList()
+for _ in range(Q):
+    query = list(map(int,input().split()))
+    if query[0] == 1:
+        A.add(query[1])
+    elif query[0] == 2:
+        x, k = query[1], query[2]
+        a = A.bisect_right(x)
+        a -= k
+        if 0 <= a:
+            print(A[a])
+        else:
+            print(-1)
+    else:
+        x, k = query[1], query[2]
+        a = A.bisect_left(x)
+        k -= 1
+        a += k
+        if a <= len(A) - 1:
+            print(A[a])
+        else:
+            print(-1)
+</code></pre>
+この問題そのものは解くだけなら大したものではないが、公式解説に「●●でも解けます」系統の話が多く、強い人たちの知見を色々得られるのが面白い。<br>
+特に色んなTree構造を使って解いている人が多く、この辺を勉強するモチベが湧いた。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
