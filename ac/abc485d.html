@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC485D ABC|ABC|ABC</h1>
+問題文は<a href="https://atcoder.jp/contests/abc485/tasks/abc485_d">こちら</a>から。<br>
+3か所に区切った文字列がそれぞれに1つ以上A,B,Cを含むように文字列を区切る方法の数を数える問題。<br>
+<br>
+\(S\)の中にA,B,Cのうち1つも含まれていない文字があった場合結果は0なので、以降はA,B,Cはすべて少なくとも1つ以上含まれていると仮定する。<br>
+3つに区切った各部分について、各各部分の中で文字列の添え字の値が最も小さいものが小さい順に、前半、真ん中、後半と名前を付けることにする。<br>
+前半について、最初から文字列を見ていって最初にA,B,Cを1つ以上含むような場所を探す。形式的には\(1 \leqq i \leqq N\)を満たす整数\(i\)であって、\(S\)の\(1\)文字目から\(i -1 \)文字目までにA,B,Cのうち少なくとも1つ登場しない文字があり、かつ\(S\)の\(1\)文字目から\(i\)文字目までにはA,B,Cがそれぞれ少なくとも1つ以上は登場している、という条件を満たす最小の\(i\)を探してくる。<br>
+すると、前半を区切る場所はこの\(i\)文字目よりも後ろでないと、前半にはA,B,Cのうち含まれない文字が出てきてしまうことになる。逆に、\(i+1\)文字目以降であればどこで区切っても前半にはA,B,Cが含まれることになる。<br>
+これは後半についても、後ろから文字を見て似たようなことをすることにすると、後半は\(j-1\)文字目より前で区切らなければならないという整数\(j\)が見つかる。<br>
+\(i\)の方が\(j\)より大きい場合は結果は0である。<br>
+そうでない場合、真ん中にA,B,Cが少なくとも1つ以上含まれるような区切り方を探せばよい。これは\(i+1\)から\(j-1\)まででスタート地点を1つ決め、そこからA,B,Cを最低1つ含むギリギリのラインを探せば、それより後ろから\(j-1\)までが条件を満たす。こういう場合は尺取り法で効率よく計算ができる。<br>
+よって、前半と後半のギリギリの位置を求めて、後は尺取り法をすれば答えが出る。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+import sys
+
+N = int(input())
+S = input()
+
+a = ord("A")
+start = 0
+goal = N - 1
+st_set = set()
+cheker = set([chr(a + i) for i in range(3)])
+for i in range(N):
+    st_set.add(S[i])
+    if st_set == cheker:
+        start = i + 1
+        break
+st_set = set()
+for i in range(N - 1, -1, -1):
+    st_set.add(S[i])
+    if st_set == cheker:
+        goal = i
+        break
+
+if start > goal:
+    print(0)
+    sys.exit()
+
+letter = [ 0 for _ in range(3)]
+j = start
+answer = 0
+for i in range(start, goal):
+    while 0 in letter and j <= goal:
+        letter[ord(S[j]) - a] += 1
+        j += 1
+    answer += goal - (j - 1)
+    letter[ord(S[i]) - a] -= 1
+print(answer)
+</code></pre>
+尺取り法、久しぶりに実装した。バグを埋め込みやすいなあと体感としては思うのである。<br>
+尺取り法なんてだいぶ最初に学ぶ内容なのにね……悲しい。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
