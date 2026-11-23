@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC334C Socks 2</h1>
+問題文は<a href="https://atcoder.jp/contests/abc334/tasks/abc334_c">こちら</a>から。<br>
+片割れを失った靴下同士を、なるべく奇妙じゃないように組み合わせる問題。<br>
+<br>
+入力例に惑わされそうになるが、同色の相方が残っている靴下は、同色同士で組み合わせるのが最良になる。<br>
+仮に色\(X\)の靴下が2つとも残っているとして、片割れ同士を別々に色\(i,j\)の靴下と組み合わせることを考えると、この部分での奇妙さは\(|X - i| +|X - j|\)になる。<br>
+同色同士を組み合わせ、\(i,j\)どうしを組み合わせると、この差は\(|i - j|\)になり、大小関係で場合分けして考えても、後者は必ず前者以下の値になる。<br>
+よって、既に片割れが無くなった靴下たちだけで組み合わせを考えればいい。<br>
+もし余っている靴下が全体で偶数個ある場合、\(A_1,A_2\)、\(A_3,A_4\)、...、\(A_{K-1},A_K\)どうしで組み合わせるのが最適になる。<br>
+（インデックスが隣り合っていないもの同士は、交換した方が明らかに良くなることが示せる）。<br>
+余っている靴下が奇数個の場合は、1個を除くと偶数個になるので上記と同様の状況に帰着できるので、どの1個を除くかについて全通り試せばよい。<br>
+除くものを決めるたびに全体を再計算すると計算時間が無駄にかかるので、ここは工夫したい。<br>
+実装例ではまず\(A_K\)の靴下を除いた場合の値を計算し、<br>
+・そこから\(|A_{K-1} - A_{K-2}|\)を引いて\(|A_{K} - A_{K-2}|\)を足し、最小値を更新する（\(A_{K-1}\)を除いた場合の最小値が出せる）。
+・そこから\(|A_{K} - A_{K-2}|\)を引いて\(|A_{K} - A_{K-1}|\)を足し、最小値を更新する（\(A_{K-2}\)を除いた場合の最小値が出せる）。
+みたいなのを繰り返して計算量を抑えている。全体の時間計算量は\(O(K)\)程度で抑えられるだろう(Nの値は入力数値の上限としてしか使っておらず、もうちょいNの上界が高くても全然いける)。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+N, K = list(map(int,input().split()))
+A = list(map(int,input().split()))
+
+answer = 0
+if K % 2 == 0:
+    for i in range(0, K, 2):
+        answer += abs(A[i] - A[i + 1])
+else:
+    # 最後の靴下を除いた場合の最小値
+    for i in range(0, K - 1, 2):
+        answer += abs(A[i] - A[i + 1])
+    now_answer = answer
+    j = K - 3
+    k = K - 2
+    # ひとつづつペアにしない靴下のインデックスを遡っていく
+    while j >= 0:
+        now_answer -= abs(A[k] - A[j])
+        now_answer += abs(A[k + 1] - A[j])
+        answer = min(answer, now_answer)
+        now_answer -= abs(A[k + 1] - A[j])
+        now_answer += abs(A[k + 1] - A[j + 1])
+        answer = min(answer, now_answer)
+        j -= 2
+        k -= 2
+print(answer)
+</code></pre>
+区間和なのでセグ木とか使っても上手くいきそう。<br>
+C問題であることを考えると別にそこまでする必要もない気はするけれど。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
