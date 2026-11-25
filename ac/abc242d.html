@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC242D ABC Transform</h1>
+問題文は<a href="https://atcoder.jp/contests/abc242/tasks/abc242_d">こちら</a>から。<br>
+文字を置き換え続けて長くなった文字列の何番目かの文字を答える問題。<br>
+<br>
+愚直に文字列に対して操作を行い続けるのは厳しい。<br>
+t回操作を行った後のk文字目は、t-1回目の操作で\(\frac{k}{2}\)(の小数点以下上げ)文字目にあった文字によって決まることに注意する。<br>
+例えば、3回目の操作時に4文字目が"A"だったとすると、4回目の操作時の7文字目は"B"になるし、8文字目は"C"になることが容易にわかるだろう。<br>
+よって、操作を遡って、再帰的に文字を求めることを考える。<br>
+もし、遡っている途中でt=0になったなら、最初の文字列のその文字を返せばよい。<br>
+そうでないなら遡り続ければいいが、操作回数の上限に対する制約が大きいので、愚直に遡り続けるわけにはいかない。<br>
+1文字目は明らかに周期3でループすることが分かるので、遡り続けて1文字目になれば、最初に1文字目まで遡った数の3で割った剰余が分かれば計算できる。<br>
+文字数の最大は\(10^18\)文字目だから、最大でも60回程度遡れば1文字目に辿りつく。<br>
+時間計算量で言うと、大体\(O(N + Q(min(t, \log_{}{max(k)})))\)くらいで押さえられ、まあ高速だろう。<br>
+実装例は以下の通り(65がマジックナンバーすぎるが、chr(65) = "A"ということである)。<br>
+<pre><code class="language-python">
+def letter_search(t, k):
+    if t == 0:
+        return S[k]
+    if k == 0:
+        s = ord(S[0]) - 65
+        if t % 3 == 1:
+            s += 1
+            s %= 3
+        elif t % 3 == 2:
+            s += 2
+            s %= 3
+        return chr(65 + s)
+    else:
+        if k % 2 == 0:
+            a = letter_search(t - 1, k // 2)
+            s = ord(a) - 65
+            s += 1
+            s %= 3
+        else:
+            a = letter_search(t - 1, k // 2)
+            s = ord(a) - 65
+            if s == 0:
+                s = 2
+            else:
+                s -= 1
+        return chr(65 + s)
+
+S = input()
+Q = int(input())
+for _ in range(Q):
+    T, K = list(map(int,input().split()))
+    K -= 1
+    print(letter_search(T, K))
+</code></pre>
+再帰に加えてもう1工夫必要な問題。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
