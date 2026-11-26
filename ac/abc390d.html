@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+<h1><a href = "../">QLTの勉強ノート</a></h1>
+<nav>
+<ul>
+    Atcoderの解説&nbsp;
+    <a href="../yc/">yukicoderの解説</a> &nbsp;
+    <a href="../others/">その他のお勉強</a> &nbsp;
+</ul>
+</nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC390D Stone XOR</h1>
+問題文は<a href="https://atcoder.jp/contests/abc390/tasks/abc390_d">こちら</a>から。<br>
+石を移動した後にXORする問題。<br>
+<br>
+石を移し替える操作は\(N-1\)回だが、これを愚直にやると流石に計算回数が多すぎる。<br>
+だが、「最終的にどの袋同士がマージされたか」に注目すると、パターンの数が一気に減る。<br>
+これは要するに区別がつくボールN個（つまり最初に袋に入っていた石の数たち）を、区別のつかない箱N箱（つまり袋）に入れる方法の数であるから、ベル数\(B(N, N)\)と一致する(ベル数自体は覚えていなかったが、写像12相のどっかにあったやつだなあと思って検索したらすぐに見つかった)。<br>
+\(B(12, 12) < 5 \times 10^6\)程度なので、答えの個数もこれ以下である。これらを全列挙してxorを取る方針というのは悪くなさそうに思える。<br>
+実装例では「今残っているうち袋の番号が最大のもの」が属するグループを、ビット全探索の要領で全列挙して、残ったもの同士で再帰的に同じようにグループを作って、最終的に各グループの和同士でXORを取るような感じで書いた。グループの分け方は本質ではないから、各グループの和と、まだ使っていない袋のインデックスだけ残す形で書いた。<br>
+時間計算量は\(O(NB(N, N))\)程度で、PyPyだと定数倍などもあり超ギリギリだが、なんとか通った。<br>
+<pre><code class="language-python">
+def stones_xor(array):
+    res = 0
+    for i in range(len(array)):
+        res ^= array[i]
+    return res
+
+global answers
+answers = set()
+
+def devides(remains, sums):
+    if len(remains) == 0:
+        answers.add(stones_xor(sums))
+        return
+    p = remains.pop()
+    n = len(remains)
+    for i in range(2 ** n):
+        tmp = []
+        check = A[p]
+        for j in range(n):
+            if (i >> j) & 1 == 0:
+                tmp.append(remains[j])
+            else:
+                check += A[remains[j]]
+        devides(tmp, sums + [check])
+
+N = int(input())
+A = list(map(int,input().split()))
+devides([i for i in range(N)], [])
+print(len(answers))
+</code></pre>
+こないだ最新回のE問題で計算量的に嘘解法すぎる奴を通してしまったので(ACした後で気が付いた)、この辺はシビアになりたいところ。<br>
+今回は多分最悪ケースにも対応できているはず……。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
