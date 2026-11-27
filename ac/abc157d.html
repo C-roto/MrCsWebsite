@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+<h1><a href = "../">QLTの勉強ノート</a></h1>
+<nav>
+<ul>
+    Atcoderの解説&nbsp;
+    <a href="../yc/">yukicoderの解説</a> &nbsp;
+    <a href="../others/">その他のお勉強</a> &nbsp;
+</ul>
+</nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC157D Friend Suggestions</h1>
+問題文は<a href="https://atcoder.jp/contests/abc157/tasks/abc157_d">こちら</a>から。<br>
+友人の友人の人数を数える問題。<br>
+<br>
+勿論愚直に求めると大変なことになってしまう。<br>
+求めたいものをまた別に言い換えると、「その人から辿っていける人の中で、直接の友人ではない人かつブロック関係じゃない人」ということになる。<br>
+こう考えると、人を頂点、友人関係を辺とするグラフを考えると、各頂点について<br>
+①その頂点を含む連結成分の頂点数(その人が繋がっている人全体の数)<br>
+②その頂点の次数(直接の友人の数)<br>
+③その人と同一の連結成分にいて、かつブロックしている人同士に対応する頂点の数(その人から辿れるブロック者の数)<br>
+これが高速で分かると、「その人が繋がっている人全体-1(その人自身)-直接の友人の数--その人とつながっていてブロックしている人の数」はすぐに計算できる。<br>
+①はunion-findをunion-by-sizeで普段使いしているならそのまま1回あたり時間計算量\(O(\log_{}{N})\)程度で計算できる。これが\(M\)回程度ある。<br>
+②は入力を受け取るときに数えておけば1回あたり定数時間で計算できる。<br>
+③はunion-findで同一連結成分にいるかどうかの判定はやはり時間計算量\(O(\log_{}{N})\)程度でできるので、同一成分同士にいる場合だけ数を数えておく。これが全体で\(K\)回ある。<br>
+以上より、全体の時間計算量は\(O(N + (M + K)\log_{}{N})\)ほどで計算できる。<br>
+実装例は以下の通り。<br>
+ <pre><code class="language-python">
+class DisjointSetUnion:
+    def __init__(self, N: int):
+        self.number = N
+        self.parent = [ -1 for _ in range(N)]
+        self.size = [ 1 for _ in range(N)]
+
+    def find(self, v : int):
+        compress = []
+        while self.parent[v] != -1:
+            compress.append(v)
+            v = self.parent[v]
+        for c in compress:
+            self.parent[c] = v
+        return v
+
+    def union(self, u: int, v: int):
+        ru = self.find(u)
+        rv = self.find(v)
+        if ru != rv:
+            if self.size[ru] < self.size[rv]:
+                ru, rv = rv, ru
+            self.parent[rv] = ru
+            self.size[ru] += self.size[rv]
+
+    def same(self, u: int, v: int):
+        return self.find(u) == self.find(v)
+
+N, M, K = list(map(int,input().split()))
+deg = [ 0 for _ in range(N)]
+Blocks = [ 0 for _ in range(N)]
+uf = DisjointSetUnion(N)
+for i in range(M):
+    a, b = list(map(int,input().split()))
+    a -= 1
+    b -= 1
+    deg[a] += 1
+    deg[b] += 1
+    uf.union(a, b)
+for i in range(K):
+    c, d = list(map(int,input().split()))
+    c -= 1
+    d -= 1
+    if uf.same(c, d):
+        Blocks[c] += 1
+        Blocks[d] += 1
+
+for i in range(N):
+    print(uf.size[uf.find(i)] - 1 - deg[i] - Blocks[i], end=" ")
+print()
+ </code></pre>
+別にそれほどって感じではあるんだけど、なんか色々細かい実装を間違えそう。<br>
+<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
