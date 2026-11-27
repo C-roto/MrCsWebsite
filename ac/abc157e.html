@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+ <!-- 基本CSS-->
+  <link rel = "stylesheet" href = "../css/novelcss.css">
+
+  <!-- Prism.js -->
+  <link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css">
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+  <script defer
+  src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+
+  <!-- MathJax -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <meta charset="UTF-8">
+  <title>QLTのサイト</title>
+  <meta name="description" content="なんかまあ、書いてみますか">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header>
+  <h1><a href = "../">QLTの勉強ノート</a></h1>
+  <nav>
+    <ul>
+      Atcoderの解説&nbsp;
+      <a href="../yc/">yukicoderの解説</a> &nbsp;
+      <a href="../others/">その他のお勉強</a> &nbsp;
+    </ul>
+  </nav>
+</header>
+
+<body>
+<div class = "main">
+<h1>ABC157E Simple String Queries</h1>
+問題文は<a href="https://atcoder.jp/contests/abc157/tasks/abc157_e">こちら</a>から。<br>
+文字列を適宜変更し、ある区間の中の文字種数を判断する問題。<br>
+<br>
+文字種数は最大で26種類までしかないので、各文字種がある区間の中に使われているかどうかを高速で調べられれば良い。<br>
+で、これはセグメント木を使って、区間最大値を記録しておけばすぐにわかる。<br>
+端的に言えば長さNの配列を扱う26本セグ木をはやして、1つずつ各文字種("a","b",...,"z")に対応させる(配列は全部0で初期化しておく)。で、文字列のi番目の文字が\(c_i\)だったとすると、\(c_i\)に対応するセグ木の、配列のi番目を1に変える。<br>
+こうすれば、文字列の長さ\(N\)に対して\(O((N + \alpha)\log_{}{N})\)程度で前計算ができる(\(\alpha\)は文字種数)。<br>
+クエリ1が与えられたら、該当する文字数目にもともとある文字について、セグ木の配列の対応する部分を0にし、新しく入る文字について対応するセグ木のその部分を1にすればよい。<br>
+クエリ2は26個のセグ木全部に対して区間最大値を取って、0ならその区間にその文字はなく、1ならあるので、1だったものの個数を数えて返せばよい。<br>
+セグ木の更新に掛かる時間などを考えると、時間計算量はおよそ\(O(Q\alpha\log_{}{N})\)程度で処理でき、この制約下なら大丈夫だろう。<br>
+実装例は以下の通り。<br>
+<pre><code class="language-python">
+class segmentTree:
+    def __init__(self, dataPieces, data):
+        self.dataPieces = dataPieces
+        self.data = data
+        cellnumpow = 0
+        while not(2 ** (cellnumpow - 1) < dataPieces <= 2 ** cellnumpow):
+                cellnumpow += 1
+        self.cnp = cellnumpow
+        self.contena = [ 0 for _ in range(2 ** (cellnumpow + 1))]
+        for i in range(dataPieces):
+            self.contena[2 ** cellnumpow + i] = data[i]
+        cellnumpow -= 1
+        while cellnumpow >= 0:
+            c = 2 ** cellnumpow
+            for j in range(c):
+                self.contena[c + j] = max(self.contena[2 * (c + j)],self.contena[2 * (c + j) + 1])
+            cellnumpow -= 1
+
+    def update(self, n: int, x: int):
+        cnp = self.cnp
+        self.contena[2 ** cnp + n - 1] = x
+        now = 2 ** cnp + n - 1
+        while now > 1:
+            if now % 2 == 0:
+                now //= 2
+            else:
+                now -= 1
+                now //= 2
+            self.contena[now] = max(self.contena[2 * now], self.contena[2 * now + 1])
+
+    def range_find(self, range_l: int , range_r: int):
+        segment_represent = []
+        cnp = self.cnp
+        now_l = 2 ** cnp + (range_l - 1)
+        now_r = 2 ** cnp + (range_r - 1)
+        while now_l <= now_r:
+            if now_l % 2 == 1:
+                segment_represent.append(self.contena[now_l])
+                now_l += 1
+                now_l //= 2
+            else:
+                now_l //= 2
+
+            if now_r % 2 == 0:
+                segment_represent.append(self.contena[now_r])
+                now_r //= 2
+                now_r -= 1
+            else:
+                now_r -= 1
+                now_r //= 2
+        return max(segment_represent)
+
+N = int(input())
+S = list(input())
+Q = int(input())
+
+Segs = [ segmentTree(N, [0 for _ in range(N)]) for _ in range(26)]
+for i in range(N):
+    Segs[ord(S[i]) - 97].update(i + 1, 1)
+
+for _ in range(Q):
+    t, l, r = input().split()
+    t = int(t)
+    if t == 1:
+        l = int(l)
+        s = S[l - 1]
+        Segs[ord(s) - 97].update(l, 0)
+        Segs[ord(r) - 97].update(l, 1)
+        S[l - 1] = r
+    else:
+        l, r = int(l), int(r)
+        answer = 0
+        for i in range(26):
+            if Segs[i].range_find(l, r) > 0:
+                answer += 1
+        print(answer)
+</code></pre>
+前どっかで類題を見た気がするので、そんな難しい感じはしなかった。<br>
+セグ木をいっぱい生やすというパワーな感じの解き方は好き。<br>
+<a href="index.html">問題一覧へ</a>
+</div>
+</body>
+
+<footer>
+  <small>
+  このWebサイトの文章はCC-BY 4.0ライセンスのもとで公開されています。<br>
+  ただし、数式の表示についてはMathJax(Apache License 2.0)を利用しており、<br>
+  コード部の表示はPrism.js(MIT License)を利用しております。
+  </small>
+</footer>
